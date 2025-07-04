@@ -15,7 +15,7 @@ Site Model:
 
 BDSky serial Model priors:
 * Rate becoming uninfectious Gamma {'a': 5.921111111111111, 'scale': 12.32876712328767, 'loc': 0} (see 5 days section of [New_COVID_inf_period.ipynb](New_COVID_inf_period.ipynb)), initial 36.25, boundaries [0, 365].
-* Origin Uniform [0, 6] initial 6. This initial value is only so high as BEAST can generate an initial tree of height 2-5 and the origin initial value needs to be greater than that initial tree height.   
+* Origin Uniform [0.1342465753423312, 2.48516649] initial 2.
 * $R_e$ Log Normal mean (not real) 1, s 0.5, initial 2.0, boundaries [0, 15]
 * Sampling proportion Beta [1, 999], initial 0.01, boundaries [0, 1]
 

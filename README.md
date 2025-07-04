@@ -8,19 +8,15 @@
 * Currently, beast_pype is reliant on [slurm](https://slurm.schedmd.com/overview.html). 
 If you are running a beast_pype workflow on a machine without [slurm](https://slurm.schedmd.com/overview.html) it can be installed  via (conda)[https://anaconda.org/conda-forge/slurm]. However, the 
 initial configuration of slurm may be quite involved.
-* For ease of distribution reasons beast_pype uses the version of BEAST 2 that is available via conda, specifically [bioconda](https://anaconda.org/bioconda/beast2), 2.6 as 2025-Jun-25. Template beast2 xmls from other versions of may not work. BEAST 2.7.7 is available on the conda channel [millerjeremya](https://anaconda.org/millerjeremya/beast2). However, I tested this on a Linux OS (2025-06-04) and could not get the command line arguments to work.
+* For licensing reasons beast_pype uses the version of BEAST 2 that is available via [bioconda](https://anaconda.org/bioconda/beast2), 2.6 as 2025-Jun-25. Template beast2 xmls from other versions of may not work. BEAST 2.7.7 is available on the conda channel [millerjeremya](https://anaconda.org/millerjeremya/beast2). However,
+as of 2025-06-026 I can't tell if this channel is under an open license (like conda-forge or bioconda). Some conda channels charge organisation of >200 staff for usage (https://www.datacamp.com/blog/navigating-anaconda-licensing). 
 
 ## Initial Setup:
 You should only need to carry out the following steps the first time you run the pipeline 
 1. Clone the beast_pype repo: 
   ```bash
-    git clone https://github.com/m-d-grunnill/BEAST_pype.git
+    git clone https://gitlab.cscscience.ca/siage/projects/BEAST_pipe.git
  ```
-OR:
-  ```bash
-    git clone git@github.com:m-d-grunnill/BEAST_pype.git
- ```
-
 2. Install the beast_pype conda environment via conda or mamba:
 ```bash
 conda env create -f requirements.yml
@@ -71,7 +67,7 @@ Once you have acquired this you will need to alter line 5 of `run-workflow.slurm
 #SBATCH -p NAME_OF_PARTITION_TO_USE
 ```
 Likewise, any parameter ymls used for running a workflow (such as
-`parameters/Test-BDSKY-serial_full.yml` and `parameters/Test-Generic_full.yml`) need to 
+`parameters/Test-BDSKY-serial.yml` and `parameters/Test-Generic.yml`) need to 
 have the line `partition: NAME_OF_PARTITION_TO_USE` added.
 
 ### Example Run of BDSKY-serial Workflow
@@ -87,10 +83,10 @@ can be found in the `workflows` directory. To run this from commandline via slur
 enter the following command
 ```bash
 cd LOCATION_YOU_CLONED_THE_BEAST_PYPE_REPO_TO
-sbatch run-workflow.slurm workflows/BDSKY-serial.ipynb parameters/Test-BDSKY-serial_full.yml
+sbatch run-workflow.slurm workflows/BDSKY-serial.ipynb parameters/Test-BDSKY-serial.yml
 ```
-This will run the workflow with the parameters set in `parameters/Test-BDSKY-serial_full.yml`. 
-You can alter them for usage or alter a copy of `parameters/Test-BDSKY-serial_full.yml`.
+This will run the workflow with the parameters set in `parameters/Test-BDSKY-serial.yml`. 
+You can alter them for usage or alter a copy of `parameters/Test-BDSKY-serial.yml`.
 A description of the parameters used in [BDSKY-serial workflow notebook](workflows/BDSKY-serial.ipynb)
 is at the top of the notebook. **NOTE** the default values for `chain_length`,
 `store_state_every`, `trace_log_every`, `tree_log_every`, `screen_log_every` and `store_state_every` are extremely low. These low values are intended for testing 
@@ -99,11 +95,11 @@ IS RECOMMEDED THAT** you up the values of `chain_length` (>=10,000,000),
 `store_state_every` (>=1000), `trace_log_every` (>=1000), `tree_log_every` (>=1000), `screen_log_every` (>=1000) and `store_state_every`(>=1000) when properly running this workflow. 
 
 Running the above command will create the directory `example_runs_of_BSDKY`
-containing a **time stamped** folder (format 'YYYY-MM-DD_hour-min-sec'). Shortly after the BDSKY-serial workflow is launched
+containing a **time stamped** folder Shortly after the BDSKY-serial workflow is launched
 a running copy of [BDSKY-serial workflow notebook](workflows/BDSKY-serial.ipynb) should appear.
 The top code cell of this notebook will have a new code cell inserted below which replaces the default parameter values
 in [BDSKY-serial workflow notebook](workflows/BDSKY-serial.ipynb) with the  values specified in
-`parameters/Test-BDSKY-serial_full.yml`.  The 'time stamped' folder will gradually fill with running
+`parameters/Test-BDSKY-serial.yml`.  The 'time stamped' folder will gradually fill with running
 copies of the notebooks (in the order):
 1. Phase-2i-IQTree.ipynb
 2. Phase-2ii-TreeTime-and-Down-Sampling.ipynb
@@ -137,10 +133,10 @@ can be found in the `workflows` directory. To run this from commandline via slur
 enter the following commands 
 ```bash
 cd LOCATION_YOU_CLONED_THE_BEAST_PYPE_REPO_TO
-sbatch run-workflow.slurm workflows/Generic.ipynb parameters/Test-Generic_full.yml
+sbatch run-workflow.slurm workflows/Generic.ipynb parameters/Test-Generic.yml
 ```
-This will run the workflow with the parameters set in `parameters/Test-Generic_full.yml`. 
-You can alter them for usage or alter a copy of `parameters/Test-Generic_full.yml`.
+This will run the workflow with the parameters set in `parameters/Test-Generic.yml`. 
+You can alter them for usage or alter a copy of `parameters/Test-Generic.yml`.
 A description of the parameters used in [Generic workflow notebook](workflows/Generic.ipynb)
 is at the top of the notebook. **NOTE** the default values for `chain_length`,
 `store_state_every`, `trace_log_every`, `tree_log_every`, `screen_log_every` and `store_state_every` are extremely low. These low values are intended for testing 
@@ -149,11 +145,11 @@ IS RECOMMEDED THAT** you up the values of `chain_length` (>=10,000,000),
 `store_state_every` (>=1000), `trace_log_every` (>=1000), `tree_log_every` (>=1000), `screen_log_every` (>=1000) and `store_state_every`(>=1000) when properly running this workflow. 
 
 Running the above command will create the directory `example_runs_of_BSDKY`
-containing a **time stamped** folder (format 'YYYY-MM-DD_hour-min-sec'). Shortly after the Generic workflow is launched
+containing a **time stamped** folder Shortly after the Generic workflow is launched
 a running copy of [Generic workflow notebook](workflows/Generic.ipynb) should appear.
 The top code cell of this notebook will have a new code cell inserted below which replaces the default parameter values
 in [Generic workflow notebook](workflows/Generic.ipynb) with the  values specified in
-`parameters/Test-Generic_full.yml`.  The 'time stamped' folder will gradually fill with running
+`parameters/Test-Generic.yml`.  The 'time stamped' folder will gradually fill with running
 copies of the notebooks (in the order):
 1. Phase-2i-IQTree.ipynb
 2. Phase-2ii-TreeTime-and-Down-Sampling.ipynb
@@ -162,7 +158,7 @@ copies of the notebooks (in the order):
 
 Lastly, `Phase-5-Diagnosing_Outputs_and_Generate_Report.ipynb` should appear in the
 **time stamped** folder  Once all the MCMC BEAST 2 chains have finished running the copy of `Phase-5-Diagnosing_Outputs_and_Generate_Report.ipynb` needs to be done manually. 
-The progress of the MCMC BEAST 2 chains can be checked via opening the files `run-1.out`,
+The progress of the MCMC BEAST 2 chains can be checked via openning the files `run-1.out`,
 `run-2.out`, `run-3.out` and `run-4.out` or the command:
 ```bash
    squeue --format="%.18i %.9P %.30j %.8u %.8T %.10M %.9l %.6D %R" --me

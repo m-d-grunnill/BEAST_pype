@@ -30,7 +30,7 @@
         <parameter id="clockRate.c:alignment" spec="parameter.RealParameter" lower="0.0" name="stateNode">4.0E-4</parameter>
         <parameter id="gammaShape.s:alignment" spec="parameter.RealParameter" name="stateNode">0.5</parameter>
         <parameter id="kappa.s:alignment" spec="parameter.RealParameter" lower="0.0" name="stateNode">2.0</parameter>
-        <parameter id="origin_BDSKY_Serial.t:alignment" spec="parameter.RealParameter" lower="0" name="stateNode" upper="6">6</parameter>
+        <parameter id="origin_BDSKY_Serial.t:alignment" spec="parameter.RealParameter" lower="0.1342465753423312" name="stateNode" upper="2.48516649">2</parameter>
         <parameter id="becomeUninfectiousRate_BDSKY_Serial.t:alignment" spec="parameter.RealParameter" lower="0.0" name="stateNode" upper="365.0">36.25</parameter>
         <parameter id="reproductiveNumber_BDSKY_Serial.t:alignment" spec="parameter.RealParameter" dimension="10" lower="0.0" name="stateNode" upper="15.0">2.0</parameter>
         <parameter id="samplingProportion_BDSKY_Serial.t:alignment" spec="parameter.RealParameter" lower="0.0" name="stateNode" upper="1.0">0.01</parameter>
@@ -71,7 +71,7 @@
                 </LogNormal>
             </prior>
             <prior id="originPrior_BDSKY_Serial.t:alignment" name="distribution" x="@origin_BDSKY_Serial.t:alignment">
-                <Uniform id="origin_Uniform" name="distr" lower="0" upper="6" offset="0.0" />
+                <Uniform id="origin_Uniform" name="distr" lower="0.1342465753423312" upper="2.48516649" offset="0.0" />
             </prior>
             <prior id="reproductiveNumberPrior_BDSKY_Serial.t:alignment" name="distribution" x="@reproductiveNumber_BDSKY_Serial.t:alignment">
                 <LogNormal id="LogNormalDistributionModel.2" name="distr">
