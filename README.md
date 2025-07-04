@@ -8,8 +8,7 @@
 * Currently, beast_pype is reliant on [slurm](https://slurm.schedmd.com/overview.html). 
 If you are running a beast_pype workflow on a machine without [slurm](https://slurm.schedmd.com/overview.html) it can be installed  via (conda)[https://anaconda.org/conda-forge/slurm]. However, the 
 initial configuration of slurm may be quite involved.
-* For licensing reasons beast_pype uses the version of BEAST 2 that is available via [bioconda](https://anaconda.org/bioconda/beast2), 2.6 as 2025-Jun-25. Template beast2 xmls from other versions of may not work. BEAST 2.7.7 is available on the conda channel [millerjeremya](https://anaconda.org/millerjeremya/beast2). However,
-as of 2025-06-026 I can't tell if this channel is under an open license (like conda-forge or bioconda). Some conda channels charge organisation of >200 staff for usage (https://www.datacamp.com/blog/navigating-anaconda-licensing). 
+* For ease of distribution reasons beast_pype uses the version of BEAST 2 that is available via conda, specifically [bioconda](https://anaconda.org/bioconda/beast2), 2.6 as 2025-Jun-25. Template beast2 xmls from other versions of may not work. BEAST 2.7.7 is available on the conda channel [millerjeremya](https://anaconda.org/millerjeremya/beast2). However, I tested this on a Linux OS (2025-06-04) and could not get the command line arguments to work.
 
 ## Initial Setup:
 You should only need to carry out the following steps the first time you run the pipeline 
