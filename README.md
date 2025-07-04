@@ -14,8 +14,13 @@ initial configuration of slurm may be quite involved.
 You should only need to carry out the following steps the first time you run the pipeline 
 1. Clone the beast_pype repo: 
   ```bash
-    git clone https://gitlab.cscscience.ca/siage/projects/BEAST_pipe.git
+    git clone https://github.com/m-d-grunnill/BEAST_pype.git
  ```
+OR:
+  ```bash
+    git clone git@github.com:m-d-grunnill/BEAST_pype.git
+ ```
+
 2. Install the beast_pype conda environment via conda or mamba:
 ```bash
 conda env create -f requirements.yml
