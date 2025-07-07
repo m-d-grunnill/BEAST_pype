@@ -1,0 +1,47 @@
+#[build-system]
+#requires = [
+#    "setuptools >= 61.0",
+#    "wheel >= 0.38"
+#]
+#build-backend = "setuptools.build_meta"
+
+[project]
+name = "beast_pype"
+version = "0.1.0"
+#dependencies = [
+#]
+authors = [
+  {name="Martin Grunnill", email="Martin.Grunnill@phac-aspc.gc.ca"},
+]
+maintainers = [
+  { name="Martin Grunnill", email="Martin.Grunnill@phac-aspc.gc.ca"},
+]
+description = "A package of BEAST 2 pipelines for phylodynamics."
+readme = "README.md"
+requires-python = ">=3.10"
+#classifiers = [
+#    'Development Status :: 4 - Beta',
+#    "Programming Language :: Python :: 3.10",
+#    "License :: OSI Approved :: Apache Software License",
+#    "Operating System :: OS Independent",
+#    "Natural Language :: English",
+#    "Topic :: Scientific/Engineering",
+#    "Intended Audience :: Science/Research",
+#]
+# keywords should contain search terms so users can
+# find our project
+keywords = [
+    "Phylodynamics",
+    "Epimediology",
+    "Ecology",
+    "Virology"
+]
+#
+#
+#license = {file = "LICENSE"}
+#
+#[project.urls]
+#Homepage = "https://github.com/m-d-grunnill/MetaCast"
+#Repository = "https://github.com/m-d-grunnill/MetaCast"
+#Issues = "https://github.com/m-d-grunnill/MetaCast/issues"
+#Documentaion = "https://metacast.readthedocs.io/en/latest/index.html"

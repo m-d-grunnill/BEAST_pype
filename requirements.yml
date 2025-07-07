@@ -1,0 +1,38 @@
+name: beast_pype
+channels:
+  - conda-forge
+  - defaults
+  - bioconda
+dependencies:
+  # BEAST istelf
+  - bioconda::beast2
+  # Python
+  # beast2-xml has had the occaisonal issue with installation python 3.12
+  # on some OSs. beast2-xml works on suggest python 3.10 sticking to python 3.10.
+  - conda-forge::python<3.11
+  # Python Bioinformatics
+  - conda-forge::biopython
+  - bioconda::iqtree
+  - bioconda::treetime
+  - bioconda::seqkit
+  # Python Data Sci
+  - conda-forge::scipy
+  - conda-forge::numpy
+  - conda-forge::pandas
+  - conda-forge::seaborn
+  - conda-forge::matplotlib
+# MCMC diagnostics_of_selection
+  - conda-forge::arviz
+  - conda-forge::xarray
+# Utils
+  - conda-forge::dask
+  - conda-forge::pyyaml
+# Jupyter & Jutyper based workflow
+  - conda-forge::jupyter
+  - conda-forge::papermill
+  - conda-forge::nbconvert
+  - conda-forge::bash_kernel
+# For packges on pip:
+  - conda-forge::pip
+  - pip: # Packages on pip:
+      - beast2-xml>=1.3.3

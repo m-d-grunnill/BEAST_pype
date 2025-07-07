@@ -1,0 +1,2 @@
+include src/beast_pype/workflow_modules/*.ipnyb
+include src/beast_pype/report_templates/*.ipnyb

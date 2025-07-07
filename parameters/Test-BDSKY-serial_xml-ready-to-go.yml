@@ -1,0 +1,9 @@
+beast_ram: 32G #
+beast_threads: 6
+collection_date_field: date
+metadata_path: example_data/COVID-19_BA.2.86/metadata.tsv
+number_of_chains: 4
+overall_save_dir: example_runs_of_BSDKY
+sample_id_field: strain
+specific_run_save_dir: null
+ready_to_go_xml:  example_data/COVID-19_BA.2.86/BDSky_serial_ready_to_go.xml

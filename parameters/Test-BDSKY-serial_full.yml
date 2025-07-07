@@ -1,0 +1,25 @@
+beast_ram: 32G #
+beast_threads: 6
+chain_length: 500000
+collection_date_field: date
+down_sample_to: null
+fasta_file: example_data/COVID-19_BA.2.86/sequences.fasta
+initial_tree_path: null
+initial_tree_type: Temporal
+log_file_basename: BDSKY_serial
+metadata_path: example_data/COVID-19_BA.2.86/metadata.tsv
+number_of_chains: 4
+origin_prior: null
+origin_start_addition: 0.02737850787132101
+origin_upper_addition: 2
+overall_save_dir: example_runs_of_BSDKY
+root_strain_names: null
+rt_dimensions: 6
+sample_id_field: strain
+screen_log_every: 500
+seeds: null
+specific_run_save_dir: null
+store_state_every: 500
+template_xml_path: template_beast_xmls/BDSKY_serial_COVID-19_template.xml
+trace_log_every: 500
+tree_log_every: 500
