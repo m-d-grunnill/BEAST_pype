@@ -6,7 +6,7 @@
   **MEANING IF YOU MAKE ANY CHANGES TO THE FILES IN  `src/beast_pype` THIS WILL
   AFFECT YOUR beast_pype INSTALLATION**
 * Currently, beast_pype is reliant on [slurm](https://slurm.schedmd.com/overview.html). 
-If you are running a beast_pype workflow on a machine without [slurm](https://slurm.schedmd.com/overview.html) it can be installed  via (conda)[https://anaconda.org/conda-forge/slurm]. However, the 
+If you are running a beast_pype workflow on a machine without [slurm](https://slurm.schedmd.com/overview.html) it can be installed  via [conda](https://anaconda.org/conda-forge/slurm). However, the 
 initial configuration of slurm may be quite involved.
 * For ease of distribution reasons beast_pype uses the version of BEAST 2 that is available via conda, specifically [bioconda](https://anaconda.org/bioconda/beast2), 2.6 as 2025-Jun-25. Template beast2 xmls from other versions of may not work. BEAST 2.7.7 is available on the conda channel [millerjeremya](https://anaconda.org/millerjeremya/beast2). However, I tested this on a Linux OS (2025-06-04) and could not get the command line arguments to work.
 
@@ -25,6 +25,7 @@ OR:
 ```bash
 conda env create -f requirements.yml
 ```
+OR if you have access mamba (much faster):
 ```bash
 mamba env create -f requirements.yml
 ```
@@ -62,41 +63,48 @@ sbatch run-workflow.slurm PATH_TO_WORKFLOW.ipnyb PATH_TO_PARAMETERS.yml
 ```
 `run-workflow.slurm` is a specialised [shell script for running sbatch jobs](https://hpc-uit.readthedocs.io/en/latest/jobs/examples.html). The
 top of `run-workflow.slurm` has `#SBATCH` arguments that you may
-wish to alter or add to (see  [slurm's sbatch documentation](https://slurm.schedmd.com/sbatch.html)) depending on a particular run of a workflow.
+wish to alter or add to (see  [slurm's sbatch documentation](https://slurm.schedmd.com/sbatch.html)) depending on a particular run of a BEAST_pype workflow.
 
 **BEFORE RUNNING THE EXAMPLES BELOW** from the administrator of the HPC you
 are using you will need to learn the name of the partition to use for your slurm jobs. 
-Once you have acquired this you will need to alter line 5 of `run-workflow.slurm`  to read:
+Once you have acquired this you will need to alter line 11 of `run-workflow.slurm`  to read:
 ```bash
 #SBATCH -p NAME_OF_PARTITION_TO_USE
 ```
-Likewise, any parameter ymls used for running a workflow (such as
-`parameters/Test-BDSKY-serial_full.yml` and `parameters/Test-Generic_full.yml`) need to 
-have the line `partition: NAME_OF_PARTITION_TO_USE` added.
+Likewise, the parameter yml files below will need to 
+have the line `partition: NAME_OF_PARTITION_TO_USE` added: 
+* `parameters/Test-BDSKY-serial_full.yml`
+* `parameters/Test-BDSKY-serial_no-initial-tree.yml`
+* `parameters/Test-BDSKY-serial_xml-ready-to-go.yml`
+* `parameters/Test-Generic_full.yml`
+* `parameters/Test-Generic_no-initial-tree.yml`
+* `parameters/Test-Generic_xml-ready-to-go.yml`
 
-### Example Run of BDSKY-serial Workflow
+**NOTE** the values for `chain_length`,
+`store_state_every`, `trace_log_every`, `tree_log_every`, `screen_log_every` and `store_state_every` in the files above are extremely low. As is the case for the xmls `example_data/COVID-19_BA.2.86/BDSky_serial_ready_to_go.xml` and `example_data/COVID-19_BA.2.86/Coalescent_Exponential_ready_to_go.xml`.  These low values are intended for testing that beast_pype workflows works on your set-up (taking a few minutes to run) and to provide an example of BEAST_pype's operation. **IT IS HIGHLY RECOMMEDED THAT** you up the values of `chain_length` (>=10,000,000),
+`store_state_every` (>=1000), `trace_log_every` (>=1000), `tree_log_every` (>=1000), `screen_log_every` (>=1000) and `store_state_every`(>=1000) when properly running these workflows. 
 
-This workflow is intended for use with the Birth-Death Skyline (BDSKY)-serial model (see https://www.beast2.org/files/bdskytutorialv2.1.1.pdf). This will only work with a template
-BDSky-serial xml or providing a ready-to-go BDSky-serial xml to use. A template
-BDSky-serial xml has the sequences from a fasta file inserted (depending on other
-settings an initial tree added, the Rt dimensions and origin prior altered) before being run by BEAST 2.  A ready-to-go BDSky-serial xml will simply be run by BEAST 2. See parameters section at the top of [BDSKY-serial workflow notebook](workflows/BDSKY-serial.ipynb) for more detailed
-information on workflow parameters.  
+### Running the BDSKY-serial Workflow
+
+
 
 The [BDSKY-serial workflow notebook](workflows/BDSKY-serial.ipynb) along with other workflows
-can be found in the `workflows` directory. To run this from commandline via slurms `sbatch`
-enter the following command
+can be found in the `workflows` directory.  This workflow is intended for use with the Birth-Death Skyline (BDSKY)-serial model (see https://www.beast2.org/files/bdskytutorialv2.1.1.pdf). This will only work with a template
+BDSky-serial xml or providing a ready-to-go BDSky-serial xml to use. When using a template
+BDSky-serial xml, that template has the sequences from a fasta file inserted, (and depending on other
+settings an initial tree added, the Rt dimensions and origin prior altered) before being run by BEAST 2.  A ready-to-go BDSky-serial xml will simply be run by BEAST 2. See parameters section at the top of [BDSKY-serial workflow notebook](workflows/BDSKY-serial.ipynb) for more detailed information on workflow parameters.  
+
+The `parameters` folder contains example yml files that are used to run the different variants of the [BDSKY-serial workflow](workflows/BDSKY-serial.ipynb) demonstrated below. You can alter the values in these files alter a copy of them for your own use.
+
+#### Full Workflow
+
+To run the full version o [BDSKY-serial workflow](workflows/BDSKY-serial.ipynb) from commandline via slurms `sbatch` enter the following command
 ```bash
 cd LOCATION_YOU_CLONED_THE_BEAST_PYPE_REPO_TO
 sbatch run-workflow.slurm workflows/BDSKY-serial.ipynb parameters/Test-BDSKY-serial_full.yml
 ```
-This will run the workflow with the parameters set in `parameters/Test-BDSKY-serial_full.yml`. 
-You can alter them for usage or alter a copy of `parameters/Test-BDSKY-serial_full.yml`.
-A description of the parameters used in [BDSKY-serial workflow notebook](workflows/BDSKY-serial.ipynb)
-is at the top of the notebook. **NOTE** the default values for `chain_length`,
-`store_state_every`, `trace_log_every`, `tree_log_every`, `screen_log_every` and `store_state_every` are extremely low. These low values are intended for testing 
-that a beast_pype workflow works on your set-up (taking a few minutes to run). **IT 
-IS RECOMMEDED THAT** you up the values of `chain_length` (>=10,000,000),
-`store_state_every` (>=1000), `trace_log_every` (>=1000), `tree_log_every` (>=1000), `screen_log_every` (>=1000) and `store_state_every`(>=1000) when properly running this workflow. 
+This will run the workflow with the parameters set in `parameters/Test-BDSKY-serial_full.yml`. A description of the parameters used in [BDSKY-serial workflow notebook](workflows/BDSKY-serial.ipynb)
+is at the top of the notebook. 
 
 Running the above command will create the directory `example_runs_of_BSDKY`
 containing a **time stamped** folder (format 'YYYY-MM-DD_hour-min-sec'). Shortly after the BDSKY-serial workflow is launched
@@ -122,6 +130,17 @@ The slurm jobs running MCMC BEAST 2 chains will be named `beast_full_sample_run_
 Competing the manual run of the copy of `Phase-5-Diagnosing_Outputs_and_Generate_Report.ipynb`
 produces the output report notebook `BEAST_pype-Report.ipynb` and html version `BEAST_pype-Report.html`.
 
+#### Skip building an initial tree and use BEAST 2's initial tree instead.
+
+The full [BDSKY-serial workflow](workflows/BDSKY-serial.ipynb) creates an initial tree using IQTree and TreeTime (in phases 2i and 2ii, respectively) and uses the intial tree in generating a BEAST 2 xml from the template xml. This initial tree does speed up the convergence of MCMC chains when running BEAST 2. However, this is slightly against the spirit of MCMC analysis (see [BEAST 2 documentation](https://www.beast2.org/2014/07/28/all-about-starting-trees)).  [BDSKY-serial workflow](workflows/BDSKY-serial.ipynb) can skip building the of an intial tree using the parameter settings demonstrated in `parameters/Test-BDSKY-serial_no-initial-tree.yml`. Use the command below to run this version of the workflow:
+
+```bash
+cd LOCATION_YOU_CLONED_THE_BEAST_PYPE_REPO_TO
+sbatch run-workflow.slurm workflows/BDSKY-serial.ipynb parameters/Test-BDSKY-serial_no-initial-tree.yml
+```
+
+This variant of the [BDSKY-serial workflow](workflows/BDSKY-serial.ipynb) will then run the 
+
 ### Example Run of Genric Workflow
 
 This workflow is intended for use with any beast 2 xml. This will work with any 
@@ -142,11 +161,7 @@ sbatch run-workflow.slurm workflows/Generic.ipynb parameters/Test-Generic_full.y
 This will run the workflow with the parameters set in `parameters/Test-Generic_full.yml`. 
 You can alter them for usage or alter a copy of `parameters/Test-Generic_full.yml`.
 A description of the parameters used in [Generic workflow notebook](workflows/Generic.ipynb)
-is at the top of the notebook. **NOTE** the default values for `chain_length`,
-`store_state_every`, `trace_log_every`, `tree_log_every`, `screen_log_every` and `store_state_every` are extremely low. These low values are intended for testing 
-that a beast_pype workflow works on your set-up (taking a few minutes to run). **IT 
-IS RECOMMEDED THAT** you up the values of `chain_length` (>=10,000,000),
-`store_state_every` (>=1000), `trace_log_every` (>=1000), `tree_log_every` (>=1000), `screen_log_every` (>=1000) and `store_state_every`(>=1000) when properly running this workflow. 
+is at the top of the notebook. 
 
 Running the above command will create the directory `example_runs_of_BSDKY`
 containing a **time stamped** folder (format 'YYYY-MM-DD_hour-min-sec'). Shortly after the Generic workflow is launched

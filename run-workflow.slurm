@@ -2,10 +2,13 @@
 ## Slurm's SBATCH arguments (prefix with '#SBATCH '):
 #SBATCH --job-name=beast_pype        # Job name
 #SBATCH --output=beast_pype_%j.out    # Standard output file
-#SBATCH -p    # Partition or queue name
 #SBATCH --cpus-per-task=4             # Number of CPU cores per task
-#SBATCH --time=0-01:00:00  # Maximum runtime (D-HH:MM:SS)
+#SBATCH --time=0-01:00:00 # Maximum runtime (D-HH:MM:SS)
 #SBATCH --mem=32G      # RAM to use.
+### Depending on how slurm is configured on the HPC you are using you may have
+### to add the name of a partition to use. If so remove the first # below and add
+### the name after the -p:
+##SBATCH -p    # Partition or queue name
 ##### More sbatch options can be found at https://slurm.schedmd.com/sbatch.html
 ###### The following are deactivated by the double hash instead of single.
 #### I could not get the twi command below to work:
