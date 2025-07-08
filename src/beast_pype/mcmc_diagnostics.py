@@ -595,7 +595,17 @@ def gen_xml_set_diag_notebook(save_dir, directories_to_exclude = ['cache']):
                 f"## Diagnosing XML Set: {xml_set}\n" +
                 "### Loading data"),
             nbf.v4.new_code_cell(f"sample_diag = BEASTDiag('{xml_set}')"),
-            nbf.v4.new_markdown_cell("### Selecting burnin and Chains to Remove"),
+            nbf.v4.new_markdown_cell(
+                "## Selecting burnin and Chains to Remove\n\n" +
+                "Activating the cell below will generate an interactive widget. Widgets parts:\n" +
+                "* Top interactive part: this allows you to select for a different burnin and remove chains and select the parameters used in the rest of the widget.,\n" +
+                "* Middle display: KDE and trace plots, see [arviz.plot_trace documentation](https://python.arviz.org/en/stable/api/generated/arviz.plot_trace.html#arviz.plot_trace).\n" +
+                "* Bottom display: A table of statistics regarding the traces, see [arviz.summary documentation](https://python.arviz.org/en/stable/api/generated/arviz.summary.html#arviz.summary). Regarding these statistics:\n" +
+                "\t* Ideally the ESSs should be >= 200, see [arviz.ess documentation](https://python.arviz.org/en/stable/api/generated/arviz.ess.html#arviz.ess).\n" +
+                "\t* Ideally the r_hat should be close fo 1, see [arviz.rhat documentation](https://python.arviz.org/en/stable/api/generated/arviz.rhat.html#arviz.rhat)).\n" +
+                "\t* Markov Chain Standard Error MCSEs, see [arviz.mcse](https://python.arviz.org/en/stable/api/generated/arviz.mcse.html#arviz.mcse).\n\n"+
+                "After making your selection click on the cell below the widget and then keep pressing shift+enter to carry on with the rest of the cells in this notebook."
+            ),
             nbf.v4.new_code_cell(
                 "sample_diag_widget = sample_diag.generate_widget()\n" +
                 "sample_diag_widget"),
