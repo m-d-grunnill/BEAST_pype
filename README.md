@@ -130,16 +130,37 @@ The slurm jobs running MCMC BEAST 2 chains will be named `beast_full_sample_run_
 Competing the manual run of the copy of `Phase-5-Diagnosing_Outputs_and_Generate_Report.ipynb`
 produces the output report notebook `BEAST_pype-Report.ipynb` and html version `BEAST_pype-Report.html`.
 
+<a id="BDSKY_skip_building"></a>
 #### Skip building an initial tree and use BEAST 2's initial tree instead.
 
-The full [BDSKY-serial workflow](workflows/BDSKY-serial.ipynb) creates an initial tree using IQTree and TreeTime (in phases 2i and 2ii, respectively) and uses the intial tree in generating a BEAST 2 xml from the template xml. This initial tree does speed up the convergence of MCMC chains when running BEAST 2. However, this is slightly against the spirit of MCMC analysis (see [BEAST 2 documentation](https://www.beast2.org/2014/07/28/all-about-starting-trees)).  [BDSKY-serial workflow](workflows/BDSKY-serial.ipynb) can skip building the of an intial tree using the parameter settings demonstrated in `parameters/Test-BDSKY-serial_no-initial-tree.yml`. Use the command below to run this version of the workflow:
+The full [BDSKY-serial workflow](workflows/BDSKY-serial.ipynb) creates an initial tree using IQTree and TreeTime (in phases 2i and 2ii, respectively) and uses the intial tree in generating a BEAST 2 xml from the template xml. This initial tree does speed up the convergence of MCMC chains when running BEAST 2. However, this is slightly against the spirit of MCMC analysis (see [BEAST 2 documentation](https://www.beast2.org/2014/07/28/all-about-starting-trees)).  [BDSKY-serial workflow](workflows/BDSKY-serial.ipynb) can skip building the initial tree if the line `use_initial_tree: False` is in the parameter yml (see `parameters/Test-BDSKY-serial_no-initial-tree.yml` for an example). An example of 
+this can be launched via the command:
 
 ```bash
 cd LOCATION_YOU_CLONED_THE_BEAST_PYPE_REPO_TO
 sbatch run-workflow.slurm workflows/BDSKY-serial.ipynb parameters/Test-BDSKY-serial_no-initial-tree.yml
 ```
 
-This variant of the [BDSKY-serial workflow](workflows/BDSKY-serial.ipynb) will then run the 
+This variant of the [BDSKY-serial workflow](workflows/BDSKY-serial.ipynb) will then run the in the same manner as the full version but miss Phases 2i and 2ii as such the Phase-2i-IQTree.ipynb,  
+Phase-2ii-TreeTime-and-Down-Sampling.ipynb will not appear in the **time stamped**
+folder (neither will any files associated with the running of IQtree or TreeTime).  
+
+#### Using a ready to go xml.
+
+You may have a BEAST BDSKY xml that you wish to run directly with
+the [BDSKY-serial workflow](workflows/BDSKY-serial.ipynb).  This can be done by 
+adding the variable `ready_to_go_xml` with the path to that BEAST BDSKY xml in
+ the parameter yml file. The file `parameters/Test-BDSKY-serial_xml-ready-to-go.yml`
+provides an example. To run this example use the command:
+
+```bash
+cd LOCATION_YOU_CLONED_THE_BEAST_PYPE_REPO_TO
+sbatch run-workflow.slurm workflows/BDSKY-serial.ipynb parameters/Test-BDSKY-serial_xml-ready-to-go.yml
+```
+
+This variant of the [BDSKY-serial workflow](workflows/BDSKY-serial.ipynb) will then run the in will miss phases 2-3
+and copy the xml you provided into the **time stamped** folder and use it for running
+the rest of the [BDSKY-serial workflow](workflows/BDSKY-serial.ipynb).
 
 ### Example Run of Genric Workflow
 
@@ -186,6 +207,36 @@ The slurm jobs running MCMC BEAST 2 chains will be named `beast_full_sample_run_
 `beast_full_sample_run_2`, `beast_full_sample_run_3` and `beast_full_sample_run_4`.
 Competing the manual run of the copy of `Phase-5-Diagnosing_Outputs_and_Generate_Report.ipynb`
 produces the output report notebook `BEAST_pype-Report.ipynb` and html version `BEAST_pype-Report.html`.
+
+
+#### Skip building an initial tree and use BEAST 2's initial tree instead.
+
+As with the [BDSKY-serial workflow](workflows/BDSKY-serial.ipynb) you can skip building an initial tree in the
+[Generic workflow](workflows/Generic.ipynb) by adding `use_initial_tree: False` to the parameter yml
+(see [above](#BDSKY_skip_building)). The `parameters/Test-Generic_no-initial-tree.yml` 
+provides an example. To run this example use the command:
+
+```bash
+cd LOCATION_YOU_CLONED_THE_BEAST_PYPE_REPO_TO
+sbatch run-workflow.slurm workflows/Generic.ipynb parameters/Test-Generic_no-initial-tree.yml
+```
+
+#### Using a ready to go xml.
+
+The [Generic workflow](workflows/Generic.ipynb) like the [BDSKY-serial workflow](workflows/BDSKY-serial.ipynb) can be run using a
+beast 2 xml that is ready to go (does not need to be modified).  This can be done by 
+adding the variable `ready_to_go_xml` with the path to that BEAST 2 xml in
+ the parameter yml file. The file `parameters/Test-Generic_xml-ready-to-go.yml`
+provides an example. To run this example use the command:
+
+```bash
+cd LOCATION_YOU_CLONED_THE_BEAST_PYPE_REPO_TO
+sbatch run-workflow.slurm workflows/Generic.ipynb parameters/Test-Generic_xml-ready-to-go.yml
+```
+
+This variant of the [BDSKY-serial workflow](workflows/BDSKY-serial.ipynb) will then run the in will miss phases 2-3
+and copy the xml you provided into the **time stamped** folder and use it for running
+the rest of the [BDSKY-serial workflow](workflows/BDSKY-serial.ipynb).
 
 ## Further Notes: 
 * The slurm command `scancel -u YOUR-USERNAME` will cancel any slurm jobs you have 
