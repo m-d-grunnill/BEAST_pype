@@ -1,4 +1,4 @@
-from src.beast_pype.outputs import (read_strain_logs_for_plotting, plot_box_violin,
+from src.beast_pype.outputs import (read_xml_sets_for_plotting, plot_box_violin,
                                     plot_comparative_skyline, plot_comparative_origin, percentile_pivot)
 from src.beast_pype.outputs import _set_dates_skyline_plotting_df
 from src.beast_pype.date_utilities import decimal_to_date
@@ -138,7 +138,7 @@ class BP2CW:
         youngest_tips_dict = {sample: datetime.strptime(date_str, '%Y-%m-%dir')
                               for sample, date_str in pipeline_run_info['youngest tip dates'].items()
                               if sample in chosen_samples}
-        df, df_melted_for_seaborn = read_strain_logs_for_plotting(
+        df, df_melted_for_seaborn = read_xml_sets_for_plotting(
             file_path_dict=log_path_dict,
             convert_become_uninfectious_rate=True,
             youngest_tips_dict=youngest_tips_dict)

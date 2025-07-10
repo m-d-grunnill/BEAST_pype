@@ -36,10 +36,11 @@ def read_log_file(file_path, cut_to_first=None):
     return trace_df
 
 
-def read_strain_logs_for_plotting(file_path_dict,
-                                  convert_become_uninfectious_rate=False,
-                                  youngest_tips_dict=None):
+def read_xml_set_logs_for_plotting(file_path_dict,
+                               convert_become_uninfectious_rate=False,
+                               youngest_tips_dict=None):
     """
+    Read xml set log files into a pandas DataFrame and a melted dataframe.
 
     Parameters
     ----------
@@ -171,8 +172,8 @@ def hdi_pivot(df, column, hdi_prob=0.95):
     return pd.DataFrame.from_records(records)
 
 
-def plot_comparative_box_violine(df_melted, parameter, prior_draws=None,
-                                 include_grid=True):
+def plot_comparative_box_violin(df_melted, parameter, prior_draws=None,
+                                include_grid=True):
     """
     Plot box violin plots comparing strains.
 

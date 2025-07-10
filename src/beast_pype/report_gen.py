@@ -5,6 +5,7 @@ import nbformat as nbf
 def add_unreported_outputs(notebook_template_path,
                            merged_log_path,
                            output_path,
+                           xml_set_comparisons=False,
                            as_version=4):
     """
     Add sections for unreported outputs to a notebook.
@@ -19,6 +20,8 @@ def add_unreported_outputs(notebook_template_path,
         Path to merged log file you wish to report on.
     output_path: str
         Path to save new report notebook file
+    xml_set_comparisons: bool, default False
+        Are the sections to be added for xml_set comparisons.
     as_version: int
         Ipnyb notebook version.
 
@@ -46,12 +49,21 @@ def add_unreported_outputs(notebook_template_path,
     columns_to_report = sorted(columns_to_report)
     for column in columns_to_report:
         report['cells'].append(nbf.v4.new_markdown_cell(f"## {column}"))
-        report['cells'].append(
-            nbf.v4.new_code_cell(
-                f"{column.replace('.','_')}_fig, ax, {column.replace('.','_')}_hdi_est ="+
-                f"plot_hist_kde(trace_df=trace_df, parameter='{column}', hdi_prob=0.95)\n"+
-                f"display({column.replace('.','_')}_hdi_est)")
-        )
+        pythonic_column = column.replace('.','_')
+        if xml_set_comparisons:
+            report['cells'].append(
+                nbf.v4.new_code_cell(
+                    f"{pythonic_column}_ax = plot_comparative_box_violin(df_melted_for_seaborn, {column})\n" +
+                    f"{pythonic_column}_hdi_df = hdi_pivot(df, {column})\n" +
+                    f"display({pythonic_column}_hdi_df)")
+            )
+        else:
+            report['cells'].append(
+                nbf.v4.new_code_cell(
+                    f"{column}_fig, ax, {column}_hdi_est ="+
+                    f"plot_hist_kde(trace_df=trace_df, parameter='{column}', hdi_prob=0.95)\n"+
+                    f"display({column}_hdi_est)")
+            )
     with open(output_path, 'w') as f:
         nbf.write(report, f)
 
