@@ -27,7 +27,7 @@ def gen_xml_from_any_template(template_path,
     template_path: str
         Path to template_xml_path.
     sequences_path: str
-        Path to sequences must be fasta_file.
+        Path to sequences must be fasta_path.
     metadata_path: str
         Path to metadata_update must be csv.
     output_path: str
@@ -105,7 +105,7 @@ def gen_bdsky_serial_xml(template_path,
     template_path: str
         Path to template_xml_path.
     sequences_path: str
-        Path to sequences must be fasta_file.
+        Path to sequences must be fasta_path.
     metadata_path: str
         Path to metadata_update must be csv.
     output_path: str

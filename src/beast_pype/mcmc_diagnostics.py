@@ -643,7 +643,7 @@ def gen_xml_set_diag_notebook(save_dir, directories_to_exclude = ['cache']):
             "report_params = {'save_dir': save_dir, 'collection_date_field': collection_date_field}\n" +
             "output_report_path = f'{save_dir}/BEAST_pype-Report.ipynb'\n" +
             "if add_unreported_fields:\n" +
-            "\tadd_unreported_outputs(report_template, f'{sample_diag.directory}/merged.log', output_report_path)\n" +
+            "\tadd_unreported_outputs(report_template, f'{sample_diag.directory}/merged.log', output_report_path, xml_set_comparisons=True)\n" +
             "\tinput_path = output_report_path\n" +
             "else:\n" +
             "\tinput_path = report_template\n\n" +

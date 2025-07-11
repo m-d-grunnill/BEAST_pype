@@ -53,8 +53,8 @@ def add_unreported_outputs(notebook_template_path,
         if xml_set_comparisons:
             report['cells'].append(
                 nbf.v4.new_code_cell(
-                    f"{pythonic_column}_ax = plot_comparative_box_violin(df_melted_for_seaborn, {column})\n" +
-                    f"{pythonic_column}_hdi_df = hdi_pivot(df, {column})\n" +
+                    f"{pythonic_column}_ax = plot_comparative_box_violin(df_melted_for_seaborn, '{column}')\n" +
+                    f"{pythonic_column}_hdi_df = hdi_pivot(df, '{column}')\n" +
                     f"display({pythonic_column}_hdi_df)")
             )
         else:

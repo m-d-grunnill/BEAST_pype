@@ -25,7 +25,7 @@ def timescale(ftree, falignment, fdates, reroot='least-squares', clock_rate=None
     ftree: str
         Path to newick tree file.
     falignment: str
-        Path to fasta_file alignment file.
+        Path to fasta_path alignment file.
     fdates: str
         Path to dates file.
     reroot: str or list of str, default `least-squares` 

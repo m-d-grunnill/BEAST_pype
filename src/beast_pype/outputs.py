@@ -73,6 +73,7 @@ def read_xml_set_logs_for_plotting(file_path_dict,
             if not isinstance(youngest_tip, (int, float)):
                 youngest_tip = date_to_decimal(youngest_tip)
             temp_df['Origin'] = youngest_tip - temp_df['origin_BDSKY_Serial']
+            temp_df['TMRCA'] = youngest_tip - temp_df['TreeHeight']
         if convert_become_uninfectious_rate:
             temp_df['Rate of Becoming Uninfectious (per day)'] = temp_df['becomeUninfectiousRate_BDSKY_Serial'] / 365
             temp_df['Infection period (per day)'] = 1 / temp_df['Rate of Becoming Uninfectious (per day)']
@@ -598,7 +599,7 @@ def plot_origin_or_tmrca(trace_df, parameter, x_tick_freq='monthly', hdi_prob=No
         Matplotlib figure, axis and dictionay of 'lower' and 'upper' hdi with median.
     """
     if parameter not in ['Origin', 'TMRCA']:
-        raise ValueError('parameters must be "Origin" or "TMRCA".')
+        raise ValueError('parameter must be "Origin" or "TMRCA".')
     tick_year_decimals, tick_labels = _yeardecimal_date_tick_lebals(trace_df[parameter], tick_freq=x_tick_freq)
     output = plot_hist_kde(trace_df,
                             parameter,
@@ -621,7 +622,8 @@ def plot_origin_or_tmrca(trace_df, parameter, x_tick_freq='monthly', hdi_prob=No
         return fig, ax, hdi_est
 
 
-def plot_comparative_origin(df_melted, tick_freq='monthly', one_figure=False, palette=None):
+def plot_comparative_origin_or_tmrca(df_melted, parameter,
+                                     tick_freq='monthly', one_figure=False, palette=None):
     """Plot histograms of origins for each strain, with kde line..
 
     Parameters
@@ -643,29 +645,31 @@ def plot_comparative_origin(df_melted, tick_freq='monthly', one_figure=False, pa
     If one_figure is True, then a single figure will be created.
     If one_figure is False, then a Seaborn.FactGrid will be created.
     """
-    df = df_melted[df_melted.variable == 'Origin']
-    df.rename(columns={'Estimate': 'Origin'}, inplace=True)
-    tick_year_decimals, tick_labels = _yeardecimal_date_tick_lebals(df.Origin, tick_freq=tick_freq)
+    if parameter not in ['Origin', 'TMRCA']:
+        raise ValueError('parameter must be "Origin" or "TMRCA".')
+    df = df_melted[df_melted.variable == parameter]
+    df.rename(columns={'Estimate': parameter}, inplace=True)
+    tick_year_decimals, tick_labels = _yeardecimal_date_tick_lebals(df[parameter], tick_freq=tick_freq)
     if one_figure:
-        ax = sns.histplot(data=df, x='Origin', hue='xml_set', kde=True, palette=palette)
+        ax = sns.histplot(data=df, x=parameter, hue='xml_set', kde=True, palette=palette)
         if palette is None:
             palette = sns.color_palette()
         for colour, strain in zip(palette, df.xml_set.unique()):
             strain_df = df[df.xml_set == strain]
-            ax.axvline(strain_df['Origin'].median(), color=colour)
-            ax.axvline(strain_df['Origin'].quantile(0.05), color=colour, ls='--', lw=1)
-            ax.axvline(strain_df['Origin'].quantile(0.95), color=colour, ls='--', lw=1)
+            ax.axvline(strain_df[parameter].median(), color=colour)
+            ax.axvline(strain_df[parameter].quantile(0.05), color=colour, ls='--', lw=1)
+            ax.axvline(strain_df[parameter].quantile(0.95), color=colour, ls='--', lw=1)
         fig = ax
     else:
         fig = sns.FacetGrid(df, row="xml_set", hue='xml_set', margin_titles=True, aspect=4)
-        fig.map_dataframe(sns.histplot, x='Origin', kde=True)
+        fig.map_dataframe(sns.histplot, x=parameter, kde=True)
         fig.set_titles(row_template='')
         fig.add_legend()
         for ax, strain in zip(fig.axes.flat, df.xml_set.unique()):
             strain_df = df[df.xml_set == strain]
-            ax.axvline(strain_df['Origin'].median(), color='k', lw=2)
-            ax.axvline(strain_df['Origin'].quantile(0.05), color='k', ls='--', lw=1)
-            ax.axvline(strain_df['Origin'].quantile(0.95), color='k', ls='--', lw=1)
+            ax.axvline(strain_df[parameter].median(), color='k', lw=2)
+            ax.axvline(strain_df[parameter].quantile(0.05), color='k', ls='--', lw=1)
+            ax.axvline(strain_df[parameter].quantile(0.95), color='k', ls='--', lw=1)
 
     ax.xaxis.set_ticks(tick_year_decimals)
     ax.set_xticklabels(tick_labels)

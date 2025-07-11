@@ -1,5 +1,5 @@
 from src.beast_pype.outputs import (read_xml_sets_for_plotting, plot_box_violin,
-                                    plot_comparative_skyline, plot_comparative_origin, percentile_pivot)
+                                    plot_comparative_skyline, plot_comparative_origin_or_tmrca, percentile_pivot)
 from src.beast_pype.outputs import _set_dates_skyline_plotting_df
 from src.beast_pype.date_utilities import decimal_to_date
 import scipy
@@ -227,6 +227,6 @@ class BP2CW:
         self.last_period_rt_ratio_upper_df = _last_period_rt_ratio('upper', rt_dfs_dict, chosen_samples)
 
         ## Origin
-        self.orign_overlayed_fig = plot_comparative_origin(df_melted_for_seaborn, one_figure=True)
-        self.orign_stacked_fig = plot_comparative_origin(df_melted_for_seaborn)
+        self.orign_overlayed_fig = plot_comparative_origin_or_tmrca(df_melted_for_seaborn, one_figure=True)
+        self.orign_stacked_fig = plot_comparative_origin_or_tmrca(df_melted_for_seaborn)
         self.orign_percentile_df = percentile_pivot(df, 'Origin')
