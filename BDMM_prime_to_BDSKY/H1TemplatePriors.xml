@@ -1,0 +1,244 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><beast beautitemplate='Standard' beautistatus='' namespace="beast.core:beast.evolution.alignment:beast.evolution.tree.coalescent:beast.core.util:beast.evolution.nuc:beast.evolution.operators:beast.evolution.sitemodel:beast.evolution.substitutionmodel:beast.base.evolution.alignment:beast.pkgmgmt:beast.base.core:beast.base.inference:beast.base.evolution.tree.coalescent:beast.pkgmgmt:beast.base.core:beast.base.inference.util:beast.evolution.nuc:beast.base.evolution.operator:beast.base.inference.operator:beast.base.evolution.sitemodel:beast.base.evolution.substitutionmodel:beast.base.evolution.likelihood" required="CoupledMCMC v1.2.2:BEAST.base v2.7.8:BDMM-Prime v2.4.0:SA v2.1.1" version="2.7">
+
+    <data id="HA_H1" spec="Alignment" name="HA_H1">
+    </data>
+
+    <map name="Uniform" >beast.base.inference.distribution.Uniform</map>
+
+    <map name="Exponential" >beast.base.inference.distribution.Exponential</map>
+
+    <map name="LogNormal" >beast.base.inference.distribution.LogNormalDistributionModel</map>
+
+    <map name="Normal" >beast.base.inference.distribution.Normal</map>
+
+    <map name="Beta" >beast.base.inference.distribution.Beta</map>
+
+    <map name="Gamma" >beast.base.inference.distribution.Gamma</map>
+
+    <map name="LaplaceDistribution" >beast.base.inference.distribution.LaplaceDistribution</map>
+
+    <map name="prior" >beast.base.inference.distribution.Prior</map>
+
+    <map name="InverseGamma" >beast.base.inference.distribution.InverseGamma</map>
+
+    <map name="OneOnX" >beast.base.inference.distribution.OneOnX</map>
+
+    <run id="mcmcmc" spec="coupledMCMC.CoupledMCMC" chainLength="100000000" chains="4" deltaTemperature="0.05" resampleEvery="1000">
+        <state id="state" spec="State" storeEvery="5000">
+            <tree id="Tree.t:HA_H1" spec="beast.base.evolution.tree.Tree" name="stateNode">
+                <trait id="dateTrait.t:HA_H1" spec="beast.evolution.tree.TraitSet" traitname="date" value="">
+                    <taxa id="TaxonSet.HA_H1" spec="TaxonSet">
+                        <alignment idref="HA_H1"/>
+                    </taxa>
+                </trait>
+            <taxonset idref="TaxonSet.HA_H1"/>
+            </tree>
+            <parameter id="freqParameter.s:HA_H1" spec="parameter.RealParameter" dimension="4" lower="0.0" name="stateNode" upper="1.0">0.25</parameter>
+            <parameter id="proportionInvariant.s:HA_H1" spec="parameter.RealParameter" lower="0.0" name="stateNode" upper="1.0">0.5</parameter>
+            <parameter id="gammaShape.s:HA_H1" spec="parameter.RealParameter" lower="0.1" name="stateNode">1.0</parameter>
+            <parameter id="ucldMean.c:HA_H1" spec="parameter.RealParameter" lower="0.0" name="stateNode">0.00467</parameter>
+            <parameter id="ucldStdev.c:HA_H1" spec="parameter.RealParameter" lower="0.0" name="stateNode">0.1</parameter>
+            <stateNode id="rateCategories.c:HA_H1" spec="parameter.IntegerParameter" dimension="560">1</stateNode>
+            <parameter id="originBDMMPrime.t:HA_H1" spec="parameter.RealParameter" lower="0.0" name="stateNode" upper="5.0">3.0</parameter>
+            <parameter id="ReEpi.t:HA_H1" spec="parameter.RealParameter" dimension="8" lower="0.0" name="stateNode" upper="5.0">1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0</parameter>
+            <parameter id="becomeUninfectiousRateEpi.t:HA_H1" spec="parameter.RealParameter" lower="52.0" name="stateNode" upper="52.0">52.0</parameter>
+            <parameter id="samplingProportionEpi.t:HA_H1" spec="parameter.RealParameter" lower="0.0" name="stateNode" upper="1.0">0.0148</parameter>
+        </state>
+        <init id="RandomTree.t:HA_H1" spec="RandomTree" estimate="false" initial="@Tree.t:HA_H1" taxa="@HA_H1">
+            <populationModel id="ConstantPopulation0.t:HA_H1" spec="ConstantPopulation">
+                <parameter id="randomPopSize.t:HA_H1" spec="parameter.RealParameter" name="popSize">1.0</parameter>
+            </populationModel>
+        </init>
+        <distribution id="posterior" spec="CompoundDistribution">
+            <distribution id="prior" spec="CompoundDistribution">
+                <distribution id="BDMMPrime.t:HA_H1" spec="bdmmprime.distribution.BirthDeathMigrationDistribution" conditionOnSurvival="false" tree="@Tree.t:HA_H1">
+                    <parameterization id="EpiBDMMPrimeParameterization.t:HA_H1" spec="bdmmprime.parameterization.EpiParameterization" processLength="@originBDMMPrime.t:HA_H1">
+                        <Re id="ReSPEpi.t:HA_H1" spec="bdmmprime.parameterization.SkylineVectorParameter" processLength="@originBDMMPrime.t:HA_H1" skylineValues="@ReEpi.t:HA_H1" timesAreAges="true">
+                            <parameter id="ReChangeTimesEpi.t:HA_H1" spec="parameter.RealParameter" dimension="7" estimate="false" lower="0.0" name="changeTimes">0.09016393 0.1748634 0.2540984 0.3387978 0.4237293 0.5059211 0.5908526</parameter>
+                            <typeSet id="typeSetBDMMPrime.t:HA_H1" spec="bdmmprime.parameterization.TypeSet">
+                                    <taxa id="TaxonSet.1" spec="TaxonSet" alignment="@HA_H1"/>
+
+                            </typeSet>
+                        </Re>
+                        <becomeUninfectiousRate id="becomeUninfectiousRateSPEpi.t:HA_H1" spec="bdmmprime.parameterization.SkylineVectorParameter" processLength="@originBDMMPrime.t:HA_H1" skylineValues="@becomeUninfectiousRateEpi.t:HA_H1" timesAreAges="true" typeSet="@typeSetBDMMPrime.t:HA_H1"/>
+                        <samplingProportion id="samplingProportionSPEpi.t:HA_H1" spec="bdmmprime.parameterization.SkylineVectorParameter" processLength="@originBDMMPrime.t:HA_H1" skylineValues="@samplingProportionEpi.t:HA_H1" timesAreAges="true" typeSet="@typeSetBDMMPrime.t:HA_H1"/>
+                        <rhoSampling id="rhoSamplingProbSPEpi.t:HA_H1" spec="bdmmprime.parameterization.TimedParameter" processLength="@originBDMMPrime.t:HA_H1" timesAreAges="true" typeSet="@typeSetBDMMPrime.t:HA_H1"/>
+                        <removalProb id="removalProbSPEpi.t:HA_H1" spec="bdmmprime.parameterization.SkylineVectorParameter" processLength="@originBDMMPrime.t:HA_H1" timesAreAges="true" typeSet="@typeSetBDMMPrime.t:HA_H1">
+                            <parameter id="removalProbEpi.t:HA_H1" spec="parameter.RealParameter" estimate="false" lower="0.0" name="skylineValues" upper="1.0">1.0</parameter>
+                        </removalProb>
+                        <migrationRate id="migrationRateSPEpi.t:HA_H1" spec="bdmmprime.parameterization.SkylineMatrixParameter" processLength="@originBDMMPrime.t:HA_H1" timesAreAges="true" typeSet="@typeSetBDMMPrime.t:HA_H1">
+                            <parameter id="migrationRateEpi.t:HA_H1" spec="parameter.RealParameter" estimate="false" lower="0.0" name="skylineValues">1.0</parameter>
+                        </migrationRate>
+                        <ReAmongDemes id="ReAmongDemesSPEpi.t:HA_H1" spec="bdmmprime.parameterization.SkylineMatrixParameter" processLength="@originBDMMPrime.t:HA_H1" timesAreAges="true" typeSet="@typeSetBDMMPrime.t:HA_H1">
+                            <parameter id="ReAmongDemesEpi.t:HA_H1" spec="parameter.RealParameter" estimate="false" lower="0.0" name="skylineValues">0.0</parameter>
+                        </ReAmongDemes>
+                        <typeSet idref="typeSetBDMMPrime.t:HA_H1"/>
+                    </parameterization>
+                    <parameter id="startTypePriorProbs.t:HA_H1" spec="parameter.RealParameter" estimate="false" lower="0.0" name="startTypePriorProbs" upper="1.0">1.0</parameter>
+                    <typeTraitSet idref="typeTraitSet.t:HA_H1"/>
+                </distribution>
+                <distribution id="ReEpiPrior.t:HA_H1" spec="bdmmprime.util.priors.ZeroExcludingPrior" x="@ReEpi.t:HA_H1">
+                    <LogNormal id="LogNormalDistributionModel.0" meanInRealSpace="true" name="distr">
+                        <parameter id="RealParameter.22" spec="parameter.RealParameter" estimate="false" name="M">1.0</parameter>
+                        <parameter id="RealParameter.23" spec="parameter.RealParameter" estimate="false" lower="0.0" name="S" upper="5.0">1.25</parameter>
+                    </LogNormal>
+                </distribution>
+                <distribution id="becomeUninfectiousRateEpiPrior.t:HA_H1" spec="bdmmprime.util.priors.ZeroExcludingPrior" x="@becomeUninfectiousRateEpi.t:HA_H1">
+                    <LogNormal id="LogNormalDistributionModel.1" meanInRealSpace="true" name="distr">
+                        <parameter id="RealParameter.24" spec="parameter.RealParameter" estimate="false" name="M">52.0</parameter>
+                        <parameter id="RealParameter.25" spec="parameter.RealParameter" estimate="false" lower="0.0" name="S" upper="5.0">1.25</parameter>
+                    </LogNormal>
+                </distribution>
+                <prior id="FrequenciesPrior.s:HA_H1" name="distribution" x="@freqParameter.s:HA_H1">
+                    <distr id="Dirichlet.0" spec="distribution.Dirichlet">
+                        <parameter id="RealParameter.13" spec="parameter.RealParameter" dimension="4" estimate="false" name="alpha">4.0 4.0 4.0 4.0</parameter>
+                    </distr>
+                </prior>
+                <prior id="GammaShapePrior.s:HA_H1" name="distribution" x="@gammaShape.s:HA_H1">
+                    <Exponential id="Exponential.0" name="distr">
+                        <parameter id="RealParameter.0" spec="parameter.RealParameter" estimate="false" name="mean">1.0</parameter>
+                    </Exponential>
+                </prior>
+                <prior id="originBDMMPrimePrior.t:HA_H1" name="distribution" x="@originBDMMPrime.t:HA_H1">
+                    <Gamma id="Gamma.8" name="distr">
+                        <parameter id="RealParameter.26" spec="parameter.RealParameter" estimate="false" name="alpha">0.5</parameter>
+                        <parameter id="RealParameter.27" spec="parameter.RealParameter" estimate="false" name="beta">2.0</parameter>
+                    </Gamma>
+                </prior>
+                <prior id="PropInvariantPrior.s:HA_H1" name="distribution" x="@proportionInvariant.s:HA_H1">
+                    <Uniform id="Uniform.2" name="distr"/>
+                </prior>
+                <distribution id="samplingProportionEpiPrior.t:HA_H1" spec="bdmmprime.util.priors.ZeroExcludingPrior" x="@samplingProportionEpi.t:HA_H1">
+                    <LogNormal id="LogNormalDistributionModel.2" meanInRealSpace="true" name="distr">
+                        <parameter id="RealParameter.28" spec="parameter.RealParameter" estimate="false" name="M">0.0148</parameter>
+                        <parameter id="RealParameter.29" spec="parameter.RealParameter" estimate="false" lower="0.0" name="S" upper="5.0">1.25</parameter>
+                    </LogNormal>
+                </distribution>
+                <prior id="MeanRatePrior.c:HA_H1" name="distribution" x="@ucldMean.c:HA_H1">
+                    <Gamma id="Gamma.7" name="distr">
+                        <parameter id="RealParameter.17" spec="parameter.RealParameter" estimate="false" name="alpha">0.01</parameter>
+                        <parameter id="RealParameter.18" spec="parameter.RealParameter" estimate="false" name="beta">100.0</parameter>
+                    </Gamma>
+                </prior>
+                <prior id="ucldStdevPrior.c:HA_H1" name="distribution" x="@ucldStdev.c:HA_H1">
+                    <Gamma id="Gamma.6" name="distr">
+                        <parameter id="RealParameter.15" spec="parameter.RealParameter" estimate="false" name="alpha">0.5396</parameter>
+                        <parameter id="RealParameter.16" spec="parameter.RealParameter" estimate="false" name="beta">0.3819</parameter>
+                    </Gamma>
+                </prior>
+            </distribution>
+            <distribution id="likelihood" spec="CompoundDistribution" useThreads="true">
+                <distribution id="treeLikelihood.HA_H1" spec="ThreadedTreeLikelihood" data="@HA_H1" tree="@Tree.t:HA_H1">
+                    <siteModel id="SiteModel.s:HA_H1" spec="SiteModel" gammaCategoryCount="4" proportionInvariant="@proportionInvariant.s:HA_H1" shape="@gammaShape.s:HA_H1">
+                        <parameter id="mutationRate.s:HA_H1" spec="parameter.RealParameter" estimate="false" lower="0.0" name="mutationRate">1.0</parameter>
+                        <substModel id="gtr.s:HA_H1" spec="GTR">
+                            <parameter id="rateAC.s:HA_H1" spec="parameter.RealParameter" estimate="false" lower="0.0" name="rateAC">0.4066</parameter>
+                            <parameter id="rateAG.s:HA_H1" spec="parameter.RealParameter" estimate="false" lower="0.0" name="rateAG">2.279</parameter>
+                            <parameter id="rateAT.s:HA_H1" spec="parameter.RealParameter" estimate="false" lower="0.0" name="rateAT">0.191</parameter>
+                            <parameter id="rateCG.s:HA_H1" spec="parameter.RealParameter" estimate="false" lower="0.0" name="rateCG">0.058</parameter>
+                            <parameter id="rateCT.s:HA_H1" spec="parameter.RealParameter" estimate="false" lower="0.0" name="rateCT">2.845</parameter>
+                            <parameter id="rateGT.s:HA_H1" spec="parameter.RealParameter" estimate="false" lower="0.0" name="rateGT">0.203</parameter>
+                            <frequencies id="estimatedFreqs.s:HA_H1" spec="Frequencies" frequencies="@freqParameter.s:HA_H1"/>
+                        </substModel>
+                    </siteModel>
+                    <branchRateModel id="RelaxedClock.c:HA_H1" spec="beast.base.evolution.branchratemodel.UCRelaxedClockModel" clock.rate="@ucldMean.c:HA_H1" rateCategories="@rateCategories.c:HA_H1" tree="@Tree.t:HA_H1">
+                        <LogNormal id="LogNormalDistributionModel.c:HA_H1" S="@ucldStdev.c:HA_H1" meanInRealSpace="true" name="distr">
+                            <parameter id="RealParameter.14" spec="parameter.RealParameter" estimate="false" lower="0.0" name="M" upper="1.0">1.0</parameter>
+                        </LogNormal>
+                    </branchRateModel>
+                </distribution>
+            </distribution>
+        </distribution>
+        <operator id="proportionInvariantScaler.s:HA_H1" spec="AdaptableOperatorSampler" weight="0.05">
+            <parameter idref="proportionInvariant.s:HA_H1"/>
+            <operator id="AVMNOperator.HA_H1" spec="kernel.AdaptableVarianceMultivariateNormalOperator" allowNonsense="true" beta="0.05" burnin="400" initial="800" weight="0.1">
+                <transformations id="AVMNSumTransform.HA_H1" spec="operator.kernel.Transform$LogConstrainedSumTransform">
+                    <f idref="freqParameter.s:HA_H1"/>
+                </transformations>
+                <transformations id="AVMNLogTransform.HA_H1" spec="operator.kernel.Transform$LogTransform">
+                    <f idref="proportionInvariant.s:HA_H1"/>
+                    <f idref="gammaShape.s:HA_H1"/>
+                </transformations>
+                <transformations id="AVMNNoTransform.HA_H1" spec="operator.kernel.Transform$NoTransform">
+                    <f idref="Tree.t:HA_H1"/>
+                </transformations>
+            </operator>
+            <operator id="proportionInvariantScalerX.s:HA_H1" spec="kernel.BactrianScaleOperator" parameter="@proportionInvariant.s:HA_H1" scaleFactor="0.5" upper="10.0" weight="0.1"/>
+        </operator>
+        <operator id="gammaShapeScaler.s:HA_H1" spec="AdaptableOperatorSampler" weight="0.05">
+            <parameter idref="gammaShape.s:HA_H1"/>
+            <operator idref="AVMNOperator.HA_H1"/>
+            <operator id="gammaShapeScalerX.s:HA_H1" spec="kernel.BactrianScaleOperator" parameter="@gammaShape.s:HA_H1" scaleFactor="0.5" upper="10.0" weight="0.1"/>
+        </operator>
+        <operator id="FrequenciesExchanger.s:HA_H1" spec="AdaptableOperatorSampler" weight="0.05">
+            <parameter idref="freqParameter.s:HA_H1"/>
+            <operator idref="AVMNOperator.HA_H1"/>
+            <operator id="FrequenciesExchangerX.s:HA_H1" spec="operator.kernel.BactrianDeltaExchangeOperator" delta="0.01" weight="0.1">
+                <parameter idref="freqParameter.s:HA_H1"/>
+            </operator>
+        </operator>
+        <operator id="ucldMeanScaler.c:HA_H1" spec="ScaleOperator" parameter="@ucldMean.c:HA_H1" scaleFactor="0.5" weight="1.0"/>
+        <operator id="ucldStdevScaler.c:HA_H1" spec="ScaleOperator" parameter="@ucldStdev.c:HA_H1" scaleFactor="0.5" weight="3.0"/>
+        <operator id="CategoriesRandomWalk.c:HA_H1" spec="operator.IntRandomWalkOperator" parameter="@rateCategories.c:HA_H1" weight="10.0" windowSize="1"/>
+        <operator id="CategoriesSwapOperator.c:HA_H1" spec="operator.SwapOperator" intparameter="@rateCategories.c:HA_H1" weight="10.0"/>
+        <operator id="CategoriesUniform.c:HA_H1" spec="operator.UniformOperator" parameter="@rateCategories.c:HA_H1" weight="10.0"/>
+        <operator id="relaxedUpDownOperator.c:HA_H1" spec="operator.UpDownOperator" scaleFactor="0.75" weight="3.0">
+            <up idref="ucldMean.c:HA_H1"/>
+            <down idref="Tree.t:HA_H1"/>
+        </operator>
+        <operator id="ReEpiScaler.t:HA_H1" spec="ScaleOperator" parameter="@ReEpi.t:HA_H1" weight="3.0"/>
+        <operator id="becomeUninfectiousRateEpiScaler.t:HA_H1" spec="ScaleOperator" parameter="@becomeUninfectiousRateEpi.t:HA_H1" weight="3.0"/>
+        <operator id="samplingProportionEpiScaler.t:HA_H1" spec="ScaleOperator" parameter="@samplingProportionEpi.t:HA_H1" weight="3.0"/>
+        <operator id="BDMMPrimeLeafToSA.t:HA_H1" spec="sa.evolution.operators.LeafToSampledAncestorJump" tree="@Tree.t:HA_H1" weight="10.0"/>
+        <operator id="BDMMPrimeSAWilsonBalding.t:HA_H1" spec="sa.evolution.operators.SAWilsonBalding" tree="@Tree.t:HA_H1" weight="10.0"/>
+        <operator id="BDMMPrimeSAWide.t:HA_H1" spec="sa.evolution.operators.SAExchange" isNarrow="false" tree="@Tree.t:HA_H1" weight="10.0"/>
+        <operator id="BDMMPrimeSANarrow.t:HA_H1" spec="sa.evolution.operators.SAExchange" tree="@Tree.t:HA_H1" weight="10.0"/>
+        <operator id="BDMMPrimeSAUniformOperator.t:HA_H1" spec="sa.evolution.operators.SAUniform" tree="@Tree.t:HA_H1" weight="20.0"/>
+        <operator id="BDMMPrimeSATreeRootScaler.t:HA_H1" spec="sa.evolution.operators.SAScaleOperator" rootOnly="true" scaleFactor="0.95" tree="@Tree.t:HA_H1" weight="1.0"/>
+        <operator id="BDMMPrimeSATreeScaler.t:HA_H1" spec="sa.evolution.operators.SAScaleOperator" scaleFactor="0.95" tree="@Tree.t:HA_H1" weight="3.0"/>
+        <operator id="originBDMMPrimeScaler.t:HA_H1" spec="ScaleOperator" parameter="@originBDMMPrime.t:HA_H1" weight="3.0"/>
+        <operator id="JointBDMMPrimeSkylineScaleOperator.t:HA_H1" spec="bdmmprime.util.operators.JointSkylineScaleOperator" weight="3.0">
+            <skylineParameter idref="becomeUninfectiousRateSPEpi.t:HA_H1"/>
+        </operator>
+        <logger id="tracelog" spec="Logger" fileName="$(filebase).log" logEvery="10000" model="@posterior" sanitiseHeaders="true" sort="smart">
+            <log idref="posterior"/>
+            <log idref="likelihood"/>
+            <log idref="prior"/>
+            <log idref="treeLikelihood.HA_H1"/>
+            <log id="TreeHeight.t:HA_H1" spec="beast.base.evolution.tree.TreeStatLogger" tree="@Tree.t:HA_H1"/>
+            <log idref="freqParameter.s:HA_H1"/>
+            <log idref="proportionInvariant.s:HA_H1"/>
+            <log idref="gammaShape.s:HA_H1"/>
+            <log idref="ucldMean.c:HA_H1"/>
+            <log idref="ucldStdev.c:HA_H1"/>
+            <log id="rate.c:HA_H1" spec="beast.base.evolution.RateStatistic" branchratemodel="@RelaxedClock.c:HA_H1" tree="@Tree.t:HA_H1"/>
+            <log idref="originBDMMPrime.t:HA_H1"/>
+            <log id="startTypePosteriorProbsLogger.t:HA_H1" spec="bdmmprime.util.StartTypePosteriorProbsLogger" bdmmTreePrior="@BDMMPrime.t:HA_H1"/>
+            <log id="typedTreeStats.t:HA_H1" spec="bdmmprime.mapping.TypedTreeStatsLogger" includeRootEdge="true" typeLabel="type" typeSet="@typeSetBDMMPrime.t:HA_H1">
+                <typedTree id="typeMappedTree.t:HA_H1" spec="bdmmprime.mapping.TypeMappedTree" bdmmDistrib="@BDMMPrime.t:HA_H1" mapOnInit="false" remapOnLog="true" startTypePriorProbs="@startTypePriorProbs.t:HA_H1" typeLabel="type" typeTraitSet="@typeTraitSet.t:HA_H1" untypedTree="@Tree.t:HA_H1"/>
+            </log>
+            <log idref="ReSPEpi.t:HA_H1"/>
+            <log idref="becomeUninfectiousRateSPEpi.t:HA_H1"/>
+            <log idref="samplingProportionSPEpi.t:HA_H1"/>
+        </logger>
+        <logger id="screenlog" spec="Logger" logEvery="10000">
+            <log idref="posterior"/>
+            <log idref="likelihood"/>
+            <log idref="prior"/>
+        </logger>
+        <logger id="treelog.t:HA_H1" spec="Logger" fileName="$(filebase)-$(tree).trees" logEvery="1000" mode="tree">
+            <log id="TreeWithMetaDataLogger.t:HA_H1" spec="beast.base.evolution.TreeWithMetaDataLogger" branchratemodel="@RelaxedClock.c:HA_H1" tree="@Tree.t:HA_H1"/>
+        </logger>
+        <logger id="typedTreeLogger.t:HA_H1" spec="bdmmprime.util.OptionalLogger" enableLogger="true" fileName="$(filebase).$(tree).typed.trees" logEvery="10000" mode="tree">
+            <log idref="typeMappedTree.t:HA_H1"/>
+        </logger>
+        <logger id="nodeTypedTreeLogger.t:HA_H1" spec="bdmmprime.util.OptionalLogger" enableLogger="true" fileName="$(filebase).$(tree).typed.node.trees" logEvery="10000" mode="tree">
+            <log id="nodeTypedTree.t:HA_H1" spec="bdmmprime.mapping.TypedNodeTreeLogger" typedTree="@typeMappedTree.t:HA_H1"/>
+        </logger>
+        <logger id="trajLogger.t:HA_H1" spec="bdmmprime.util.OptionalLogger" fileName="$(filebase).$(tree).traj" logEvery="10000">
+            <log id="typedTraj.t:HA_H1" spec="bdmmprime.trajectories.SampledTrajectory" bdmmDistrib="@BDMMPrime.t:HA_H1" startTypePriorProbs="@startTypePriorProbs.t:HA_H1" typeMappedTree="@typeMappedTree.t:HA_H1" useTauLeaping="true"/>
+        </logger>
+        <operatorschedule id="OperatorSchedule" spec="OperatorSchedule"/>
+    </run>
+
+</beast>
