@@ -9,9 +9,11 @@ import os
 
 def _check_file_was_generated(
         subtests,
-        directory,
         filename,
+        directory=None,
         return_path=False):
+    if directory is None:
+        directory = os.getcwd()
     possible_notebooks = [path for path in Path(directory).rglob(filename)]
     with subtests.test(f"Check {filename} notebook was generated."):
         assert len(possible_notebooks) == 1
@@ -21,8 +23,10 @@ def _check_file_was_generated(
 
 def _check_file_was_not_generated(
         subtests,
-        directory,
-        filename):
+        filename,
+        directory=None):
+    if directory is None:
+        directory = os.getcwd()
     possible_notebooks = [path for path in Path(directory).rglob(filename)]
     with subtests.test(f"Check {filename} notebook was generated."):
         assert len(possible_notebooks) == 0
@@ -36,9 +40,13 @@ class WorkflowVariationTest:
     diagnostic_notebook= None
 
     def test_running_of_workflow(self, subtests, tmp_path):
+        start_working_dir = os.getcwd()
         parameters = read_yaml_file(self.parameters_path)
-        parameters['overall_save_dir'] = f"{tmp_path}/{parameters['overall_save_dir']}"
-        tmp_parameters_path = f"{tmp_path}/parameters.yml"
+        os.chdir(tmp_path)
+        for param in ['fasta_path', 'metadata_path', 'template_xml_path', 'ready_to_go_xml']:
+            if param in parameters:
+                parameters[param] = f"{start_working_dir}/{parameters[param]}"
+        tmp_parameters_path = "parameters.yml"
         with open(tmp_parameters_path, 'w') as file:
             yaml.safe_dump(parameters, file)
         file.close()
@@ -53,20 +61,16 @@ class WorkflowVariationTest:
         for notebook in should_be_generated:
             _check_file_was_generated(
                 subtests=subtests,
-                directory=tmp_path,
                 filename=notebook)
         for notebook in should_not_be_generated:
             _check_file_was_not_generated(
                 subtests=subtests,
-                directory=tmp_path,
                 filename=notebook)
         phase_5_path = _check_file_was_generated(
             subtests=subtests,
-            directory=tmp_path,
             filename=self.diagnostic_notebook,
             return_path=True
         )
-        start_working_dir = os.getcwd()
         os.chdir(phase_5_path.parent)
         execute_notebook(
             input_path=self.diagnostic_notebook,

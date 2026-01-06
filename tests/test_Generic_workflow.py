@@ -16,7 +16,7 @@ class TestGenericNoInitialTree(SimpleWorkflowVariationTest):
     xml_generation_notebook = xml_generation_notebook
 
 class TestGenericXmlReadyToGo(SimpleWorkflowVariationTest):
-    parameters_path = 'parameters/locally_run_examples/Generic_full.yml'
+    parameters_path = 'parameters/locally_run_examples/Generic_xml-ready-to-go.yml'
     workflow = workflow
     variation = 'xml ready-to-go'
     xml_generation_notebook = xml_generation_notebook
