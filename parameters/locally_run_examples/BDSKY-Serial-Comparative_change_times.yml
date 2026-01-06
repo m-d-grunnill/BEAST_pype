@@ -43,4 +43,4 @@ trace_log_every: 0.001 #    How often to save a log file during BEAST runs.
 tree_log_every: 0.001 #    How often to save a tree file during BEAST runs.
 
 #Running BEAST 2
-number_of_beast_runs: 4 #Number of chains to use (repeated runs to do) when running BEAST.
+number_of_beast_runs: 3 #Number of chains to use (repeated runs to do) when running BEAST.

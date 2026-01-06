@@ -6,13 +6,13 @@ combined_cpu_thread_instance_options: # Number of cpu cores and BEAST threads
   'stop': 3
 configurations:
   no_gpu:
-    number_of_beast_runs: 4 #    Number of chains to use (repeated runs to do) when running BEAST.
+    number_of_beast_runs: 3 #    Number of chains to use (repeated runs to do) when running BEAST.
     sbatch_options_needing_a_value:
       '--time': 0-01:00:00 # Maximum runtime (D-HH:MM:SS)
       '--mem': 10G      # RAM to use.
       #'--partition':  If needed uncomment and fill in the name of a partition to use. 
 #  one_gpu:
-#    number_of_beast_runs: 4 #    Number of chains to use (repeated runs to do) when running BEAST.
+#    number_of_beast_runs: 3 #    Number of chains to use (repeated runs to do) when running BEAST.
 #    sbatch_options_needing_a_value:
 #      '--time': 0-01:00:00 # Maximum runtime (D-HH:MM:SS)
 #      '--mem': 10G      # RAM to use.
@@ -21,7 +21,7 @@ configurations:
 #    beast_options_without_a_value:
 #      - '-beagle_GPU'
 #  two_gpus:
-#    number_of_beast_runs: 4 #    Number of chains to use (repeated runs to do) when running BEAST.
+#    number_of_beast_runs: 3 #    Number of chains to use (repeated runs to do) when running BEAST.
 #    sbatch_options_needing_a_value:
 #      '--time': 0-01:00:00 # Maximum runtime (D-HH:MM:SS)
 #      '--mem': 10G      # RAM to use.

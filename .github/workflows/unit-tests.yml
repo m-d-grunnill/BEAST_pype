@@ -1,0 +1,37 @@
+name: unit-tests
+# Source - https://stackoverflow.com/q
+# Posted by sodiumnitrate
+# Retrieved 2026-01-06, License - CC BY-SA 4.0
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  tests:
+    name: tests
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [ubuntu-latest]
+        python-version: ['3.12']
+
+    runs-on: ${{ matrix.platform }}
+
+    steps:
+    - uses: conda-incubator/setup-miniconda@v3
+      with:
+        miniconda-version: "latest"
+
+    - name: tests
+      run: |
+        conda env create -f tests/environment.yml
+        conda activate beast_pype
+        python -m ipykernel install --user --name=beast_pype
+        python -m bash_kernel.install --user
+        packagemanager -add BDSKY
+        packagemanager -add BEASTLabs
+        pip install -e . 
+        pytest tests/

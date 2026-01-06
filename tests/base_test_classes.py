@@ -28,7 +28,7 @@ def _check_file_was_not_generated(
     if directory is None:
         directory = os.getcwd()
     possible_notebooks = [path for path in Path(directory).rglob(filename)]
-    with subtests.test(f"Check {filename} notebook was generated."):
+    with subtests.test(f"Check {filename} notebook was NOT generated."):
         assert len(possible_notebooks) == 0
 
 class WorkflowVariationTest:
@@ -39,20 +39,21 @@ class WorkflowVariationTest:
     xml_generation_notebook = None
     diagnostic_notebook= None
 
+
     def test_running_of_workflow(self, subtests, tmp_path):
-        start_working_dir = os.getcwd()
+        self.start_working_dir = os.getcwd()
         parameters = read_yaml_file(self.parameters_path)
         os.chdir(tmp_path)
         for param in ['fasta_path', 'metadata_path', 'template_xml_path', 'ready_to_go_xml']:
             if param in parameters:
-                parameters[param] = f"{start_working_dir}/{parameters[param]}"
+                parameters[param] = f"{self.start_working_dir}/{parameters[param]}"
         tmp_parameters_path = "parameters.yml"
         with open(tmp_parameters_path, 'w') as file:
             yaml.safe_dump(parameters, file)
         file.close()
         runner = CliRunner()
         result = runner.invoke(beast_pype, ['run-workflow', self.workflow, tmp_parameters_path])
-        with subtests.test("Check for error generation."):
+        with subtests.test(f"Check for error generation: {result.exc_info}"):
             assert result.exit_code == 0
         should_not_be_generated = []
         should_be_generated = ['Phase-4-GNU-Parallel-Running-BEAST.ipynb']
@@ -77,8 +78,7 @@ class WorkflowVariationTest:
             output_path=self.diagnostic_notebook)
         with subtests.test("Check Report generated."):
             assert os.path.exists(f'outputs_and_reports/BEASTPype-Report.ipynb')
-
-        os.chdir(start_working_dir)
+        os.chdir(self.start_working_dir)
 
 
 class SimpleWorkflowVariationTest(WorkflowVariationTest):
