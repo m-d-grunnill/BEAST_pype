@@ -32,6 +32,7 @@ jobs:
         run: |
           mamba create --name beast_pype
           source $CONDA/bin/activate beast_pype
+          mamba install bioconda::beast2
           pip install .
 
       # Step 4:

@@ -33,7 +33,7 @@ def _check_file_was_not_generated(
 
 class WorkflowVariationTest:
 
-    parameters_path = None
+    parameters = None
     workflow = None
     variation  = None
     xml_generation_notebook = None
@@ -43,13 +43,11 @@ class WorkflowVariationTest:
 
     def test_running_of_workflow(self, subtests, tmp_path):
         self.start_working_dir = os.getcwd()
-        parameters = read_yaml_file(self.parameters_path)
         os.chdir(tmp_path)
         for param in ['fasta_path', 'metadata_path', 'template_xml_path', 'ready_to_go_xml']:
-            if param in parameters:
-                parameters[param] = f"{self.start_working_dir}/{parameters[param]}"
-        parameters['max_threads'] = 1 # This allows all tests to be run in parallel as it stops beast and IQ tree running parallel.
-        self.parameters = parameters
+            if param in self.parameters:
+                self.parameters[param] = f"{self.start_working_dir}/{self.parameters[param]}"
+        self.parameters['max_threads'] = 1 # This allows all tests to be run in parallel as it stops beast and IQ tree running parallel.
         tmp_parameters_path = "parameters.yml"
         with open(tmp_parameters_path, 'w') as file:
             yaml.safe_dump(self.parameters, file)
