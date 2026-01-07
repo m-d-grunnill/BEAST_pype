@@ -38,6 +38,7 @@ class WorkflowVariationTest:
     variation  = None
     xml_generation_notebook = None
     diagnostic_notebook= None
+    kernel_name = 'beast_pype'
 
 
     def test_running_of_workflow(self, subtests, tmp_path):
@@ -47,18 +48,18 @@ class WorkflowVariationTest:
         for param in ['fasta_path', 'metadata_path', 'template_xml_path', 'ready_to_go_xml']:
             if param in parameters:
                 parameters[param] = f"{self.start_working_dir}/{parameters[param]}"
+        # parameters['max_threads'] = 1 # This allows all tests to be run in parallel as it stops beast and IQ tree running parallel.
+        self.parameters = parameters
         tmp_parameters_path = "parameters.yml"
         with open(tmp_parameters_path, 'w') as file:
-            yaml.safe_dump(parameters, file)
+            yaml.safe_dump(self.parameters, file)
         file.close()
         runner = CliRunner()
         result = runner.invoke(beast_pype, ['run-workflow', self.workflow, tmp_parameters_path])
         with subtests.test(f"Check for error generation: {result.exc_info}"):
             assert result.exit_code == 0
-        should_not_be_generated = []
-        should_be_generated = ['Phase-4-GNU-Parallel-Running-BEAST.ipynb']
-        self.adding_notebooks_to_lists(should_be_generated, should_not_be_generated,
-                                       subtests, tmp_path)
+        should_be_generated, should_not_be_generated = self.adding_notebooks_to_lists()
+        should_be_generated.append('Phase-4-GNU-Parallel-Running-BEAST.ipynb') # Appended here so it is checked last.
         for notebook in should_be_generated:
             _check_file_was_generated(
                 subtests=subtests,
@@ -77,14 +78,16 @@ class WorkflowVariationTest:
             input_path=self.diagnostic_notebook,
             output_path=self.diagnostic_notebook)
         with subtests.test("Check Report generated."):
-            assert os.path.exists(f'outputs_and_reports/BEASTPype-Report.ipynb')
+            assert os.path.exists(f'outputs_and_reports/BEAST_pype-Report.ipynb')
         os.chdir(self.start_working_dir)
 
 
 class SimpleWorkflowVariationTest(WorkflowVariationTest):
     diagnostic_notebook = 'Phase-5-Diagnosing-Outputs-and-Generate-Report.ipynb'
 
-    def adding_notebooks_to_lists(self, should_be_generated, should_not_be_generated, subtests, tmp_path):
+    def adding_notebooks_to_lists(self):
+        should_be_generated = []
+        should_not_be_generated = []
         if self.variation == 'full':
             should_be_generated += [
                 'Phase-2i-IQTree-Building.ipynb',
@@ -101,32 +104,31 @@ class SimpleWorkflowVariationTest(WorkflowVariationTest):
             should_be_generated += [self.xml_generation_notebook]
         else:
             should_not_be_generated += [self.xml_generation_notebook]
+        return should_be_generated, should_not_be_generated
 
 class ComparativeWorkflowVariationTest(WorkflowVariationTest):
     diagnostic_notebook =  'Phase-5-Diagnosing-XML-sets-and-Generate-Report.ipynb'
 
-    def adding_notebooks_to_lists(self, should_be_generated, should_not_be_generated, subtests, tmp_path):
-        phase_1_path = _check_file_was_generated(
-            subtests=subtests,
-            directory=tmp_path,
-            filename='Phase-1-Metadata-and-Sequence-Separation.ipynb',
-            return_path=True)
-        xml_set_directories = [f.path for f in os.scandir(phase_1_path.parent) if f.is_dir() and not f.name.startswith('.')]
+    def adding_notebooks_to_lists(self):
+        should_be_generated = ['Phase-1-Metadata-and-Sequence-Separation.ipynb']
+        should_not_be_generated = []
+        xml_set_labels = list(self.parameters['xml_set_definitions'].keys())
         if self.variation == 'full':
             should_be_generated += [
-                'Phase-2i-IQTree-Building.ipynb',
-                'Phase-2i-IQTree-Correction.ipynb',
-            ] + [f"{xml_set_directory}/Phase-2ii-TreeTime-and-Down-Sampling.ipynb"
-                 for xml_set_directory in xml_set_directories]
-        else:
-            should_not_be_generated += [
                                        'Phase-2i-IQTree-Building.ipynb',
                                        'Phase-2i-IQTree-Correction.ipynb',
                                    ] + [f"{xml_set_directory}/Phase-2ii-TreeTime-and-Down-Sampling.ipynb"
-                                        for xml_set_directory in xml_set_directories]
-        if self.variation in ['full', 'no initial tree']:
-                should_be_generated += [f"{xml_set_directory}/{self.xml_generation_notebook}"
-                                        for xml_set_directory in xml_set_directories]
+                                        for xml_set_directory in xml_set_labels]
         else:
-                should_not_be_generated += [f"{xml_set_directory}/{self.xml_generation_notebook}"
-                                        for xml_set_directory in xml_set_directories]
+            should_not_be_generated += [
+                                           'Phase-2i-IQTree-Building.ipynb',
+                                           'Phase-2i-IQTree-Correction.ipynb',
+                                       ] + [f"{xml_set_directory}/Phase-2ii-TreeTime-and-Down-Sampling.ipynb"
+                                            for xml_set_directory in xml_set_labels]
+        if self.variation in ['full', 'no initial tree']:
+            should_be_generated += [f"{xml_set_directory}/{self.xml_generation_notebook}"
+                                    for xml_set_directory in xml_set_labels]
+        else:
+            should_not_be_generated += [f"{xml_set_directory}/{self.xml_generation_notebook}"
+                                        for xml_set_directory in xml_set_labels]
+        return should_be_generated, should_not_be_generated
