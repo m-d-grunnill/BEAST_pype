@@ -26,11 +26,13 @@ jobs:
           use-mamba: true
           activate-environment: test
 
-      # Step 3: Create Conda environment using Mamba and YAML file
-      - name: Create Conda environment from YAML
+      # Step 3: Create Conda environment & install beast_pype
+      - name: Create Conda environment
         shell: bash -el {0}
         run: |
-          mamba env create -f tests/environment.yml
+          mamba create --name beast_pype
+          source $CONDA/bin/activate beast_pype
+          pip install .
 
       # Step 4:
       - name: Install extra dependancies
@@ -42,12 +44,6 @@ jobs:
           packagemanager -add BDSKY
           packagemanager -add BEASTLabs
 
-      # Step 5:
-      - name: Install beast_pype
-        shell: bash -el {0}
-        run: |
-          source $CONDA/bin/activate beast_pype
-          pip install .
 
       # Step 5:
       - name: Run tests
