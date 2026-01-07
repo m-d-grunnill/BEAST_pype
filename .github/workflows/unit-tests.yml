@@ -27,7 +27,7 @@ jobs:
 
     - name: tests
       run: |
-        conda env create -f tests/environment.yml
+        conda env create -f test_environment.yml
         conda activate beast_pype
         python -m ipykernel install --user --name=beast_pype
         python -m bash_kernel.install --user
