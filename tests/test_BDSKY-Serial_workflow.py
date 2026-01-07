@@ -12,7 +12,7 @@ class TestBDSKYSerialFull(SimpleWorkflowVariationTest):
 class TestBDSKYSerialChangeTimes(SimpleWorkflowVariationTest):
     parameters_path = 'parameters/locally_run_examples/BDSKY-Serial_change_times.yml'
     workflow = workflow
-    variation = 'full'
+    variation = 'no initial tree'
     xml_generation_notebook = xml_generation_notebook
 
 class TestBDSKYSerialNoInitialTree(SimpleWorkflowVariationTest):

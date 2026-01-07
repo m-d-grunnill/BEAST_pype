@@ -33,5 +33,5 @@ jobs:
         python -m bash_kernel.install --user
         packagemanager -add BDSKY
         packagemanager -add BEASTLabs
-        pip install -e . 
-        pytest tests/
+        pip install . 
+        pytest -n logical tests/

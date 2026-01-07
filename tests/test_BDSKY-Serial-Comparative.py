@@ -12,7 +12,7 @@ class TestBDSKYSerialComparativeFull(ComparativeWorkflowVariationTest):
 class TestBDSKYSerialComparativeChangeTimes(ComparativeWorkflowVariationTest):
     parameters_path = 'parameters/locally_run_examples/BDSKY-Serial-Comparative_change_times.yml'
     workflow = workflow
-    variation = 'full'
+    variation = 'no initial tree'
     xml_generation_notebook = xml_generation_notebook
 
 class TestBDSKYSerialComparativeNoInitialTree(ComparativeWorkflowVariationTest):
