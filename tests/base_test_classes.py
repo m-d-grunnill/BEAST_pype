@@ -48,6 +48,7 @@ class WorkflowVariationTest:
         for param in ['fasta_path', 'metadata_path', 'template_xml_path', 'ready_to_go_xml']:
             if param in parameters:
                 parameters[param] = f"{self.start_working_dir}/{parameters[param]}"
+        parameters['max_threads'] = 1  # This allows all tests to be run in parallel as it stops beast and IQ tree running parallel.
         self.parameters = parameters
         tmp_parameters_path = "parameters.yml"
         with open(tmp_parameters_path, 'w') as file:

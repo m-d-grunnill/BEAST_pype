@@ -5,6 +5,8 @@ channels:
 dependencies:
   # For unit testing
   - conda-forge::pytest
+  - conda-forge::pytest-xdist
+  - conda-forge::psutil
   # BEAST istelf
   - bioconda::beast2
   # Python

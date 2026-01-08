@@ -30,7 +30,7 @@ jobs:
       - name: Create Conda environment
         shell: bash -el {0}
         run: |
-          mamba env create -f tests/environment.yml
+          mamba env create -f requirements.yml
           source $CONDA/bin/activate beast_pype
           pip install .
 
@@ -50,4 +50,4 @@ jobs:
         shell: bash -el {0}
         run: |
           source $CONDA/bin/activate beast_pype
-          pytest tests/
+          pytest -n logical tests/
