@@ -35,7 +35,7 @@ jobs:
           pip install .
 
       # Step 4:
-      - name: Install extra dependancies
+      - name: Install extra dependencies
         shell: bash -el {0}
         run: |
           source $CONDA/bin/activate beast_pype
