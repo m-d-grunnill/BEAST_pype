@@ -17,6 +17,12 @@ jobs:
       - name: Checkout current code
         uses: actions/checkout@v4
 
+      # Step 1a: List files
+      - name: List file
+        shell: bash -el {0}
+        run: |
+          ls
+
       # Step 2: Set up Conda with Mamba (Using Miniforge3)
       - name: Set up Conda with Mamba
         uses: conda-incubator/setup-miniconda@v3
@@ -32,7 +38,6 @@ jobs:
         run: |
           mamba create --name beast_pype
           source $CONDA/bin/activate beast_pype
-          mamba install bioconda::beast2
           pip install .
 
       # Step 4:
@@ -40,6 +45,7 @@ jobs:
         shell: bash -el {0}
         run: |
           source $CONDA/bin/activate beast_pype
+          mamba install bioconda::beast2 conda-forge::pytest conda-forge::pytest-xdist conda-forge::psutil
           python -m ipykernel install --user --name=beast_pype
           python -m bash_kernel.install --user
           packagemanager -add BDSKY
