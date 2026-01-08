@@ -7,7 +7,7 @@ dependencies:
   - conda-forge::pytest
   - conda-forge::pytest-xdist
   - conda-forge::psutil
-  # BEAST istelf
+  # BEAST itself
   - bioconda::beast2
   # Python
   # beast2-xml has had the occaisonal issue with installation python 3.12

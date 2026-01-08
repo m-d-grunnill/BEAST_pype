@@ -13,6 +13,6 @@ pip install .
 ```bash
 pytest -n NUMBER_OF_CPUS_TO_USE tests/
 ```
-**Note** NUMBER_OF_CPUS_TO_USE can be `logical` to run on all CPUs detected by 
-the OS. **BEWARE** if working on a High Performance Cluster the detection method 
-when using `logical` may detect more CPUs than allocated to you.
+**Notes:** 
+* NUMBER_OF_CPUS_TO_USE can be `logical` to run on all CPUs detected by the OS. BEWARE if working on a High Performance Cluster the detection method when using logical may detect more CPUs than allocated to you.
+* It is not recommended that you run these tests from a HPC (like the one at NML). Doing so will cause the tests to fail with `RuntimeError("Kernel didn't respond in 60 seconds")`.
