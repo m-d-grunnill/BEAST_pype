@@ -50,4 +50,4 @@ jobs:
         shell: bash -el {0}
         run: |
           source $CONDA/bin/activate beast_pype
-          pytest -n logical tests/
+          pytest tests/
