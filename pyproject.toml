@@ -84,6 +84,7 @@ dependencies = [
     { pip = 'papermill'},
     { pip = 'nbconvert'},
     { pip = 'bash_kernel'},
+    { pip = 'ipykernel'},
     { pip = 'nbformat'},
     { pip = 'ipywidgets'}
 ]

@@ -47,4 +47,3 @@ dependencies:
       - beast2-xml>=1.4.1
       - dark-matter
       - python-dateutil
-      - beast-pype
