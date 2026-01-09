@@ -1,5 +1,3 @@
-from copy import deepcopy
-
 import nbformat as nbf
 import importlib.resources as importlib_resources
 import os

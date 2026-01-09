@@ -5,12 +5,12 @@ log_file_basename: BDSKY_serial #    If provided .tree, .log and .state files fr
 metadata_path: example_data/COVID-19_JN.1/VirusSeq_JN1_metadata.csv #    Path to csv or tsv containing metadata for sequences in fasta_path.
 number_of_beast_runs: 3 #    Number of chains to use (repeated runs to do) when running BEAST.
 overall_save_dir: Local-Test-BDSKY_change_times #    Path to where you are saving all the runs of this workflow.
-rt_changes: #Instructions for setting rt_change date, going backwards from youngest xml_set in fasta_path until rt_changes["end"]  is reached.
+rt_partitions: #Instructions for setting rt_change date, going backwards from youngest xml_set in fasta_path until rt_partitions["end"]  is reached.
   # {'unit': 'days, weeks or years', 'every': int/float, 'end': date str YYYY-MM-DD}
   unit: months
   every: 1
-sampling_prop_changes:     #Instructions for setting sampling_prop_change date, going backwards from the youngest collection date in metadata until sampling_prop_changes["end"]  is reached.
-    #If sampling_prop_changes["end"] is not given the oldest collection date in metadata is used for this end point value instead.
+sampling_prop_partitions:     #Instructions for setting sampling_prop_change date, going backwards from the youngest collection date in metadata until sampling_partition_freq["end"]  is reached.
+    #If sampling_partition_freq["end"] is not given the oldest collection date in metadata is used for this end point value instead.
   unit: months
   every: 1
 zero_sampling_before_first_sample: True # Fix the sampling proportion to 0 for the period before the first xml_set.

@@ -23,12 +23,12 @@ xml_set_definitions: # The definitions for the xml_sets you wish to use.
 #down_sample_to: 100 #    If provided the fasta file and initial tree file used to generate the BEAST 2 xml is downsampled to this amount.
 
 # BDSky Options
-rt_changes: #Instructions for setting rt_change date, going backwards from youngest xml_set in fasta_path until rt_changes["end"]  is reached.
+rt_partitions: #Instructions for setting rt_change date, going backwards from youngest xml_set in fasta_path until rt_partitions["end"]  is reached.
   # {'unit': 'days, weeks or years', 'every': int/float, 'end': date str YYYY-MM-DD}
   unit: months
   every: 1
 
-sampling_prop_changes: #Instructions for setting sampling_prop_change date, going backwards from youngest xml_set in fasta_path until sampling_prop_changes["end"]  is reached.
+sampling_prop_partitions: #Instructions for setting sampling_prop_change date, going backwards from youngest xml_set in fasta_path until sampling_partition_freq["end"]  is reached.
   # {'unit': 'days, weeks or years', 'every': int/float, 'end': date str YYYY-MM-DD}
   unit: months
   every: 1

@@ -8,12 +8,12 @@ number_of_beast_runs: 3 #    Number of chains to use (repeated runs to do) when 
 origin_start_addition: 0.02737850787132101 #    Suggested infection period of pathogen. **Should be in years.** This + initial MLE tree height is used as starting value of origin.
 origin_upper_addition: 2 #    This + initial MLE tree height is used as upper value of origin prior.
 overall_save_dir: SBATCH-Test-BDSKY_change_times #    Path to where you are saving all the runs of this workflow.
-rt_changes: #Instructions for setting rt_change date, going backwards from youngest xml_set in fasta_path until rt_changes["end"]  is reached.
+rt_partitions: #Instructions for setting rt_change date, going backwards from youngest xml_set in fasta_path until rt_partitions["end"]  is reached.
   # {'unit': 'days, weeks or years', 'every': int/float, 'end': date str YYYY-MM-DD}
   unit: months
   every: 1
-sampling_prop_changes:     #Instructions for setting sampling_prop_change date, going backwards from the youngest collection date in metadata until sampling_prop_changes["end"]  is reached.
-    #If sampling_prop_changes["end"] is not given the oldest collection date in metadata is used for this end point value instead.
+sampling_prop_partitions:     #Instructions for setting sampling_prop_change date, going backwards from the youngest collection date in metadata until sampling_partition_freq["end"]  is reached.
+    #If sampling_partition_freq["end"] is not given the oldest collection date in metadata is used for this end point value instead.
   unit: months
   every: 1
 zero_sampling_before_first_sample: True # Fix the sampling proportion to 0 for the period before the first xml_set.

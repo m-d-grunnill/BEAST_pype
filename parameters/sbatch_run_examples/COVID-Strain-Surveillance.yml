@@ -8,7 +8,7 @@ number_of_beast_runs: 3 #    Number of chains to use (repeated runs to do) when 
 origin_start_addition: 0.02737850787132101 #    Suggested infection period of pathogen. **Should be in years.** This + initial MLE tree height is used as starting value of origin.
 origin_upper_addition: 2 #    This + initial MLE tree height is used as upper value of origin prior.
 overall_save_dir: SBATCH-Test-COVID-Strain-Surveillance #    Path to where you are saving all the runs of this workflow.
-rt_partition_freq: #Instructions for setting rt_change date, going backwards from youngest xml_set in fasta_path until rt_changes["end"]  is reached.
+rt_partition_freq: #Instructions for setting rt_change date, going backwards from youngest xml_set in fasta_path until rt_partitions["end"]  is reached.
   # {'unit': 'days, weeks or years', 'every': int/float, 'end': date str YYYY-MM-DD}
   #     Instructions for setting rt_change date, going backwards from the youngest date in all the metadata (all xml_sets/strains)
   #    For VOI strains the endpoint is the youngest date out of the oldest dates for each of the VOI strains' metadata.
