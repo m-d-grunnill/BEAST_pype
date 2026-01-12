@@ -28,7 +28,7 @@ rt_partitions: #Instructions for setting rt_change date, going backwards from yo
   unit: months
   every: 1
 
-sampling_prop_partitions: #Instructions for setting sampling_prop_change date, going backwards from youngest xml_set in fasta_path until sampling_partition_freq["end"]  is reached.
+sampling_prop_partitions: #Instructions for setting sampling_prop_change date, going backwards from youngest xml_set in fasta_path until sampling_prop_partition_freq["end"]  is reached.
   # {'unit': 'days, weeks or years', 'every': int/float, 'end': date str YYYY-MM-DD}
   unit: months
   every: 1

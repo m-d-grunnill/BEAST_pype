@@ -492,10 +492,10 @@ def _bdksy_serial_errors(rt_dims,
     if rt_dims is not None and rt_partitions is not None:
         raise TypeError('rt_dims and rt_partitions cannot be used together')
     if sampling_prop_dims is not None and sampling_prop_partitions is not None:
-        raise TypeError('sampling_prop_dims and sampling_partition_freq cannot be used together')
+        raise TypeError('sampling_prop_dims and sampling_prop_partitions cannot be used together')
     if sampling_prop_dims is not None and zero_sampling_before_first_sample:
         raise TypeError('Currently zero_sampling_before_first_sample can only be used '+
-                        'on its own or with sampling_partition_freq, but NOT with sampling_prop_dims.')
+                        'on its own or with sampling_prop_partitions, but NOT with sampling_prop_dims.')
     if ready_to_go_xml is not None or not use_initial_tree:
         if origin_start_addition is not None:
             if initial_tree_type != 'Temporal':
@@ -550,7 +550,7 @@ def _phase_3_partition_params(rt_partitions,
         sampling_prop_partition_dates = _partition_dates_dict_to_list(sampling_prop_partitions,
                                                                    youngest_tip_date,
                                                                    oldest_tip_date,
-                                                                   parameter_name='sampling_partition_freq',
+                                                                   parameter_name='sampling_prop_partitions',
                                                                    inclusive_of_end=sampling_prop_include_oldest_tip_date
                                                                    )
     else:
@@ -563,7 +563,7 @@ _accepted_bdsky_param = {'origin_start_addition',
                          'rt_dims',
                          'rt_partitions',
                          'sampling_prop_dims',
-                         'sampling_partition_freq',
+                         'sampling_prop_partitions',
                          'zero_sampling_before_first_sample'
                          }
 
@@ -574,8 +574,8 @@ def _sequence_to_dims_checks(phase_3_params, number_of_sequences, unsafe_sequenc
             raise ValueError(
                 f'The ratio of fasta_path to Rt dimensions is too low ({str(seqs_to_rt_dims)}<={str(unsafe_sequence_to_dims)}.\n' +
                 'Suggest you alter rt_partitions to lower the number of partions it produces.')
-    if phase_3_params['sampling_partition_freq'] is not None:
-        seqs_to_sample_prop_dims = number_of_sequences / (len(phase_3_params['sampling_partition_freq']) + 1)
+    if phase_3_params['sampling_prop_partitions'] is not None:
+        seqs_to_sample_prop_dims = number_of_sequences / (len(phase_3_params['sampling_prop_partitions']) + 1)
         if seqs_to_sample_prop_dims <= unsafe_sequence_to_dims:
             raise ValueError(
                 f'The ratio of fasta_path to Sampling Proportion dimensions is too low ({str(seqs_to_sample_prop_dims)}<={str(unsafe_sequence_to_dims)}.\n' +
@@ -660,19 +660,19 @@ class BDSKYSerialWorkflowParams(SimpleWorkflowParams):
                 youngest_tip_date,
                 oldest_tip_date)
             phase_3_params['rt_partitions'] = rt_partition_dates
-            phase_3_params['sampling_partition_freq'] = sampling_prop_partition_dates
+            phase_3_params['sampling_prop_partitions'] = sampling_prop_partition_dates
         else:
             phase_3_params['rt_partitions'] = self.rt_partitions
-            phase_3_params['sampling_partition_freq'] = self.sampling_prop_partitions
+            phase_3_params['sampling_prop_partitions'] = self.sampling_prop_partitions
             if self.zero_sampling_before_first_sample:
                 oldest_tip_date, youngest_tip_date = self.tip_date_range()
                 if self.sampling_prop_partitions is not None:
                     partition_dates = pd.to_datetime(self.sampling_prop_partitions)
                     if oldest_tip_date > min(partition_dates):
-                        raise ValueError('If using zero_sampling_before_first_sample oldest partition date should be before oldest date in the list from of sampling_partition_freq.')
-                    phase_3_params['sampling_partition_freq'] = [oldest_tip_date.strftime('%Y-%m-%d')] + phase_3_params['sampling_partition_freq']
+                        raise ValueError('If using zero_sampling_before_first_sample oldest partition date should be before oldest date in the list from of sampling_prop_partitions.')
+                    phase_3_params['sampling_prop_partitions'] = [oldest_tip_date.strftime('%Y-%m-%d')] + phase_3_params['sampling_prop_partitions']
                 else:
-                    phase_3_params['sampling_partition_freq'] = [oldest_tip_date.strftime('%Y-%m-%d')]
+                    phase_3_params['sampling_prop_partitions'] = [oldest_tip_date.strftime('%Y-%m-%d')]
 
         _sequence_to_dims_checks(phase_3_params, self.number_of_sequences, self.unsafe_sequence_to_dims)
         if self.down_sample_to is None:
@@ -701,8 +701,8 @@ class BDSKYSerialWorkflowParams(SimpleWorkflowParams):
             pipeline_run_info = yaml.safe_load(file)
         self.rt_partition_dates = phase_3_params['rt_partitions']
         pipeline_run_info['rt_partitions'] = phase_3_params['rt_partitions']
-        self.sampling_prop_partition_dates = phase_3_params['sampling_partition_freq']
-        pipeline_run_info['sampling_partition_freq'] = phase_3_params['sampling_partition_freq']
+        self.sampling_prop_partition_dates = phase_3_params['sampling_prop_partitions']
+        pipeline_run_info['sampling_prop_partitions'] = phase_3_params['sampling_prop_partitions']
         with open(f'{self.save_dir}/pipeline_run_info.yml', 'w') as fp:
             yaml.dump(pipeline_run_info, fp, sort_keys=True)
         fp.close()
@@ -993,19 +993,19 @@ class BDSKYSerialComparativeWorkflowParams(ComparativeWorkflowParams):
                 youngest_tip_date,
                 oldest_tip_date)
             phase_3_xml_set_params['rt_partitions'] = rt_partition_dates
-            phase_3_xml_set_params['sampling_partition_freq'] = sampling_prop_partition_dates
+            phase_3_xml_set_params['sampling_prop_partitions'] = sampling_prop_partition_dates
         else:
             phase_3_xml_set_params['rt_partitions'] = rt_partitions_to_use
-            phase_3_xml_set_params['sampling_partition_freq'] = sampling_prop_partitions_to_use
+            phase_3_xml_set_params['sampling_prop_partitions'] = sampling_prop_partitions_to_use
             if self.zero_sampling_before_first_sample:
                 oldest_tip_date, youngest_tip_date = self.tip_date_range(xml_set_directory)
                 if sampling_prop_partitions_to_use is not None:
                     partition_dates = pd.to_datetime(sampling_prop_partitions_to_use)
                     if oldest_tip_date > min(partition_dates):
-                        raise ValueError('If using zero_sampling_before_first_sample oldest partition date should be before oldest date in the list from of sampling_partition_freq.')
-                    phase_3_xml_set_params['sampling_partition_freq'] = [oldest_tip_date.strftime('%Y-%m-%d')] + phase_3_xml_set_params['sampling_partition_freq']
+                        raise ValueError('If using zero_sampling_before_first_sample oldest partition date should be before oldest date in the list from of sampling_prop_partitions.')
+                    phase_3_xml_set_params['sampling_prop_partitions'] = [oldest_tip_date.strftime('%Y-%m-%d')] + phase_3_xml_set_params['sampling_prop_partitions']
                 else:
-                    phase_3_xml_set_params['sampling_partition_freq'] = [oldest_tip_date.strftime('%Y-%m-%d')]
+                    phase_3_xml_set_params['sampling_prop_partitions'] = [oldest_tip_date.strftime('%Y-%m-%d')]
         if self.down_sample_to is None:
             phase_3_xml_set_params['fasta_path'] = f'{xml_set_directory}/sequences.fasta'
             phase_3_xml_set_params['metadata_path'] = f'{xml_set_directory}/metadata.csv'
@@ -1037,16 +1037,16 @@ class BDSKYSerialComparativeWorkflowParams(ComparativeWorkflowParams):
             self.rt_partition_dates[xml_set] = phase_3_xml_set_params['rt_partitions']
             pipeline_run_info['rt_partitions'][xml_set] = phase_3_xml_set_params['rt_partitions']
 
-        if 'sampling_partition_freq' not in pipeline_run_info:
+        if 'sampling_prop_partitions' not in pipeline_run_info:
             self.sampling_prop_partition_dates = {
-                xml_set: phase_3_xml_set_params['sampling_partition_freq']}
-            pipeline_run_info['sampling_partition_freq'] = {
-                xml_set: phase_3_xml_set_params['sampling_partition_freq']}
+                xml_set: phase_3_xml_set_params['sampling_prop_partitions']}
+            pipeline_run_info['sampling_prop_partitions'] = {
+                xml_set: phase_3_xml_set_params['sampling_prop_partitions']}
         else:
             self.sampling_prop_partition_dates[xml_set] = phase_3_xml_set_params[
-                'sampling_partition_freq']
-            pipeline_run_info['sampling_partition_freq'][xml_set] = phase_3_xml_set_params[
-                'sampling_partition_freq']
+                'sampling_prop_partitions']
+            pipeline_run_info['sampling_prop_partitions'][xml_set] = phase_3_xml_set_params[
+                'sampling_prop_partitions']
 
         with open(f'{self.save_dir}/pipeline_run_info.yml', 'w') as fp:
             yaml.dump(pipeline_run_info, fp, sort_keys=True)

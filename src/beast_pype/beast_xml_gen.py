@@ -237,7 +237,7 @@ def gen_bdsky_serial_xml(template_path,
                                               dimension=rt_dims)
     if sampling_prop_change_dates is not None:
         if sampling_prop_dims is not None:
-            raise AssertionError("Either sampling_prop_dims or sampling_partition_freq can be given but not both.")
+            raise AssertionError("Either sampling_prop_dims or sampling_prop_partition_freq can be given but not both.")
         if zero_sampling_before_first_sample:
             beast2xml.add_rate_change_dates(
                 parameter="samplingRateChangeTimes",

@@ -9,8 +9,8 @@ rt_partitions: #Instructions for setting rt_change date, going backwards from yo
   # {'unit': 'days, weeks or years', 'every': int/float, 'end': date str YYYY-MM-DD}
   unit: months
   every: 1
-sampling_prop_partitions:     #Instructions for setting sampling_prop_change date, going backwards from the youngest collection date in metadata until sampling_partition_freq["end"]  is reached.
-    #If sampling_partition_freq["end"] is not given the oldest collection date in metadata is used for this end point value instead.
+sampling_prop_partitions:     #Instructions for setting sampling_prop_change date, going backwards from the youngest collection date in metadata until sampling_prop_partition_freq["end"]  is reached.
+    #If sampling_prop_partition_freq["end"] is not given the oldest collection date in metadata is used for this end point value instead.
   unit: months
   every: 1
 zero_sampling_before_first_sample: True # Fix the sampling proportion to 0 for the period before the first xml_set.

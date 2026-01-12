@@ -24,14 +24,14 @@ xml_set_definitions: # The definitions for the xml_sets you wish to use.
 
 # BDSky Options
 rt_partitions: #Instructions for setting rt_change date, going backwards from youngest xml_set in fasta_path until rt_partitions["end"]  is reached.
-  # {'unit': 'days, weeks or years', 'every': int/float, 'end': date str YYYY-MM-DD}
+  # {'unit': 'days, weeks or years', 'amount': int/float, 'end': date str YYYY-MM-DD}
   unit: months
-  every: 1
+  amount: 1
 
-sampling_prop_partitions: #Instructions for setting sampling_prop_change date, going backwards from youngest xml_set in fasta_path until sampling_partition_freq["end"]  is reached.
-  # {'unit': 'days, weeks or years', 'every': int/float, 'end': date str YYYY-MM-DD}
+sampling_prop_partitions: #Instructions for setting sampling_prop_change date, going backwards from youngest xml_set in fasta_path until sampling_prop_partition_freq["end"]  is reached.
+  # {'unit': 'days, weeks or years', 'amount': int/float, 'end': date str YYYY-MM-DD}
   unit: months
-  every: 1
+  amount: 1
 
 zero_sampling_before_first_sample: True # Fix the sampling proportion to 0 for the period before the first xml_set.
 
