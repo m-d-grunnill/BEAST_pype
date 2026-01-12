@@ -23,7 +23,7 @@ default_report_names = [
 diag_valid_params = [
     'metadata_path',
     'rt_partitions',
-    'sampling_partition_freq',
+    'sampling_prop_partition_freq',
     'collection_date_field'
 ]
 

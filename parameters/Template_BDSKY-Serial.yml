@@ -101,9 +101,9 @@ sampling_prop_dims: #int, optional
     #Number of sampling proportion dimensions (time periods over which sampling proportion is estimated).
 
 sampling_prop_partitions: #dict of strings {'unit': 'days, weeks, months or years', 'every': int/float, 'end': date str YYYY-MM-DD}, optional
-    #Instructions for setting sampling_prop_change date, going backwards from the youngest date provided in the metadata until sampling_partition_freq["end"]  is reached.
-    #If sampling_partition_freq["end"] is not given the oldest date provided in the metadata is used for this end point value instead.
-    #sampling_partition_freq["end"] should be a datetime object or string of format YYYY-MM-DD'.
+    #Instructions for setting sampling_prop_change date, going backwards from the youngest date provided in the metadata until sampling_prop_partition_freq["end"]  is reached.
+    #If sampling_prop_partition_freq["end"] is not given the oldest date provided in the metadata is used for this end point value instead.
+    #sampling_prop_partition_freq["end"] should be a datetime object or string of format YYYY-MM-DD'.
     #If given sampling_prop_dims must equal None.
 
 zero_sampling_before_first_sample: #bool, default (can be missing from yml) False

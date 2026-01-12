@@ -5,15 +5,14 @@ from papermill.iorw import read_yaml_file
 from pathlib import Path
 from papermill import execute_notebook
 import os
+import shutil
 
 
 def _check_file_was_generated(
         subtests,
         filename,
-        directory=None,
+        directory,
         return_path=False):
-    if directory is None:
-        directory = os.getcwd()
     possible_notebooks = [path for path in Path(directory).rglob(filename)]
     with subtests.test(f"Check {filename} notebook was generated."):
         assert len(possible_notebooks) == 1
@@ -24,9 +23,7 @@ def _check_file_was_generated(
 def _check_file_was_not_generated(
         subtests,
         filename,
-        directory=None):
-    if directory is None:
-        directory = os.getcwd()
+        directory):
     possible_notebooks = [path for path in Path(directory).rglob(filename)]
     with subtests.test(f"Check {filename} notebook was NOT generated."):
         assert len(possible_notebooks) == 0
@@ -38,24 +35,24 @@ class WorkflowVariationTest:
     variation  = None
     xml_generation_notebook = None
     diagnostic_notebook= None
-    kernel_name = 'beast_pype'
+    kernel_name = 'dev_beast_pype'
 
 
     def test_running_of_workflow(self, subtests, tmp_path):
         self.start_working_dir = os.getcwd()
         parameters = read_yaml_file(self.parameters_path)
-        os.chdir(tmp_path)
+        overall_save_dir = parameters['overall_save_dir']
         for param in ['fasta_path', 'metadata_path', 'template_xml_path', 'ready_to_go_xml']:
             if param in parameters:
                 parameters[param] = f"{self.start_working_dir}/{parameters[param]}"
         parameters['max_threads'] = 1  # This allows all tests to be run in parallel as it stops beast and IQ tree running parallel.
         self.parameters = parameters
-        tmp_parameters_path = "parameters.yml"
+        tmp_parameters_path = f"{overall_save_dir}parameters.yml"
         with open(tmp_parameters_path, 'w') as file:
             yaml.safe_dump(self.parameters, file)
         file.close()
         runner = CliRunner()
-        result = runner.invoke(beast_pype, ['run-workflow', self.workflow, tmp_parameters_path])
+        result = runner.invoke(beast_pype, ['run-workflow','-k', self.kernel_name, self.workflow, tmp_parameters_path])
         with subtests.test(f"Check for error generation: {result.exc_info}"):
             assert result.exit_code == 0
         should_be_generated, should_not_be_generated = self.adding_notebooks_to_lists()
@@ -63,14 +60,17 @@ class WorkflowVariationTest:
         for notebook in should_be_generated:
             _check_file_was_generated(
                 subtests=subtests,
-                filename=notebook)
+                filename=notebook,
+                directory=overall_save_dir)
         for notebook in should_not_be_generated:
             _check_file_was_not_generated(
                 subtests=subtests,
-                filename=notebook)
+                filename=notebook,
+                directory=overall_save_dir)
         phase_5_path = _check_file_was_generated(
             subtests=subtests,
             filename=self.diagnostic_notebook,
+            directory=overall_save_dir,
             return_path=True
         )
         ### Unfortunately when running this section of certain tests from command
@@ -83,8 +83,9 @@ class WorkflowVariationTest:
         #     output_path=self.diagnostic_notebook)
         # with subtests.test("Check Report generated."):
         #     assert os.path.exists(f'outputs_and_reports/BEAST_pype-Report.ipynb')
+        # os.chdir(self.start_working_dir)
         ###
-        os.chdir(self.start_working_dir)
+        shutil.rmtree(overall_save_dir)
 
 
 class SimpleWorkflowVariationTest(WorkflowVariationTest):
@@ -114,26 +115,29 @@ class SimpleWorkflowVariationTest(WorkflowVariationTest):
 class ComparativeWorkflowVariationTest(WorkflowVariationTest):
     diagnostic_notebook =  'Phase-5-Diagnosing-XML-sets-and-Generate-Report.ipynb'
 
+    @property
+    def xml_set_labels(self):
+        return list(self.parameters['xml_set_definitions'].keys())
+
     def adding_notebooks_to_lists(self):
         should_be_generated = ['Phase-1-Metadata-and-Sequence-Separation.ipynb']
         should_not_be_generated = []
-        xml_set_labels = list(self.parameters['xml_set_definitions'].keys())
         if self.variation == 'full':
             should_be_generated += [
                                        'Phase-2i-IQTree-Building.ipynb',
                                        'Phase-2i-IQTree-Correction.ipynb',
                                    ] + [f"{xml_set_directory}/Phase-2ii-TreeTime-and-Down-Sampling.ipynb"
-                                        for xml_set_directory in xml_set_labels]
+                                        for xml_set_directory in self.xml_set_labels]
         else:
             should_not_be_generated += [
                                            'Phase-2i-IQTree-Building.ipynb',
                                            'Phase-2i-IQTree-Correction.ipynb',
                                        ] + [f"{xml_set_directory}/Phase-2ii-TreeTime-and-Down-Sampling.ipynb"
-                                            for xml_set_directory in xml_set_labels]
+                                            for xml_set_directory in self.xml_set_labels]
         if self.variation in ['full', 'no initial tree']:
             should_be_generated += [f"{xml_set_directory}/{self.xml_generation_notebook}"
-                                    for xml_set_directory in xml_set_labels]
+                                    for xml_set_directory in self.xml_set_labels]
         else:
             should_not_be_generated += [f"{xml_set_directory}/{self.xml_generation_notebook}"
-                                        for xml_set_directory in xml_set_labels]
+                                        for xml_set_directory in self.xml_set_labels]
         return should_be_generated, should_not_be_generated
