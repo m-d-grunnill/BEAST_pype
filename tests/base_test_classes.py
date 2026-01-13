@@ -6,16 +6,19 @@ from pathlib import Path
 from papermill import execute_notebook
 import os
 import shutil
+from copy import deepcopy
 
 
 def _check_file_was_generated(
         subtests,
         filename,
         directory,
+        test_ran_list,
         return_path=False):
     possible_notebooks = [path for path in Path(directory).rglob(filename)]
     with subtests.test(f"Check {filename} notebook was generated."):
-        assert len(possible_notebooks) == 1
+        test_ran_list.append(len(possible_notebooks) == 1)
+        assert test_ran_list[-1]
     notebook_path = possible_notebooks[0]
     if return_path:
         return notebook_path
@@ -23,13 +26,15 @@ def _check_file_was_generated(
 def _check_file_was_not_generated(
         subtests,
         filename,
-        directory):
+        directory,
+        test_ran_list):
     possible_notebooks = [path for path in Path(directory).rglob(filename)]
     with subtests.test(f"Check {filename} notebook was NOT generated."):
-        assert len(possible_notebooks) == 0
+        test_ran_list.append(len(possible_notebooks) == 0)
+        assert test_ran_list[-1]
 
 class WorkflowVariationTest:
-
+    name = None
     parameters_path = None
     workflow = None
     variation  = None
@@ -41,36 +46,43 @@ class WorkflowVariationTest:
     def test_running_of_workflow(self, subtests, tmp_path):
         self.start_working_dir = os.getcwd()
         parameters = read_yaml_file(self.parameters_path)
+        parameters['overall_save_dir'] = self.name
         overall_save_dir = parameters['overall_save_dir']
+        os.makedirs(overall_save_dir, exist_ok=True)
         for param in ['fasta_path', 'metadata_path', 'template_xml_path', 'ready_to_go_xml']:
             if param in parameters:
                 parameters[param] = f"{self.start_working_dir}/{parameters[param]}"
         parameters['max_threads'] = 1  # This allows all tests to be run in parallel as it stops beast and IQ tree running parallel.
         self.parameters = parameters
-        tmp_parameters_path = f"{overall_save_dir}parameters.yml"
+        tmp_parameters_path = f"{overall_save_dir}/parameters.yml"
         with open(tmp_parameters_path, 'w') as file:
             yaml.safe_dump(self.parameters, file)
         file.close()
+        test_ran_ok_list = []
         runner = CliRunner()
         result = runner.invoke(beast_pype, ['run-workflow','-k', self.kernel_name, self.workflow, tmp_parameters_path])
         with subtests.test(f"Check for error generation: {result.exc_info}"):
-            assert result.exit_code == 0
+            test_ran_ok_list.append(result.exit_code == 0)
+            assert test_ran_ok_list[-1]
         should_be_generated, should_not_be_generated = self.adding_notebooks_to_lists()
         should_be_generated.append('Phase-4-GNU-Parallel-Running-BEAST.ipynb') # Appended here so it is checked last.
         for notebook in should_be_generated:
             _check_file_was_generated(
                 subtests=subtests,
                 filename=notebook,
-                directory=overall_save_dir)
+                directory=overall_save_dir,
+                test_ran_list=test_ran_ok_list,)
         for notebook in should_not_be_generated:
             _check_file_was_not_generated(
                 subtests=subtests,
                 filename=notebook,
-                directory=overall_save_dir)
+                directory=overall_save_dir,
+                test_ran_list=test_ran_ok_list)
         phase_5_path = _check_file_was_generated(
             subtests=subtests,
             filename=self.diagnostic_notebook,
             directory=overall_save_dir,
+            test_ran_list=test_ran_ok_list,
             return_path=True
         )
         ### Unfortunately when running this section of certain tests from command
@@ -85,7 +97,8 @@ class WorkflowVariationTest:
         #     assert os.path.exists(f'outputs_and_reports/BEAST_pype-Report.ipynb')
         # os.chdir(self.start_working_dir)
         ###
-        shutil.rmtree(overall_save_dir)
+        if all(test_ran_ok_list):
+            shutil.rmtree(overall_save_dir)
 
 
 class SimpleWorkflowVariationTest(WorkflowVariationTest):
