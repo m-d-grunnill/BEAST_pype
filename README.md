@@ -2,26 +2,26 @@
 
 # **BEAST_pype**: An automated pipeline for high throughput phylodynamic analyses using BEAST 2.
 
-BEAST_pype is a pipeline with aim of automating and parallelizing many of the steps involved in phylodynamics using 
+BEAST_pype is a pipeline with the aim of automating and parallelizing many of the steps involved in phylodynamics using 
 [BEAST 2](https://www.beast2.org/). The [workflows](https://github.com/m-d-grunnill/BEAST_pype/wiki) 
 expedite phylodynamic analyses using [BEAST 2](https://www.beast2.org/) via a series of python-based Jupyter Notebooks. 
 
-BEAST_pype was concieved with the aim to speed up and automate the use of BEAST 2 analyses for routine public health use at the Public Health Agency of Canada.  
+BEAST_pype was concieved with the aim to speed up and automate the use of BEAST-2 analyses for routine public health use at the Public Health Agency of Canada.  
 Activities include running routine analyses on continuously circulating viruses, such as SARS-CoV-2 or Influenza, to extract epidemiological parameters of interest for surviellance. Also, for accelerating research or outbreak investigations that require several experimental runs for optimization and more rapid results generation.  
 
 Features of BEAST_pype include:  
 * Command-line launchable, and Yaml file controlled pipeline.
-* Improved XML generation and re-use. e.g. using user-provided BEAST-2 xmls as a template for generating a new BEAST-2 xml
+* Improved XML generation and re-use, e.g. using user-provided BEAST-2 xmls as a template for generating a new BEAST-2 xml
    from new sequences with the associated metadata.
 * Launching several parallelized runs and a GUI for selecting converged MCMC chains.
-* Automated generation of reports analysing BEAST 2 runs (diagnostic and result plots and statistics).
+* Automated generation of reports analysing BEAST-2 runs (diagnostic and result plots and statistics).
 * Ability to create and include initial trees for faster runs.
 * Incorporating downsampling techniques.
   
 ### For instructions, getting started, and more details, please see [BEAST_pype's wiki](https://github.com/m-d-grunnill/BEAST_pype/wiki).
 
 ## IMPORTANT NOTES
-* For ease of distribution reasons beast_pype uses the version of BEAST 2 that is available via conda, specifically [bioconda](https://anaconda.org/bioconda/beast2), 2.6 as 2025-Jun-25. Template beast2 xmls from other versions of may not work. BEAST 2.7.7 is available on the conda channel [millerjeremya](https://anaconda.org/millerjeremya/beast2). However, I tested this on a Linux OS (2025-06-04) and could not get the command line arguments to work.
+* For ease of distribution reasons beast_pype uses the version of BEAST-2 that is currently available via conda, specifically [bioconda](https://anaconda.org/bioconda/beast2), 2.6 as 2025-Jun-25. Template BEAST-2 XMLs from other versions of may not work. BEAST 2.7.7 is available on the conda channel [millerjeremya](https://anaconda.org/millerjeremya/beast2). However, this has been tested on a Linux OS (2025-06-04) and the command line arguments did not work.
 
 ## Installation instructions:
 
