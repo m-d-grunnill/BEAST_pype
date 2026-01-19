@@ -108,13 +108,13 @@ log_file_basename: # str, (required if not using a `ready_to_go_xml`)
 #    If not given value in template_xml_path will be used.
 
 #trace_log_every: # int > 1 or float between 0 and 1 optional (can be missing from yml)
-#    Suggested value 0.001.
+#    Suggested value 0.0001.
 #    How often to save a log file during BEAST runs.
 #    If float the save will happen as multiple of the chain_length rounded to the nearest integer.
 #    If not given value in template_xml_path will be used.
 
 #tree_log_every: # int > 1 or float between 0 and 1 optional (can be missing from yml)
-#    Suggested value 0.001.
+#    Suggested value 0.0001.
 #    How often to save a log file during BEAST runs.
 #    If float the save will happen as multiple of the chain_length rounded to the nearest integer.
 #    If not given value in template_xml_path will be used.
@@ -126,7 +126,7 @@ log_file_basename: # str, (required if not using a `ready_to_go_xml`)
 #    If not given value in template_xml_path will be used.
 
 #store_state_every: # int > 1 or float between 0 and 1 optional (can be missing from yml)
-#    Suggested value 0.001.
+#    Suggested value 0.0001.
 #    How often to save a log file during BEAST runs.
 #    If float the save will happen as multiple of the chain_length rounded to the nearest integer.
 #    If not given value in template_xml_path will be used.

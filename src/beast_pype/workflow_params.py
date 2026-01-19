@@ -79,7 +79,6 @@ def _gen_phase_4_params(
 class WorkflowParams(SimpleNamespace):
     """Base Class responsible for setting up and checking workflow parameters."""
 
-    unsafe_sequence_to_dims = 5
     workflow_name = None
 
 
@@ -567,31 +566,7 @@ _accepted_bdsky_param = {'origin_start_addition',
                          'zero_sampling_before_first_sample'
                          }
 
-def _sequence_to_dims_checks(phase_3_params, number_of_sequences, unsafe_sequence_to_dims):
-    if phase_3_params['rt_partitions'] is not None:
-        seqs_to_rt_dims = number_of_sequences / (len(phase_3_params['rt_partitions']) + 1)
-        if seqs_to_rt_dims <= unsafe_sequence_to_dims:
-            raise ValueError(
-                f'The ratio of fasta_path to Rt dimensions is too low ({str(seqs_to_rt_dims)}<={str(unsafe_sequence_to_dims)}.\n' +
-                'Suggest you alter rt_partitions to lower the number of partions it produces.')
-    if phase_3_params['sampling_prop_partitions'] is not None:
-        seqs_to_sample_prop_dims = number_of_sequences / (len(phase_3_params['sampling_prop_partitions']) + 1)
-        if seqs_to_sample_prop_dims <= unsafe_sequence_to_dims:
-            raise ValueError(
-                f'The ratio of fasta_path to Sampling Proportion dimensions is too low ({str(seqs_to_sample_prop_dims)}<={str(unsafe_sequence_to_dims)}.\n' +
-                'Suggest you alter rt_partitions to lower the number of partions it produces.')
-    if phase_3_params['rt_dims'] is not None:
-        seqs_to_rt_dims = number_of_sequences / phase_3_params['rt_dims'] 
-        if seqs_to_rt_dims <= unsafe_sequence_to_dims:
-            raise ValueError(
-                f'The ratio of fasta_path to Rt dimensions is too low ({str(seqs_to_rt_dims)}<={str(unsafe_sequence_to_dims)}.\n' +
-                'Suggest you lower rt_dims.')
-    if phase_3_params['sampling_prop_dims'] is not None:
-        seqs_to_sampling_prop_dims = number_of_sequences / phase_3_params['sampling_prop_dims']
-        if seqs_to_sampling_prop_dims <= unsafe_sequence_to_dims:
-            raise ValueError(
-                f'The ratio of fasta_path to Rt dimensions is too low ({str(seqs_to_sampling_prop_dims)}<={str(unsafe_sequence_to_dims)}.\n' +
-                'Suggest you lower sampling_prop_dims.')
+
 
 class BDSKYSerialWorkflowParams(SimpleWorkflowParams):
     """Set up and check BDSKY-Serial workflow parameters."""
@@ -673,29 +648,6 @@ class BDSKYSerialWorkflowParams(SimpleWorkflowParams):
                     phase_3_params['sampling_prop_partitions'] = [oldest_tip_date.strftime('%Y-%m-%d')] + phase_3_params['sampling_prop_partitions']
                 else:
                     phase_3_params['sampling_prop_partitions'] = [oldest_tip_date.strftime('%Y-%m-%d')]
-
-        _sequence_to_dims_checks(phase_3_params, self.number_of_sequences, self.unsafe_sequence_to_dims)
-        if self.down_sample_to is None:
-            phase_3_params['fasta_path'] = self.fasta_path
-            phase_3_params['metadata_path'] = self.metadata_path
-        else:
-            phase_3_params['fasta_path'] = f'{self.save_dir}/down_sampled_sequences.fasta'
-            phase_3_params['metadata_path'] = f'{self.save_dir}/down_sampled_metadata.csv'
-
-        if self.use_initial_tree:
-            if self.initial_tree_path is not None:
-                phase_3_params['initial_tree_path'] = self.initial_tree_path
-            elif self.down_sample_to is not None:
-                phase_3_params['initial_tree_path'] = f'{self.save_dir}/initial_trees/down_sampled_time.nwk'
-            elif self.initial_tree_type == 'Temporal':
-                phase_3_params['initial_tree_path'] = f'{self.save_dir}/initial_trees/full_time.nwk'
-            elif self.initial_tree_type == 'Distance':
-                phase_3_params['initial_tree_path'] = f'{self.save_dir}/initial_trees/iqtree.nwk'
-            else:
-                raise FileNotFoundError(
-                    f'Initial tree file not found. initial_tree_path has not been provided and none of the files down_sampled_time.nwk, full_time.nwk or iqtree.treefile can not be found in save_dir ({self.save_dir}).')
-        else:
-            phase_3_params['initial_tree_path'] = None
 
         with open(f'{self.save_dir}/pipeline_run_info.yml', 'r') as file:
             pipeline_run_info = yaml.safe_load(file)
@@ -1006,27 +958,7 @@ class BDSKYSerialComparativeWorkflowParams(ComparativeWorkflowParams):
                     phase_3_xml_set_params['sampling_prop_partitions'] = [oldest_tip_date.strftime('%Y-%m-%d')] + phase_3_xml_set_params['sampling_prop_partitions']
                 else:
                     phase_3_xml_set_params['sampling_prop_partitions'] = [oldest_tip_date.strftime('%Y-%m-%d')]
-        if self.down_sample_to is None:
-            phase_3_xml_set_params['fasta_path'] = f'{xml_set_directory}/sequences.fasta'
-            phase_3_xml_set_params['metadata_path'] = f'{xml_set_directory}/metadata.csv'
-        else:
-            phase_3_xml_set_params['fasta_path'] = f'{xml_set_directory}/down_sampled_sequences.fasta'
-            phase_3_xml_set_params['metadata_path'] = f'{xml_set_directory}/down_sampled_metadata.csv'
 
-        number_of_sequences = len([1 for line in open(phase_3_xml_set_params['fasta_path']) if line.startswith(">")])
-        _sequence_to_dims_checks(phase_3_xml_set_params, number_of_sequences, self.unsafe_sequence_to_dims)
-        if self.use_initial_tree:
-            if self.down_sample_to is not None:
-                phase_3_xml_set_params['initial_tree_path'] = f'{xml_set_directory}/initial_trees/down_sampled_time.nwk'
-            elif self.initial_tree_type == 'Temporal':
-                phase_3_xml_set_params['initial_tree_path'] = f'{xml_set_directory}/initial_trees/full_time.nwk'
-            elif self.initial_tree_type == 'Distance':
-                phase_3_xml_set_params['initial_tree_path'] = f'{xml_set_directory}/initial_trees/iqtree.nwk'
-            else:
-                raise FileNotFoundError(
-                    f'Initial tree file not found. initial_tree_path has not been provided and none of the files down_sampled_time.nwk, full_time.nwk or iqtree.treefile can not be found in save_dir ({xml_set_directory}).')
-        else:
-            phase_3_xml_set_params['initial_tree_path'] = None
         with open(f'{self.save_dir}/pipeline_run_info.yml', 'r') as file:
             pipeline_run_info = yaml.safe_load(file)
 
