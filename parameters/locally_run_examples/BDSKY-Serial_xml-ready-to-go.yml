@@ -1,4 +1,4 @@
-number_of_beast_runs: 4 #    Number of chains to use (repeated runs to do) when running BEAST.
+number_of_beast_runs: 3 #    Number of chains to use (repeated runs to do) when running BEAST.
 overall_save_dir: Local-Test-BDSKY-Serial_xml-ready-to-go #    Path to where you are saving all the runs of this workflow.
 ready_to_go_xml:  example_data/COVID-19_JN.1/BDSky_test_ready_to_go.xml #    Path to a BEAST 2 xml that you wish to run unaltered. If provided phases 2i, 2ii and 3 are skipped.
 

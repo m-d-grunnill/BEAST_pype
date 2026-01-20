@@ -1,22 +1,21 @@
-chain_length: 500000 #    Number of chains to use for BEAST runs.
 collection_date_field: 'sample collection date' #    Name of field in metadata_db containing collection dates of sequences. Should be formatted YYYY-MM-DD.
 fasta_path: example_data/COVID-19_JN.1/VirusSeq_JN1_alignment.fasta #    Path to fasta file containing sequences to be placed into template xml.
 down_sample_to: 100 #    If provided the fasta file and initial tree file used to generate the BEAST 2 xml is downsampled to this amount.
 initial_tree_type: Temporal #    Intial tree type to use. str (either 'Distance' or 'Temporal') or None
 log_file_basename: BDSKY_serial #    If provided .tree, .log and .state files from running BEAST 2 will have this name prefixed by 'run-with-seed-{seed}-'.
 metadata_path: example_data/COVID-19_JN.1/VirusSeq_JN1_metadata.csv #    Path to csv or tsv containing metadata for sequences in fasta_path.
-number_of_beast_runs: 4 #    Number of chains to use (repeated runs to do) when running BEAST.
+number_of_beast_runs: 3 #    Number of chains to use (repeated runs to do) when running BEAST.
 origin_start_addition: 0.02737850787132101 #    Suggested infection period of pathogen. **Should be in years.** This + initial MLE tree height is used as starting value of origin.
 origin_upper_addition: 2 #    This + initial MLE tree height is used as upper value of origin prior.
 overall_save_dir: SBATCH-Test-BDSKY-Serial_full #    Path to where you are saving all the runs of this workflow.
 rt_dims: 3 #    Number of Rt dimensions (time periods over which Rt is estimated).
 zero_sampling_before_first_sample: True # Fix the sampling proportion to 0 for the period before the first xml_set.
 sample_id_field: 'specimen collector sample ID' #    Name of field in metadata_db containing sequence IDs.
-screen_log_every: 0.005 #    How often to output to screen during BEAST runs.
-store_state_every: 0.001 #    How often to store MCMC state during BEAST runs.
-template_xml_path: template_beast_xmls/BDSKY_serial_COVID-19_template.xml #    Path to template BEAST 2 xml.
-trace_log_every: 0.001 #    How often to save a log file during BEAST runs.
-tree_log_every: 0.001 #    How often to save a tree file during BEAST runs.
+chain_length: 50000 # Number of chains to use for BEAST runs.
+screen_log_every: 5000 #    How often to output to screen during BEAST runs.
+store_state_every: 1000 #    How often to store MCMC state during BEAST runs.
+trace_log_every: 1000 #    How often to save a log file during BEAST runs.
+tree_log_every: 1000 #    How often to save a tree file during BEAST runs.
 
 sbatch_options_needing_a_value:
   '--cpus-per-task': 1             # Number of CPU cores per task

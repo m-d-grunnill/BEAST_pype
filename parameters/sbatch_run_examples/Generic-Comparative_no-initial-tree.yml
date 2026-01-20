@@ -1,17 +1,17 @@
-chain_length: 500000 #    Number of chains to use for BEAST runs.
 collection_date_field: 'sample collection date' #    Name of field in metadata_db containing collection dates of sequences. Should be formatted YYYY-MM-DD.
 fasta_path: example_data/COVID-19_JN.1/VirusSeq_JN1_alignment.fasta #    Path to fasta file containing sequences to be placed into template xml.
 use_initial_tree: False #    If False an initial tree will not be generated skipping Phases 2i and 2ii. As such, in phase 4 BEAST 2 generate its own initial tree.
 metadata_path: example_data/COVID-19_JN.1/VirusSeq_JN1_metadata.csv #    Path to csv or tsv containing metadata for sequences in fasta_path.
-number_of_beast_runs: 4 #    Number of chains to use (repeated runs to do) when running BEAST.
+number_of_beast_runs: 3 #    Number of chains to use (repeated runs to do) when running BEAST.
 overall_save_dir: SBATCH-Test-Generic-Comparative_no-initial-tree #    Path to where you are saving all the runs of this workflow.
 log_file_basename: BEAST # The definitions for the xml_sets you wish to use.
 sample_id_field: 'specimen collector sample ID' #    Name of field in metadata_db containing sequence IDs.
-screen_log_every: 0.005 #    How often to output to screen during BEAST runs.
-store_state_every: 0.001 #    How often to store MCMC state during BEAST runs.
 template_xml_path: template_beast_xmls/Coalescent_Exponential_COVID-19_template.xml #    Path to template BEAST 2 xml.
-trace_log_every: 0.001 #    How often to save a log file during BEAST runs.
-tree_log_every: 0.001 #    How often to save a tree file during BEAST runs.
+chain_length: 5000 # Number of chains to use for BEAST runs.
+screen_log_every: 5000 #    How often to output to screen during BEAST runs.
+store_state_every: 1000 #    How often to store MCMC state during BEAST runs.
+trace_log_every: 1000 #    How often to save a log file during BEAST runs.
+tree_log_every: 1000 #    How often to save a tree file during BEAST runs.
 xml_set_definitions:
   JN.1: "`lineage name` == 'JN.1'"
   JN.1.1: "`lineage name` == 'JN.1.1'"

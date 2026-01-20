@@ -29,14 +29,14 @@ zero_sampling_before_first_sample: True # Fix the sampling proportion to 0 for t
 
 #MCMC Tree/Logfile names Chain-lengths & Save Steps
 log_file_basename: BDSKY_Serial # If provided .tree, .log and .state files from running BEAST 2 will have this name prefixed by 'run-with-seed-{seed}-', number being that of the chain.
-chain_length: 500000 # Number of chains to use for BEAST runs.
-screen_log_every: 0.005 #    How often to output to screen during BEAST runs.
-store_state_every: 0.001 #    How often to store MCMC state during BEAST runs.
-trace_log_every: 0.001 #    How often to save a log file during BEAST runs.
-tree_log_every: 0.001 #    How often to save a tree file during BEAST runs.
+chain_length: 50000 # Number of chains to use for BEAST runs.
+screen_log_every: 5000 #    How often to output to screen during BEAST runs.
+store_state_every: 1000 #    How often to store MCMC state during BEAST runs.
+trace_log_every: 1000 #    How often to save a log file during BEAST runs.
+tree_log_every: 1000 #    How often to save a tree file during BEAST runs.
 
 #Running BEAST 2
-number_of_beast_runs: 4 #Number of chains to use (repeated runs to do) when running BEAST.
+number_of_beast_runs: 3 #Number of chains to use (repeated runs to do) when running BEAST.
 
 sbatch_options_needing_a_value:
     '--cpus-per-task': 1             # Number of CPU cores per task

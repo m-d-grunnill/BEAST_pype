@@ -9,6 +9,7 @@ fasta_path: example_data/COVID-19_JN.1/VirusSeq_JN1_alignment.fasta # Path to fa
 metadata_path: example_data/COVID-19_JN.1/VirusSeq_JN1_metadata.csv # Path to csv or tsv containing metadata for sequences in fasta_path.
 sample_id_field: 'specimen collector sample ID' #    Name of field in metadata_db containing sequence IDs.
 collection_date_field: 'sample collection date' #Name of field in metadata_db containing collection dates of sequences. Should be formatted YYYY-MM-DD.
+use_initial_tree: False
 
 # Defining XML Sets (Partitioning Data)
 xml_set_definitions: # The definitions for the xml_sets you wish to use.
@@ -37,10 +38,10 @@ zero_sampling_before_first_sample: True # Fix the sampling proportion to 0 for t
 #MCMC Tree/Logfile names Chain-lengths & Save Steps
 log_file_basename: BDSKY_serial #   If provided .tree, .log and .state files from running BEAST 2 will have this name prefixed by 'run-with-seed-{seed}-', number being that of the chain.
 chain_length: 50000 # Number of chains to use for BEAST runs.
-screen_log_every: 0.005 #    How often to output to screen during BEAST runs.
-store_state_every: 0.001 #    How often to store MCMC state during BEAST runs.
-trace_log_every: 0.001 #    How often to save a log file during BEAST runs.
-tree_log_every: 0.001 #    How often to save a tree file during BEAST runs.
+screen_log_every: 5000 #    How often to output to screen during BEAST runs.
+store_state_every: 1000 #    How often to store MCMC state during BEAST runs.
+trace_log_every: 1000 #    How often to save a log file during BEAST runs.
+tree_log_every: 1000 #    How often to save a tree file during BEAST runs.
 
 #Running BEAST 2
-number_of_beast_runs: 4 #Number of chains to use (repeated runs to do) when running BEAST.
+number_of_beast_runs: 3 #Number of chains to use (repeated runs to do) when running BEAST.

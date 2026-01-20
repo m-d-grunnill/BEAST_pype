@@ -6,9 +6,9 @@ combined_thread_instance_options: # Number of cpu cores and BEAST threads
   'stop': 3
 configurations:
   no_gpu:
-    number_of_beast_runs: 4 #    Number of chains to use (repeated runs to do) when running BEAST.
+    number_of_beast_runs: 3 #    Number of chains to use (repeated runs to do) when running BEAST.
 
 #  gpu:
-#    number_of_beast_runs: 4 #    Number of chains to use (repeated runs to do) when running BEAST.
+#    number_of_beast_runs: 3 #    Number of chains to use (repeated runs to do) when running BEAST.
 #    beast_options_without_a_value:
 #      - '-beagle_GPU'

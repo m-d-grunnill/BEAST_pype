@@ -1,11 +1,10 @@
 chain_length: 50000 #    Number of chains to use for BEAST runs.
 collection_date_field: 'sample collection date' #    Name of field in metadata_db containing collection dates of sequences. Should be formatted YYYY-MM-DD.
 fasta_path: example_data/COVID-19_JN.1/VirusSeq_JN1_alignment.fasta #    Path to fasta file containing sequences to be placed into template xml.
-#down_sample_to: 100 #    If provided the fasta file and initial tree file used to generate the BEAST 2 xml is downsampled to this amount.
-initial_tree_type: Temporal #    Initial tree type to use. str (either 'Distance' or 'Temporal') or None
+use_initial_tree: False
 log_file_basename: BDSKY_serial #    If provided .tree, .log and .state files from running BEAST 2 will have this name prefixed by 'run-with-seed-{seed}-'.
 metadata_path: example_data/COVID-19_JN.1/VirusSeq_JN1_metadata.csv #    Path to csv or tsv containing metadata for sequences in fasta_path.
-number_of_beast_runs: 4 #    Number of chains to use (repeated runs to do) when running BEAST.
+number_of_beast_runs: 3 #    Number of chains to use (repeated runs to do) when running BEAST.
 origin_start_addition: 0.02737850787132101 #    Suggested infection period of pathogen. **Should be in years.** This + initial MLE tree height is used as starting value of origin.
 origin_upper_addition: 2 #    This + initial MLE tree height is used as upper value of origin prior.
 overall_save_dir: SBATCH-Test-BDSKY_change_times #    Path to where you are saving all the runs of this workflow.
