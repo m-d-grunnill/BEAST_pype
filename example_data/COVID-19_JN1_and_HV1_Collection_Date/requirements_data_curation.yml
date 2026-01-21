@@ -1,0 +1,17 @@
+name: beast_pype_data_curation
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  # Python
+  - conda-forge::python
+  # Python Bioinformatics
+  - conda-forge::biopython
+  - bioconda::nextclade
+  # Python Data Sci
+  - conda-forge::pandas
+  # Utils
+  - conda-forge::pyyaml
+  - conda-forge::tqdm
+  # Jupyter
+  - conda-forge::jupyter

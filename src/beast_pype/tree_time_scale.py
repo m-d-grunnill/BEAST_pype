@@ -188,7 +188,7 @@ def plot_root_to_tip(time_tree, label=True, x_tick_freq='automatic'):
 
 
 
-def temporal_pruning_sampler(time_tree: TreeTime, sample_size: int, draws=1):
+def temporal_pruning_sampler(time_tree: TreeTime, sample_size: int, draws=1, seed=None):
     """
     Sample a time tree object.
 
@@ -201,6 +201,8 @@ def temporal_pruning_sampler(time_tree: TreeTime, sample_size: int, draws=1):
         Sample size of desired tree.
     draws : int
         Number of draws.
+    seed : int
+        Random seed for sampling.
 
     Returns
     -------
@@ -226,9 +228,10 @@ def temporal_pruning_sampler(time_tree: TreeTime, sample_size: int, draws=1):
     abs_residuals = np.absolute(root_to_tip_actual - root_to_tip_expected)
     prune_prob = abs_residuals / abs_residuals.sum()
     selections = []
+    rng = np.random.default_rng(seed=seed)
     for draw in range(draws):
         selection = copy.deepcopy(tip_names)
-        to_prune_index = np.random.choice(n_tips, size=to_prune, p=prune_prob, replace=False)
+        to_prune_index = rng.choice(n_tips, size=to_prune, p=prune_prob, replace=False)
         selection = [ele for index, ele in enumerate(selection) if index not in to_prune_index]
         selections.append(selection)
 

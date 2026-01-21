@@ -72,9 +72,9 @@ def gen_xml_set_diag_notebook(save_dir,
                 f"phase_5i_params = sample_diag.merging_outputs_params(output_path=outputs_and_reports_dir, xml_set='{xml_set}')\n" +
                 "phase_5i_log = execute_notebook(input_path=f'{workflow_modules}/Phase-5i-Merge-BEAST-outputs.ipynb',\n" +
                  f"output_path=save_dir + '/{xml_set}/Phase-5i-Merge-BEAST-outputs.ipynb',\n" +
-                "parameters=phase_5i_params,\n" +
-                "progress_bar=True,\n" +
-                "nest_asyncio=True)"
+                "\t\t\t\t\t\t\t\tparameters=phase_5i_params,\n" +
+                "\t\t\t\t\t\t\t\tprogress_bar=True,\n" +
+                "\t\t\t\t\t\t\t\tnest_asyncio=True)"
             )
         ]
 

@@ -1,8 +1,8 @@
 collection_date_field: 'sample collection date' #    Name of field in metadata_db containing collection dates of sequences. Should be formatted YYYY-MM-DD.
-fasta_path: example_data/COVID-19_JN.1_and_HV.1/JN_1_sequences.fasta #    Path to fasta file containing sequences to be placed into template xml.
+fasta_path: example_data/COVID-19_JN.1_and_HV.1_Submission_Date/JN_1_sequences.fasta #    Path to fasta file containing sequences to be placed into template xml.
 use_initial_tree: False #    If False an initial tree will not be generated skipping Phases 2i and 2ii. As such, in phase 4 BEAST 2 generate its own initial tree.
 log_file_basename: BEAST #     If provided .tree, .log and .state files from running BEAST 2 will have this name prefixed by 'run-with-seed-{seed}-'.
-metadata_path: example_data/COVID-19_JN.1_and_HV.1/JN_1_metadata.csv #      Path to csv or tsv containing metadata for sequences in fasta_path.
+metadata_path: example_data/COVID-19_JN.1_and_HV.1_Submission_Date/JN_1_metadata.csv #      Path to csv or tsv containing metadata for sequences in fasta_path.
 number_of_beast_runs: 3 #    Number of chains to use (repeated runs to do) when running BEAST.
 overall_save_dir: Local-Test-Generic_no-initial-tree #    Path to where you are saving all the runs of this workflow.
 sample_id_field: 'fasta header name' #    Name of field in metadata_db containing sequence IDs.
