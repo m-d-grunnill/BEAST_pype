@@ -1,7 +1,7 @@
 # Example Parameters for running the BDSKY-Serial-Comparative.ipynb workflow with Rt change Times.
 
 # Running an Instance of this Workflow
-overall_save_dir: Local-Test-BDSKY-Serial-Comparative_change_times # Path to where you are saving all the runs of this workflow.
+overall_save_dir: SBATCH-Test-BDSKY-Serial-Comparative_change_times # Path to where you are saving all the runs of this workflow.
 
 # General Inputs
 template_xml_path: template_beast_xmls/BDSKY_serial_COVID-19_template.xml #    Path to template BEAST 2 xml.
@@ -16,17 +16,19 @@ xml_set_definitions: # The definitions for the xml_sets you wish to use.
   #{Keys=The name used for the xml_set.: Values: Will be used with pandas DataFrame.query to separate out your data}
   JN.1: "`lineage name` == 'JN.1'"
   JN.1.1: "`lineage name` == 'JN.1.1'"
+#  JN.1.2: "`lineage name` == 'JN.1.2'"
+#  JN.1.4: "`lineage name` == 'JN.1.4'"
 
 # Initial Tree Building & Downsampling
 #down_sample_to: 100 #    If provided the fasta file and initial tree file used to generate the BEAST 2 xml is downsampled to this amount.
 
 # BDSky Options
-rt_partitions: #Instructions for setting rt_change date, going backwards from youngest xml_set in fasta_path until rt_partitions["end"]  is reached.
+rt_changes: #Instructions for setting rt_change date, going backwards from youngest xml_set in fasta_path until rt_changes["end"]  is reached.
   # {'unit': 'days, weeks or years', 'every': int/float, 'end': date str YYYY-MM-DD}
   unit: months
   every: 1
 
-sampling_prop_partitions: #Instructions for setting sampling_prop_change date, going backwards from youngest xml_set in fasta_path until sampling_prop_partition_freq["end"]  is reached.
+sampling_prop_changes: #Instructions for setting sampling_prop_change date, going backwards from youngest xml_set in fasta_path until sampling_prop_changes["end"]  is reached.
   # {'unit': 'days, weeks or years', 'every': int/float, 'end': date str YYYY-MM-DD}
   unit: months
   every: 1
@@ -43,3 +45,8 @@ tree_log_every: 1000 #    How often to save a tree file during BEAST runs.
 
 #Running BEAST 2
 number_of_beast_runs: 3 #Number of chains to use (repeated runs to do) when running BEAST.
+sbatch_options_needing_a_value:
+    '--cpus-per-task': 1             # Number of CPU cores per task
+    '--time': 0-01:00:00 # Maximum runtime (D-HH:MM:SS)
+    '--mem': 16G      # RAM to use.
+    #'--partition':  If needed uncomment and fill in the name of a partition to use. 

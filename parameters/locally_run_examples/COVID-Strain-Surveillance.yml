@@ -1,71 +1,38 @@
 collection_date_field: 'sample collection date' #    Name of field in metadata_db containing collection dates of sequences. Should be formatted YYYY-MM-DD.
-fasta_path: example_data/COVID-19_JN.1_and_HV.1_Submission_Date/HV_1_and_JN_1_sequences.fasta #    Path to fasta file containing sequences to be placed into template xml.
+fasta_path: example_data/COVID-19_JN.1/VirusSeq_JN1_alignment.fasta #    Path to fasta file containing sequences to be placed into template xml.
 down_sample_to: 100 #    If provided the fasta file and initial tree file used to generate the BEAST 2 xml is downsampled to this amount.
 initial_tree_type: Temporal #    Intial tree type to use. str (either 'Distance' or 'Temporal') or None
 log_file_basename: BDSKY_serial #    If provided .tree, .log and .state files from running BEAST 2 will have this name prefixed by 'run-with-seed-{seed}-'.
-metadata_path: example_data/COVID-19_JN.1_and_HV.1_Submission_Date/HV_1_and_JN_1_metadata.csv #    Path to csv or tsv containing metadata for sequences in fasta_path.
+metadata_path: example_data/COVID-19_JN.1/VirusSeq_JN1_metadata.csv #    Path to csv or tsv containing metadata for sequences in fasta_path.
 number_of_beast_runs: 3 #    Number of chains to use (repeated runs to do) when running BEAST.
 origin_start_addition: 0.02737850787132101 #    Suggested infection period of pathogen. **Should be in years.** This + initial MLE tree height is used as starting value of origin.
 origin_upper_addition: 2 #    This + initial MLE tree height is used as upper value of origin prior.
 overall_save_dir: Local-Test-COVID-Strain-Surveillance #    Path to where you are saving all the runs of this workflow.
-rt_partition_freq: #Instructions for setting rt_partitions dates, going backwards from youngest xml_set in fasta_path until rt_partitions["end"]  is reached.
+rt_partition_freq: #Instructions for setting rt_change date, going backwards from youngest xml_set in fasta_path until rt_changes["end"]  is reached.
   # {'unit': 'days, weeks or years', 'every': int/float, 'end': date str YYYY-MM-DD}
-  #     Instructions for setting rt_partitions date, going backwards from the youngest date in all the metadata (all xml_sets/strains)
+  #     Instructions for setting rt_change date, going backwards from the youngest date in all the metadata (all xml_sets/strains)
   #    For VOI strains the endpoint is the youngest date out of the oldest dates for each of the VOI strains' metadata.
-  #    For the DR stain the last partition goes backwards one more 'unit' multiplied by 'every' from the VOI strains.
-  #    Alternatively, you can set the DR stain the last partition by including
-  #   'dr_extra_offset' with its own 'unit' and 'amount'.
+  #    For the DR stain the endpoint goes backwards one more 'unit' multiplied by 'every' from the VOI strains.
   unit: weeks
   every: 4
-sampling_prop_partition_freq: #Instructions for setting sampling_prop_partitions dates,
- # going backwards from youngest xml_set in fasta_path until sampling_prop_partitions["end"]  is reached.
-  # {'unit': 'days, weeks or years', 'every': int/float, 'end': date str YYYY-MM-DD}
-  #     Instructions for setting sampling_prop_partitions date, going backwards from the youngest date in all the metadata (all xml_sets/strains)
-  #    For VOI strains the endpoint is the youngest date out of the oldest dates for each of the VOI strains' metadata.
-  #    For the DR stain the last partition goes backwards one more 'unit' multiplied by 'every' from the VOI strains.
-  #    Alternatively, you can set the DR stain the last partition by including
-  #   'dr_extra_offset' with its own 'unit' and 'amount'.
-  unit: weeks
-  every: 4
-  dr_extra_offset:
-    unit: weeks
-    amount: 4
 lineage_field: 'lineage name'
-dr_strain: 'HV.1'
+dr_strain: 'JN.1'
 voi_strains:
-  - 'JN.1'
+  - 'JN.1.1'
+  - 'JN.1.3'
 sub_lineages_mapping:
-  'HV.1':
-    - 'HV.1'
   'JN.1':
     - 'JN.1'
-    - 'JN.1.1'
-    - 'JN.1.10'
-    - 'JN.1.18'
-    - 'JN.1.19'
-    - 'JN.1.2'
-    - 'JN.1.22'
-    - 'JN.1.31'
-    - 'JN.1.39'
-    - 'JN.1.4'
-    - 'JN.1.4.5'
-    - 'JN.1.4.7'
-    - 'JN.1.41'
-    - 'JN.1.44'
-    - 'JN.1.45'
-    - 'JN.1.47.1'
-    - 'JN.1.5'
-    - 'JN.1.52'
-    - 'JN.1.55'
-    - 'JN.1.6'
-    - 'JN.1.60'
-    - 'JN.1.8'
-    - 'JN.1.8.3'
-    - 'JN.1.9'
-    - 'JN.11'
-    - 'JN.13'
-    - 'JN.18'
-sample_id_field: 'fasta header name' #    Name of field in metadata_db containing sequence IDs.
+  'JN.1.1':
+      - 'JN.1.1'
+      - 'JN.1.2'
+  'JN.1.3':
+      - 'JN.1.3'
+      - 'JN.1.4'
+      - 'JN.1.5'
+      - 'JN.1.6'
+zero_sampling_before_first_sample: True # Fix the sampling proportion to 0 for the period before the first xml_set.
+sample_id_field: 'specimen collector sample ID' #    Name of field in metadata_db containing sequence IDs.
 template_xml_path: template_beast_xmls/BDSKY_serial_COVID-19_template.xml #    Path to template BEAST 2 xml.
 chain_length: 50000 # Number of chains to use for BEAST runs.
 screen_log_every: 5000 #    How often to output to screen during BEAST runs.
