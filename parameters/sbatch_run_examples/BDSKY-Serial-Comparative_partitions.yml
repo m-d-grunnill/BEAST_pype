@@ -1,0 +1,50 @@
+# Example Parameters for running the BDSKY-Serial-Comparative.ipynb workflow with Rt change Times.
+
+# Running an Instance of this Workflow
+overall_save_dir: SBATCH-Test-BDSKY-Serial-Comparative_change_times # Path to where you are saving all the runs of this workflow.
+
+# General Inputs
+template_xml_path: template_beast_xmls/BDSKY_serial_COVID-19_template.xml #    Path to template BEAST 2 xml.
+fasta_path: example_data/COVID-19_JN.1/VirusSeq_JN1_alignment.fasta # Path to fasta file containing sequences to be placed into template xml.
+metadata_path: example_data/COVID-19_JN.1/VirusSeq_JN1_metadata.csv # Path to csv or tsv containing metadata for sequences in fasta_path.
+sample_id_field: 'specimen collector sample ID' #    Name of field in metadata_db containing sequence IDs.
+collection_date_field: 'sample collection date' #Name of field in metadata_db containing collection dates of sequences. Should be formatted YYYY-MM-DD.
+use_initial_tree: False
+
+# Defining XML Sets (Partitioning Data)
+xml_set_definitions: # The definitions for the xml_sets you wish to use.
+  #{Keys=The name used for the xml_set.: Values: Will be used with pandas DataFrame.query to separate out your data}
+  HV.1: "`lineage name` == 'HV.1'"
+  JN.1: "`lineage name` == 'JN.1'"
+
+# Initial Tree Building & Downsampling
+#down_sample_to: 100 #    If provided the fasta file and initial tree file used to generate the BEAST 2 xml is downsampled to this amount.
+
+# BDSky Options
+rt_partitions: #Instructions for setting rt_change date, going backwards from youngest xml_set in fasta_path until rt_partitions["end"]  is reached.
+  # {'unit': 'days, weeks or years', 'amount': int/float, 'end': date str YYYY-MM-DD}
+  unit: months
+  amount: 1
+
+sampling_prop_partitions: #Instructions for setting sampling_prop_change date, going backwards from youngest xml_set in fasta_path until sampling_prop_partition_freq["end"]  is reached.
+  # {'unit': 'days, weeks or years', 'amount': int/float, 'end': date str YYYY-MM-DD}
+  unit: months
+  amount: 1
+
+zero_sampling_before_first_sample: True # Fix the sampling proportion to 0 for the period before the first xml_set.
+
+#MCMC Tree/Logfile names Chain-lengths & Save Steps
+log_file_basename: BDSKY_serial #   If provided .tree, .log and .state files from running BEAST 2 will have this name prefixed by 'run-with-seed-{seed}-', number being that of the chain.
+chain_length: 50000 # Number of chains to use for BEAST runs.
+screen_log_every: 5000 #    How often to output to screen during BEAST runs.
+store_state_every: 1000 #    How often to store MCMC state during BEAST runs.
+trace_log_every: 1000 #    How often to save a log file during BEAST runs.
+tree_log_every: 1000 #    How often to save a tree file during BEAST runs.
+
+#Running BEAST 2
+number_of_beast_runs: 3 #Number of chains to use (repeated runs to do) when running BEAST.
+sbatch_options_needing_a_value:
+    '--cpus-per-task': 1             # Number of CPU cores per task
+    '--time': 0-01:00:00 # Maximum runtime (D-HH:MM:SS)
+    '--mem': 16G      # RAM to use.
+    #'--partition':  If needed uncomment and fill in the name of a partition to use. 

@@ -228,7 +228,7 @@ def gen_bdsky_serial_xml(template_path,
                       "* origin_start_addition")
     if rt_change_dates is not None:
         if rt_dims is not None:
-            raise AssertionError("Either rt_dims or rt_changes can be given but not both.")
+            raise AssertionError("Either rt_dims or rt_partitions can be given but not both.")
         beast2xml.add_rate_change_dates(
             parameter="birthRateChangeTimes",
             dates=rt_change_dates)
@@ -237,7 +237,7 @@ def gen_bdsky_serial_xml(template_path,
                                               dimension=rt_dims)
     if sampling_prop_change_dates is not None:
         if sampling_prop_dims is not None:
-            raise AssertionError("Either sampling_prop_dims or sampling_prop_changes can be given but not both.")
+            raise AssertionError("Either sampling_prop_dims or sampling_prop_partition_freq can be given but not both.")
         if zero_sampling_before_first_sample:
             beast2xml.add_rate_change_dates(
                 parameter="samplingRateChangeTimes",
