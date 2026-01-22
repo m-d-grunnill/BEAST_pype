@@ -109,15 +109,15 @@ class SimpleWorkflowVariationTest(WorkflowVariationTest):
         should_not_be_generated = []
         if self.variation == 'full':
             should_be_generated += [
-                'Phase-2i-IQTree-Building.ipynb',
-                'Phase-2i-IQTree-Correction.ipynb',
-                'Phase-2ii-TreeTime-and-Down-Sampling.ipynb'
+                'Phase-2i-and-2iii-IQTree-Building.ipynb',
+                'Phase-2i-and-2iii-IQTree-Correction.ipynb',
+                'Phase-2ii-and-2iv-TreeTime-and-Downsampling.ipynb'
             ]
         else:
             should_not_be_generated += [
-                'Phase-2i-IQTree-Building.ipynb',
-                'Phase-2i-IQTree-Correction.ipynb',
-                'Phase-2ii-TreeTime-and-Down-Sampling.ipynb'
+                'Phase-2i-and-2iii-IQTree-Building.ipynb',
+                'Phase-2i-and-2iii-IQTree-Correction.ipynb',
+                'Phase-2ii-and-2iv-TreeTime-and-Downsampling.ipynb'
             ]
         if self.variation in ['full', 'no initial tree']:
             should_be_generated += [self.xml_generation_notebook]
@@ -137,15 +137,15 @@ class ComparativeWorkflowVariationTest(WorkflowVariationTest):
         should_not_be_generated = []
         if self.variation == 'full':
             should_be_generated += [
-                                       'Phase-2i-IQTree-Building.ipynb',
-                                       'Phase-2i-IQTree-Correction.ipynb',
-                                   ] + [f"{xml_set_directory}/Phase-2ii-TreeTime-and-Down-Sampling.ipynb"
+                                       'Phase-2i-and-2iii-IQTree-Building.ipynb',
+                                       'Phase-2i-and-2iii-IQTree-Correction.ipynb',
+                                   ] + [f"{xml_set_directory}/Phase-2ii-and-2iv-TreeTime-and-Downsampling.ipynb"
                                         for xml_set_directory in self.xml_set_labels]
         else:
             should_not_be_generated += [
-                                           'Phase-2i-IQTree-Building.ipynb',
-                                           'Phase-2i-IQTree-Correction.ipynb',
-                                       ] + [f"{xml_set_directory}/Phase-2ii-TreeTime-and-Down-Sampling.ipynb"
+                                           'Phase-2i-and-2iii-IQTree-Building.ipynb',
+                                           'Phase-2i-and-2iii-IQTree-Correction.ipynb',
+                                       ] + [f"{xml_set_directory}/Phase-2ii-and-2iv-TreeTime-and-Downsampling.ipynb"
                                             for xml_set_directory in self.xml_set_labels]
         if self.variation in ['full', 'no initial tree']:
             should_be_generated += [f"{xml_set_directory}/{self.xml_generation_notebook}"

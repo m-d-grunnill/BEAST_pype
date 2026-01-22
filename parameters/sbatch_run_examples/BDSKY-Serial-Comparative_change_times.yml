@@ -20,7 +20,7 @@ xml_set_definitions: # The definitions for the xml_sets you wish to use.
 #  JN.1.4: "`lineage name` == 'JN.1.4'"
 
 # Initial Tree Building & Downsampling
-#down_sample_to: 100 #    If provided the fasta file and initial tree file used to generate the BEAST 2 xml is downsampled to this amount.
+#downsample_to: 100 #    If provided the fasta file and initial tree file used to generate the BEAST 2 xml is downsampled to this amount.
 
 # BDSky Options
 rt_changes: #Instructions for setting rt_change date, going backwards from youngest xml_set in fasta_path until rt_changes["end"]  is reached.

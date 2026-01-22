@@ -248,6 +248,54 @@ class WorkflowParams(SimpleNamespace):
         """
         return {key: value for key, value in self.__dict__.items() if key in parameter_names}
 
+    def retrieve_phase_3_params(self, dir_to_check_and_save_to):
+        """
+        Retrieve parameters used in phase 3 of the workflow.
+
+        Parameters
+        ---------------
+        dir_to_check_and_save_to: str
+            Path to the directory to check for metadata, sequences and initial trees and
+            save to.
+
+        Returns
+        -------
+        Dictionary of parameter names and values.
+        """
+        params = self.retrieve_params([
+                                     'template_xml_path',
+                                     'collection_date_field',
+                                     'sample_id_field',
+                                     'log_file_basename',
+                                     'chain_length',
+                                     'trace_log_every',
+                                     'tree_log_every',
+                                     'screen_log_every',
+                                     'store_state_every'])
+        params['save_dir'] = dir_to_check_and_save_to
+        if os.path.exists(f'{dir_to_check_and_save_to}/downsampled_initial_tree/treetime.nwk'):
+            params['initial_tree_path'] = f'{dir_to_check_and_save_to}/downsampled_initial_tree/treetime.nwk'
+        elif os.path.exists(f'{dir_to_check_and_save_to}/initial_tree/treetime.nwk'):
+            params['initial_tree_path'] = f'{dir_to_check_and_save_to}/initial_tree/treetime.nwk'
+        elif os.path.exists(f'{dir_to_check_and_save_to}/initial_tree/treetime.nwk'):
+            params['initial_tree_path'] = f'{dir_to_check_and_save_to}/initial_tree/iqtree.nwk'
+        else:
+            params['initial_tree_path'] = None
+
+        if os.path.exists(f'{dir_to_check_and_save_to}/downsampled_metadata.csv'):
+            params['metadata_path'] = f'{dir_to_check_and_save_to}/downsampled_metadata.csv'
+        elif os.path.exists(f'{dir_to_check_and_save_to}/metadata.csv'):
+            params['metadata_path'] = f'{dir_to_check_and_save_to}/metadata.csv'
+        else:
+            params['metadata_path'] = self.metadata_path
+        if os.path.exists(f'{dir_to_check_and_save_to}/downsampled_sequences.fasta'):
+            params['fasta_path'] = f'{dir_to_check_and_save_to}/downsampled_sequences.fasta'
+        elif os.path.exists(f'{dir_to_check_and_save_to}/sequences.fasta'):
+            params['fasta_path'] = f'{dir_to_check_and_save_to}/sequences.fasta'
+        else:
+            params['fasta_path'] = self.fasta_path
+        return params
+
     def retrieve_phase_4_params(self):
         """
         Retrieve parameters used in phase 4 of the workflow.
@@ -350,7 +398,7 @@ class SimpleWorkflowParams(WorkflowParams):
             if self.initial_tree_path is not None and self.initial_tree_type is None:
                 raise ValueError('initial_tree_type must be specified if initial_tree_path is given.')
 
-            if self.down_sample_to is not None and (self.initial_tree_path is not None or self.initial_tree_type == 'Distance'):
+            if self.downsample_to is not None and (self.initial_tree_path is not None or self.initial_tree_type == 'Distance'):
                 raise ValueError("Currently beast_pype's down_sampling method is tied to its Tree Time tree building." +
                                  "Therefore, to use this down sampling method an initial_tree_path should not be given and an initial_tree_type should be set to 'Temporal'.")
 
@@ -368,7 +416,14 @@ class SimpleWorkflowParams(WorkflowParams):
         -------
         Dictionary of parameter names and values.
         """
-        return self.retrieve_params(['save_dir', 'fasta_path' , 'max_threads'])
+        if self.ready_to_go_xml is None and \
+                self.use_initial_tree and \
+                (self.initial_tree_path is None and self.initial_tree_type is not None):
+            params = self.retrieve_params(['save_dir', 'fasta_path' , 'max_threads'])
+            params['tree_dir_name'] = 'initial_tree'
+        else:
+            params = None
+        return params
 
     def retrieve_phase_2ii_params(self):
         """
@@ -378,14 +433,56 @@ class SimpleWorkflowParams(WorkflowParams):
         -------
         Dictionary of parameter names and values.
         """
-        return self.retrieve_params(['save_dir',
-                                     'fasta_path',
-                                     'metadata_path',
-                                     'sample_id_field',
-                                     'collection_date_field',
-                                     'down_sample_to',
-                                     'root_strain_names',
-                                     'remove_root'])
+        if self.ready_to_go_xml is None and \
+                self.use_initial_tree and \
+                (self.initial_tree_path is None and self.initial_tree_type == 'Temporal'):
+            params = self.retrieve_params(['save_dir',
+                                           'fasta_path',
+                                           'metadata_path',
+                                           'sample_id_field',
+                                           'collection_date_field',
+                                           'downsample_to',
+                                           'root_strain_names',
+                                           'remove_root'])
+            params['tree_dir_name'] = 'initial_tree'
+        else:
+            params = None
+        return params
+
+    def retrieve_phase_2iii_params(self):
+        """
+        Retrieve parameters used in phase 2i of the workflow.
+
+        Returns
+        -------
+        Dictionary of parameter names and values.
+        """
+        if os.path.exists(f'{self.save_dir}/downsampled_sequences.fasta'):
+            params = self.retrieve_params(['save_dir', 'max_threads'])
+            params['fasta_path'] = f'{self.save_dir}/downsampled_sequences.fasta'
+            params['tree_dir_name'] = 'downsampled_initial_tree'
+        else:
+            params = None
+        return params
+
+    def retrieve_phase_2iv_params(self):
+        """
+        Retrieve parameters used in phase 2iv of the workflow.
+
+        Returns
+        -------
+        Dictionary of parameter names and values.
+        """
+        if os.path.exists(f'{self.save_dir}/downsampled_sequences.fasta'):
+            params = self.retrieve_params(['save_dir'
+                                           'sample_id_field',
+                                           'collection_date_field'])
+            params['fasta_path'] = f'{self.save_dir}/downsampled_sequences.fasta'
+            params['metadata_path'] = f'{self.save_dir}/downsampled_metadata.csv'
+            params['tree_dir_name'] = 'downsampled_initial_tree'
+        else:
+            params = None
+        return params
 
     def retrieve_phase_5_params(self):
         """
@@ -413,10 +510,10 @@ class SimpleWorkflowParams(WorkflowParams):
             Youngest tip date.
 
         """
-        if self.down_sample_to is None:
+        if self.downsample_to is None:
             metadata_path = self.metadata_path
         else:
-            metadata_path = f'{self.save_dir}/down_sampled_metadata.csv'
+            metadata_path = f'{self.save_dir}/downsampled_metadata.csv'
         if metadata_path.endswith('.tsv'):
             sep = '\t'
         elif metadata_path.endswith('.csv'):
@@ -465,18 +562,11 @@ class GenericWorkflowParams(SimpleWorkflowParams):
         -------
         Dictionary of parameter names and values.
         """
-        return self.retrieve_params(['save_dir',
-                                     'template_xml_path',
-                                     'use_initial_tree',
-                                     'initial_tree_path',
-                                     'collection_date_field',
-                                     'sample_id_field',
-                                     'log_file_basename',
-                                     'chain_length',
-                                     'trace_log_every',
-                                     'tree_log_every',
-                                     'screen_log_every',
-                                     'store_state_every'])
+        if self.ready_to_go_xml is not None:
+            params = super().retrieve_phase_3_params(dir_to_check_and_save_to=self.save_dir)
+        else:
+            params = None
+        return params
 
 def _bdksy_serial_errors(rt_dims,
                          rt_partitions,
@@ -609,55 +699,49 @@ class BDSKYSerialWorkflowParams(SimpleWorkflowParams):
         -------
         Dictionary of parameter names and values.
         """
-        phase_3_params = self.retrieve_params(['save_dir',
-                                               'template_xml_path',
-                                               'use_initial_tree',
-                                               'rt_dims',
-                                               'sampling_prop_dims',
-                                               'zero_sampling_before_first_sample',
-                                               'collection_date_field',
-                                               'sample_id_field',
-                                               'origin_start_addition',
-                                               'origin_upper_addition',
-                                               'log_file_basename',
-                                               'origin_prior',
-                                               'chain_length',
-                                               'trace_log_every',
-                                               'tree_log_every',
-                                               'screen_log_every',
-                                               'store_state_every'])
-        if isinstance(self.rt_partitions, dict) or isinstance(self.sampling_prop_partitions, dict):
-            oldest_tip_date, youngest_tip_date = self.tip_date_range()
-            rt_partition_dates, sampling_prop_partition_dates = _phase_3_partition_params(
-                self.rt_partitions,
-                self.sampling_prop_partitions,
-                self.zero_sampling_before_first_sample,
-                youngest_tip_date,
-                oldest_tip_date)
-            phase_3_params['rt_partitions'] = rt_partition_dates
-            phase_3_params['sampling_prop_partitions'] = sampling_prop_partition_dates
-        else:
-            phase_3_params['rt_partitions'] = self.rt_partitions
-            phase_3_params['sampling_prop_partitions'] = self.sampling_prop_partitions
-            if self.zero_sampling_before_first_sample:
+        if self.ready_to_go_xml is not None:
+            phase_3_params = super().retrieve_phase_3_params(dir_to_check_and_save_to=self.save_dir)
+            phase_3_params.update(self.retrieve_params([
+                                                   'rt_dims',
+                                                   'sampling_prop_dims',
+                                                   'zero_sampling_before_first_sample',
+                                                   'origin_start_addition',
+                                                   'origin_upper_addition',
+                                                   'origin_prior']))
+            if isinstance(self.rt_partitions, dict) or isinstance(self.sampling_prop_partitions, dict):
                 oldest_tip_date, youngest_tip_date = self.tip_date_range()
-                if self.sampling_prop_partitions is not None:
-                    partition_dates = pd.to_datetime(self.sampling_prop_partitions)
-                    if oldest_tip_date > min(partition_dates):
-                        raise ValueError('If using zero_sampling_before_first_sample oldest partition date should be before oldest date in the list from of sampling_prop_partitions.')
-                    phase_3_params['sampling_prop_partitions'] = [oldest_tip_date.strftime('%Y-%m-%d')] + phase_3_params['sampling_prop_partitions']
-                else:
-                    phase_3_params['sampling_prop_partitions'] = [oldest_tip_date.strftime('%Y-%m-%d')]
+                rt_partition_dates, sampling_prop_partition_dates = _phase_3_partition_params(
+                    self.rt_partitions,
+                    self.sampling_prop_partitions,
+                    self.zero_sampling_before_first_sample,
+                    youngest_tip_date,
+                    oldest_tip_date)
+                phase_3_params['rt_partitions'] = rt_partition_dates
+                phase_3_params['sampling_prop_partitions'] = sampling_prop_partition_dates
+            else:
+                phase_3_params['rt_partitions'] = self.rt_partitions
+                phase_3_params['sampling_prop_partitions'] = self.sampling_prop_partitions
+                if self.zero_sampling_before_first_sample:
+                    oldest_tip_date, youngest_tip_date = self.tip_date_range()
+                    if self.sampling_prop_partitions is not None:
+                        partition_dates = pd.to_datetime(self.sampling_prop_partitions)
+                        if oldest_tip_date > min(partition_dates):
+                            raise ValueError('If using zero_sampling_before_first_sample oldest partition date should be before oldest date in the list from of sampling_prop_partitions.')
+                        phase_3_params['sampling_prop_partitions'] = [oldest_tip_date.strftime('%Y-%m-%d')] + phase_3_params['sampling_prop_partitions']
+                    else:
+                        phase_3_params['sampling_prop_partitions'] = [oldest_tip_date.strftime('%Y-%m-%d')]
 
-        with open(f'{self.save_dir}/pipeline_run_info.yml', 'r') as file:
-            pipeline_run_info = yaml.safe_load(file)
-        self.rt_partition_dates = phase_3_params['rt_partitions']
-        pipeline_run_info['rt_partitions'] = phase_3_params['rt_partitions']
-        self.sampling_prop_partition_dates = phase_3_params['sampling_prop_partitions']
-        pipeline_run_info['sampling_prop_partitions'] = phase_3_params['sampling_prop_partitions']
-        with open(f'{self.save_dir}/pipeline_run_info.yml', 'w') as fp:
-            yaml.dump(pipeline_run_info, fp, sort_keys=True)
-        fp.close()
+            with open(f'{self.save_dir}/pipeline_run_info.yml', 'r') as file:
+                pipeline_run_info = yaml.safe_load(file)
+            self.rt_partition_dates = phase_3_params['rt_partitions']
+            pipeline_run_info['rt_partitions'] = phase_3_params['rt_partitions']
+            self.sampling_prop_partition_dates = phase_3_params['sampling_prop_partitions']
+            pipeline_run_info['sampling_prop_partitions'] = phase_3_params['sampling_prop_partitions']
+            with open(f'{self.save_dir}/pipeline_run_info.yml', 'w') as fp:
+                yaml.dump(pipeline_run_info, fp, sort_keys=True)
+            fp.close()
+        else:
+            phase_3_params = None
         return phase_3_params
 
 
@@ -710,7 +794,7 @@ class ComparativeWorkflowParams(WorkflowParams):
             if self.initial_tree_type not in ['Temporal', 'Distance']:
                 raise ValueError('initial_tree_type must be either "Temporal" or "Distance".')
 
-            if self.down_sample_to is not None and (self.initial_tree_type != 'Temporal'):
+            if self.downsample_to is not None and (self.initial_tree_type != 'Temporal'):
                 raise ValueError("Currently beast_pype's down_sampling method is tied to its Tree Time tree building." +
                                  "Therefore, to use this down sampling method an use_initial_tree = True and initial_tree_type = 'Temporal'.")
 
@@ -779,7 +863,7 @@ class ComparativeWorkflowParams(WorkflowParams):
         parameters = self.retrieve_params([
             'sample_id_field',
             'collection_date_field',
-            'down_sample_to',
+            'downsample_to',
             'root_strain_names',
             'remove_root'])
         parameters['save_dir'] = xml_set_directory
@@ -821,10 +905,10 @@ class ComparativeWorkflowParams(WorkflowParams):
         youngest_tip_date: datetime
             Youngest tip date.
         """
-        if self.down_sample_to is None:
+        if self.downsample_to is None:
             metadata_path = f'{xml_set_directory}/metadata.csv'
         else:
-            metadata_path = f'{xml_set_directory}/down_sampled_metadata.csv'
+            metadata_path = f'{xml_set_directory}/downsampled_metadata.csv'
         if metadata_path.endswith('.tsv'):
             sep = '\t'
         elif metadata_path.endswith('.csv'):

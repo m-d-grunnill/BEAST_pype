@@ -86,7 +86,7 @@ def read_log_file(file_path,
                 'Therefore conversion to "TMRCA" column by subtraction from youngest tip date skipped.')
         if convert_become_uninfectious_rate:
             trace_df['Rate of Becoming Uninfectious (per day)'] = trace_df['becomeUninfectiousRate_BDSKY_Serial'] / 365
-            trace_df['Infection period (per day)'] = 1 / trace_df['Rate of Becoming Uninfectious (per day)']
+            trace_df['Mean Infection period (per day)'] = 1 / trace_df['Rate of Becoming Uninfectious (per day)']
     return trace_df
 
 

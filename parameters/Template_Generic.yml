@@ -79,7 +79,7 @@ initial_tree_path: # str, (optional, can be missing from yml)
 # * Set `use_initial_tree` to True`.
 # * Set `use_initial_type` to 'Temporal' or 'Distance'.
 # Otherwise:
-# * Comment out `use_initial_tree`, 'initial_tree_type' and `down_sample_to`.
+# * Comment out `use_initial_tree`, 'initial_tree_type' and `downsample_to`.
 
 use_initial_tree: #  bool, (default, can be missing from yml) True
 #    If False an initial tree will not be generated skipping Phases 2i and 2ii. As such, in phase 4 BEAST 2 generate its own
@@ -89,22 +89,22 @@ initial_tree_type: # str (either 'Distance' or 'Temporal') or None, (default, ca
 #    Initial tree type to use.
 #    If 'Distance' and initial_tree_path is not provided the IQtree tree from Phase-2i-IQTree.ipynb is used for the
 #    initial tree and phase 2ii is skipped.
-#    if 'Temporal' and initial_tree_path is not provided the TreeTime tree from Phase-2ii-TreeTime-and-Down-Sampling.ipynb
+#    if 'Temporal' and initial_tree_path is not provided the TreeTime tree from Phase-2ii-and-2iv-TreeTime-and-Downsampling.ipynb
 #    is used for the initial tree.
 
 #root_strain_names: # list of strings, (optional, can be missing from yml)
 #     IDs of sequences used to root 'Temporal' initial_tree removed from fasta file and initial tree file used to generate
 #    the BEAST 2 xml (e.g. ...).
 
-#down_sample_to: # int, (optional, can be missing from yml)
+#downsample_to: # int, (optional, can be missing from yml)
 #    Available if not using a `ready_to_go_xml` and generating an initial tree file.
 #    If not given downsampling will not occur. When given down sampling only
 #   occurs if there are more sequences than the value given.
 #    If downsampling occurs the following are saved in  '{overall_save_dir}/{specific_run_save_dir}/' and used in generating
 #    a BEAST 2 xml in phase 3:
-#    #    initial_trees/down_sampled_time.nwk: # A downsampled temporal tree.
-#    #    down_sampled_sequences.fasta: # Fasta file containing downsamplec sequences.
-#    #    down_sampled_metadata.csv: # the down sampled metadata.
+#    #    initial_trees/downsampled_time.nwk: # A downsampled temporal tree.
+#    #    downsampled_sequences.fasta: # Fasta file containing downsamplec sequences.
+#    #    downsampled_metadata.csv: # the down sampled metadata.
 
 
 #MCMC Tree/Logfile names Chain-lengths & Save Steps
