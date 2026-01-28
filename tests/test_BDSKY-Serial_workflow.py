@@ -3,11 +3,18 @@ from base_test_classes import SimpleWorkflowVariationTest
 xml_generation_notebook = 'Phase-3-Gen-BDSKY-Serial-xml.ipynb'
 workflow = 'BDSKY-Serial'
 
-class TestBDSKYSerialFull(SimpleWorkflowVariationTest):
-    name = 'Test_BDSKY-Serial_Full'
-    parameters_path = 'parameters/locally_run_examples/BDSKY-Serial_full.yml'
+class TestBDSKYSerialInitialTree(SimpleWorkflowVariationTest):
+    name = 'Test_BDSKY-Serial_Initial_Tree'
+    parameters_path = 'parameters/locally_run_examples/BDSKY-Serial_InitialTree.yml'
     workflow = workflow
-    variation = 'full'
+    variation = 'initial tree building'
+    xml_generation_notebook = xml_generation_notebook
+
+class TestBDSKYSerialInitialTree(SimpleWorkflowVariationTest):
+    name = 'Test_BDSKY-Serial_Initial_Tree'
+    parameters_path = 'parameters/locally_run_examples/BDSKY-Serial_InitialTree.yml'
+    workflow = workflow
+    variation = 'initial tree building'
     xml_generation_notebook = xml_generation_notebook
 
 class TestBDSKYSerialChangeTimes(SimpleWorkflowVariationTest):

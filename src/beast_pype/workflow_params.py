@@ -399,7 +399,7 @@ class SimpleWorkflowParams(WorkflowParams):
                 raise ValueError('initial_tree_type must be specified if initial_tree_path is given.')
 
             if self.downsample_to is not None and (self.initial_tree_path is not None or self.initial_tree_type == 'Distance'):
-                raise ValueError("Currently beast_pype's down_sampling method is tied to its Tree Time tree building." +
+                raise ValueError("Currently beast_pype's downsample_toing method is tied to its Tree Time tree building." +
                                  "Therefore, to use this down sampling method an initial_tree_path should not be given and an initial_tree_type should be set to 'Temporal'.")
 
         # If seeds not given generate them.
@@ -418,7 +418,7 @@ class SimpleWorkflowParams(WorkflowParams):
         """
         if self.ready_to_go_xml is None and \
                 self.use_initial_tree and \
-                (self.initial_tree_path is None and self.initial_tree_type is not None):
+                (self.initial_tree_path is None):
             params = self.retrieve_params(['save_dir', 'fasta_path' , 'max_threads'])
             params['tree_dir_name'] = 'initial_tree'
         else:
@@ -562,7 +562,7 @@ class GenericWorkflowParams(SimpleWorkflowParams):
         -------
         Dictionary of parameter names and values.
         """
-        if self.ready_to_go_xml is not None:
+        if self.ready_to_go_xml is None:
             params = super().retrieve_phase_3_params(dir_to_check_and_save_to=self.save_dir)
         else:
             params = None
@@ -699,7 +699,7 @@ class BDSKYSerialWorkflowParams(SimpleWorkflowParams):
         -------
         Dictionary of parameter names and values.
         """
-        if self.ready_to_go_xml is not None:
+        if self.ready_to_go_xml is None:
             phase_3_params = super().retrieve_phase_3_params(dir_to_check_and_save_to=self.save_dir)
             phase_3_params.update(self.retrieve_params([
                                                    'rt_dims',
@@ -795,7 +795,7 @@ class ComparativeWorkflowParams(WorkflowParams):
                 raise ValueError('initial_tree_type must be either "Temporal" or "Distance".')
 
             if self.downsample_to is not None and (self.initial_tree_type != 'Temporal'):
-                raise ValueError("Currently beast_pype's down_sampling method is tied to its Tree Time tree building." +
+                raise ValueError("Currently beast_pype's downsample_toing method is tied to its Tree Time tree building." +
                                  "Therefore, to use this down sampling method an use_initial_tree = True and initial_tree_type = 'Temporal'.")
 
         # If seeds not given generate them.
@@ -842,9 +842,13 @@ class ComparativeWorkflowParams(WorkflowParams):
         -------
         Dictionary of parameter names and values.
         """
-        parameters = self.retrieve_params(['save_dir', 'max_threads'])
-        parameters['fasta_path'] = 'sequences.fasta'
-        return parameters
+        if self.use_initial_tree:
+            params = self.retrieve_params(['save_dir', 'max_threads'])
+            params['fasta_path'] = 'sequences.fasta'
+            params['tree_dir_name'] = 'initial_tree'
+        else:
+            params = None
+        return params
 
     def retrieve_phase_2ii_params(self, xml_set_directory):
         """
@@ -860,14 +864,52 @@ class ComparativeWorkflowParams(WorkflowParams):
         -------
         Dictionary of parameter names and values.
         """
-        parameters = self.retrieve_params([
-            'sample_id_field',
-            'collection_date_field',
-            'downsample_to',
-            'root_strain_names',
-            'remove_root'])
-        parameters['save_dir'] = xml_set_directory
+        if self.use_initial_tree and self.initial_tree_type == 'Temporal':
+            parameters = self.retrieve_params([
+                'sample_id_field',
+                'collection_date_field',
+                'downsample_to',
+                'root_strain_names',
+                'remove_root'])
+            parameters['save_dir'] = xml_set_directory
+        else:
+            parameters = None
         return parameters
+
+    def retrieve_phase_2iii_params(self):
+        """
+        Retrieve parameters used in phase 2i of the workflow.
+
+        Returns
+        -------
+        Dictionary of parameter names and values.
+        """
+        if os.path.exists(f'{self.save_dir}/downsampled_sequences.fasta'):
+            params = self.retrieve_params(['save_dir', 'max_threads'])
+            params['fasta_path'] = f'{self.save_dir}/downsampled_sequences.fasta'
+            params['tree_dir_name'] = 'downsampled_initial_tree'
+        else:
+            params = None
+        return params
+
+    def retrieve_phase_2iv_params(self):
+        """
+        Retrieve parameters used in phase 2iv of the workflow.
+
+        Returns
+        -------
+        Dictionary of parameter names and values.
+        """
+        if os.path.exists(f'{self.save_dir}/downsampled_sequences.fasta'):
+            params = self.retrieve_params(['save_dir'
+                                           'sample_id_field',
+                                           'collection_date_field'])
+            params['fasta_path'] = f'{self.save_dir}/downsampled_sequences.fasta'
+            params['metadata_path'] = f'{self.save_dir}/downsampled_metadata.csv'
+            params['tree_dir_name'] = 'downsampled_initial_tree'
+        else:
+            params = None
+        return params
 
     def retrieve_phase_5_params(self):
         """

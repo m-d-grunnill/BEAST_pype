@@ -3,11 +3,11 @@ from base_test_classes import SimpleWorkflowVariationTest
 xml_generation_notebook = 'Phase-3-Gen-Generic-xml.ipynb'
 workflow = 'Generic'
 
-class TestGenericFull(SimpleWorkflowVariationTest):
-    name = 'Test_Generic_Full'
-    parameters_path = 'parameters/locally_run_examples/Generic_full.yml'
+class TestGenericInitialTree(SimpleWorkflowVariationTest):
+    name = 'Test_Generic_Initial_Tree'
+    parameters_path = 'parameters/locally_run_examples/Generic_InitialTree.yml'
     workflow = workflow
-    variation = 'full'
+    variation = 'initial tree building'
     xml_generation_notebook = xml_generation_notebook
 
 class TestGenericNoInitialTree(SimpleWorkflowVariationTest):

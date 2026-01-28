@@ -38,8 +38,12 @@ class WorkflowVariationTest:
     parameters_path = None
     workflow = None
     variation  = None
+    xml_generation_notebooks = None
     xml_generation_notebook = None
     diagnostic_notebook= None
+    tree_building_notebooks = None
+    downsampled_tree_building_notebooks = None
+    beast_running_notebook = 'Phase-4-GNU-Parallel-Running-BEAST.ipynb'
     kernel_name = 'dev_beast_pype'
 
 
@@ -64,8 +68,21 @@ class WorkflowVariationTest:
         with subtests.test(f"Check for error generation: {result.exc_info}"):
             test_ran_ok_list.append(result.exit_code == 0)
             assert test_ran_ok_list[-1]
-        should_be_generated, should_not_be_generated = self.adding_notebooks_to_lists()
-        should_be_generated.append('Phase-4-GNU-Parallel-Running-BEAST.ipynb') # Appended here so it is checked last.
+        should_be_generated = []
+        should_not_be_generated = []
+        if self.variation in ['initial tree building', 'downsampling'] :
+            should_be_generated += self.tree_building_notebooks
+        else:
+            should_not_be_generated += self.tree_building_notebooks
+        if self.variation == 'downsampling':
+            should_be_generated += self.downsampled_tree_building_notebooks
+        else:
+            should_not_be_generated += self.downsampled_tree_building_notebooks
+        if self.variation != 'xml ready-to-go':
+            should_be_generated += self.xml_generation_notebooks
+        else:
+            should_not_be_generated += self.xml_generation_notebooks
+        should_be_generated.append(self.beast_running_notebook) # Appended here so it is checked last.
         for notebook in should_be_generated:
             _check_file_was_generated(
                 subtests=subtests,
@@ -103,27 +120,18 @@ class WorkflowVariationTest:
 
 class SimpleWorkflowVariationTest(WorkflowVariationTest):
     diagnostic_notebook = 'Phase-5-Diagnosing-Outputs-and-Generate-Report.ipynb'
+    tree_building_notebooks = [
+        'Phase-2i-IQTree-Building.ipynb', 'Phase-2i-IQTree-Correction.ipynb', 'Phase-2ii-TreeTime-and-Downsampling.ipynb',
+                               ]
+    downsampled_tree_building_notebooks = [
+        'Phase-2iii-IQTree-Building.ipynb', 'Phase-2iii-IQTree-Correction.ipynb', 'Phase-2iv-TreeTime-with-Downsampled-Data.ipynb'
+                               ]
 
-    def adding_notebooks_to_lists(self):
-        should_be_generated = []
-        should_not_be_generated = []
-        if self.variation == 'full':
-            should_be_generated += [
-                'Phase-2i-and-2iii-IQTree-Building.ipynb',
-                'Phase-2i-and-2iii-IQTree-Correction.ipynb',
-                'Phase-2ii-and-2iv-TreeTime-and-Downsampling.ipynb'
-            ]
-        else:
-            should_not_be_generated += [
-                'Phase-2i-and-2iii-IQTree-Building.ipynb',
-                'Phase-2i-and-2iii-IQTree-Correction.ipynb',
-                'Phase-2ii-and-2iv-TreeTime-and-Downsampling.ipynb'
-            ]
-        if self.variation in ['full', 'no initial tree']:
-            should_be_generated += [self.xml_generation_notebook]
-        else:
-            should_not_be_generated += [self.xml_generation_notebook]
-        return should_be_generated, should_not_be_generated
+    @property
+    def xml_generation_notebooks(self):
+        return [self.xml_generation_notebook]
+
+
 
 class ComparativeWorkflowVariationTest(WorkflowVariationTest):
     diagnostic_notebook =  'Phase-5-Diagnosing-XML-sets-and-Generate-Report.ipynb'
@@ -132,25 +140,22 @@ class ComparativeWorkflowVariationTest(WorkflowVariationTest):
     def xml_set_labels(self):
         return list(self.parameters['xml_set_definitions'].keys())
 
-    def adding_notebooks_to_lists(self):
-        should_be_generated = ['Phase-1-Metadata-and-Sequence-Separation.ipynb']
-        should_not_be_generated = []
-        if self.variation == 'full':
-            should_be_generated += [
-                                       'Phase-2i-and-2iii-IQTree-Building.ipynb',
-                                       'Phase-2i-and-2iii-IQTree-Correction.ipynb',
-                                   ] + [f"{xml_set_directory}/Phase-2ii-and-2iv-TreeTime-and-Downsampling.ipynb"
-                                        for xml_set_directory in self.xml_set_labels]
-        else:
-            should_not_be_generated += [
-                                           'Phase-2i-and-2iii-IQTree-Building.ipynb',
-                                           'Phase-2i-and-2iii-IQTree-Correction.ipynb',
-                                       ] + [f"{xml_set_directory}/Phase-2ii-and-2iv-TreeTime-and-Downsampling.ipynb"
-                                            for xml_set_directory in self.xml_set_labels]
-        if self.variation in ['full', 'no initial tree']:
-            should_be_generated += [f"{xml_set_directory}/{self.xml_generation_notebook}"
-                                    for xml_set_directory in self.xml_set_labels]
-        else:
-            should_not_be_generated += [f"{xml_set_directory}/{self.xml_generation_notebook}"
-                                        for xml_set_directory in self.xml_set_labels]
-        return should_be_generated, should_not_be_generated
+    @property
+    def tree_building_notebooks(self):
+        notebook_list = [
+                            'Phase-2i-IQTree-Building.ipynb', 'Phase-2i-IQTree-Correction.ipynb']
+        notebook_list += [f"{xml_set_directory}/Phase-2iv-TreeTime-with-Downsampled-Data.ipynb"
+                          for xml_set_directory in self.xml_set_labels]
+        return notebook_list
+
+    @property
+    def downsampled_tree_building_notebooks(self):
+        notebook_list = ['Phase-2iii-IQTree-Building.ipynb', 'Phase-2iii-IQTree-Correction.ipynb']
+        notebook_list += [f"{xml_set_directory}/Phase-2iv-TreeTime-with-Downsampled-Data.ipynb"
+                          for xml_set_directory in self.xml_set_labels]
+        return notebook_list
+
+    @property
+    def xml_generation_notebooks(self):
+        return [f"{xml_set_directory}/{self.xml_generation_notebook}"
+                for xml_set_directory in self.xml_set_labels]

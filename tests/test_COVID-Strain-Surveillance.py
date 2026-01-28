@@ -7,7 +7,7 @@ class TestCOVIDStrainSurveillance(ComparativeWorkflowVariationTest):
     name = 'Test_COVID_Strain_Surveillance'
     parameters_path = 'parameters/locally_run_examples/COVID-Strain-Surveillance.yml'
     workflow = workflow
-    variation = 'full'
+    variation = 'initial tree building'
     xml_generation_notebook = xml_generation_notebook
 
     @property
