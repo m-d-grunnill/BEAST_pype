@@ -7,12 +7,13 @@ class TestGenericComparativeInitialTree(ComparativeWorkflowVariationTest):
     name = 'Test_Generic_Comparative_Initial_Tree'
     parameters_path = 'parameters/locally_run_examples/Generic-Comparative_InitialTree.yml'
     workflow = workflow
-    variation = 'initial tree building'
+    initial_tree_building = True
+    xml_generation = True
     xml_generation_notebook = xml_generation_notebook
 
 class TestGenericComparativeNoInitialTree(ComparativeWorkflowVariationTest):
     name = 'Test_Generic_Comparative_No_Initial_Tree'
     parameters_path = 'parameters/locally_run_examples/Generic-Comparative_no-initial-tree.yml'
     workflow = workflow
-    variation = 'no initial tree'
+    xml_generation = True
     xml_generation_notebook = xml_generation_notebook

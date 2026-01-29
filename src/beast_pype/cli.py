@@ -87,11 +87,10 @@ def run_workflow(workflow,
     parameters['kernel_name'] = kernel_name
     workflow_save_name = f'{workflow}.ipynb'
     workflow = f'{workflows_path}/{workflow_save_name}'
-
-    os.makedirs(parameters['overall_save_dir'], exist_ok=True)
     if 'specific_run_save_dir' not in parameters:
         parameters['specific_run_save_dir'] = datetime.now().strftime(
             "%Y-%m-%d_%H-%M-%S")
+    os.makedirs(parameters['overall_save_dir'], exist_ok=True)
     save_dir = f"{parameters['overall_save_dir']}/{parameters['specific_run_save_dir']}"
     os.makedirs(save_dir)
     execute_notebook(
