@@ -422,7 +422,10 @@ class SimpleWorkflowParams(WorkflowParams):
         if self.ready_to_go_xml is None and \
                 self.use_initial_tree and \
                 (self.initial_tree_path is None):
-            params = self.retrieve_params(['save_dir', 'fasta_path' , 'max_threads'])
+            params = self.retrieve_params(['save_dir',
+                                           'fasta_path' ,
+                                           'max_threads',
+                                           'kernel_name'])
             params['tree_dir_name'] = 'initial_tree'
         else:
             params = None
@@ -461,7 +464,7 @@ class SimpleWorkflowParams(WorkflowParams):
         Dictionary of parameter names and values.
         """
         if os.path.exists(f'{self.save_dir}/downsampled_sequences.fasta'):
-            params = self.retrieve_params(['save_dir', 'max_threads'])
+            params = self.retrieve_params(['save_dir', 'max_threads', 'kernel_name'])
             params['fasta_path'] = f'{self.save_dir}/downsampled_sequences.fasta'
             params['tree_dir_name'] = 'downsampled_initial_tree'
         else:
@@ -846,7 +849,7 @@ class ComparativeWorkflowParams(WorkflowParams):
         Dictionary of parameter names and values.
         """
         if self.use_initial_tree:
-            params = self.retrieve_params(['save_dir', 'max_threads'])
+            params = self.retrieve_params(['save_dir', 'max_threads', 'kernel_name'])
             params['fasta_path'] = 'sequences.fasta'
             params['tree_dir_name'] = 'initial_tree'
         else:
@@ -888,7 +891,7 @@ class ComparativeWorkflowParams(WorkflowParams):
         Dictionary of parameter names and values.
         """
         if self.downsample_to is not None:
-            params = self.retrieve_params(['save_dir', 'max_threads'])
+            params = self.retrieve_params(['save_dir', 'max_threads', 'kernel_name'])
             params['fasta_path'] = 'downsampled_sequences.fasta'
             params['tree_dir_name'] = 'downsampled_initial_tree'
         else:
