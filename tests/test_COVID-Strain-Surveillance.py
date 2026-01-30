@@ -8,6 +8,7 @@ class TestCOVIDStrainSurveillance(ComparativeWorkflowVariationTest):
     parameters_path = 'parameters/locally_run_examples/COVID-Strain-Surveillance.yml'
     workflow = workflow
     initial_tree_building = True
+    downsampling = True
     xml_generation = True
     xml_generation_notebook = xml_generation_notebook
 

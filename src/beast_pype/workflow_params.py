@@ -430,6 +430,24 @@ class SimpleWorkflowParams(WorkflowParams):
         else:
             params = None
         return params
+    
+    def retrieve_phase_2i_correction_params(self):
+        """
+        Retrieve parameters used in the correction of phase 2i of the workflow.
+
+        Parameters
+        -------------
+        xml_set_directory: str
+            Path to the XML set directory to include under 'save_dir' of the returned
+            dictionary.
+
+        Returns
+        -------
+        Dictionary of parameter names and values.
+        """
+        correction_params = self.retrieve_params(['save_dir', 'fasta_path'])
+        correction_params['tree_dir_name'] = 'initial_tree'
+        return correction_params
 
     def retrieve_phase_2ii_params(self):
         """
@@ -469,6 +487,25 @@ class SimpleWorkflowParams(WorkflowParams):
             params['tree_dir_name'] = 'downsampled_initial_tree'
         else:
             params = None
+        return params
+    
+    def retrieve_phase_2iii_correction_params(self):
+        """
+        Retrieve parameters used in the correction of phase 2iii of the workflow.
+
+        Parameters
+        -------------
+        xml_set_directory: str
+            Path to the XML set directory to include under 'save_dir' of the returned
+            dictionary.
+
+        Returns
+        -------
+        Dictionary of parameter names and values.
+        """
+        params = self.retrieve_params(['save_dir'])
+        params['fasta_path'] = f'{self.save_dir}/downsampled_sequences.fasta'
+        params['tree_dir_name'] = 'downsampled_initial_tree'
         return params
 
     def retrieve_phase_2iv_params(self):
@@ -855,6 +892,26 @@ class ComparativeWorkflowParams(WorkflowParams):
         else:
             params = None
         return params
+    
+    def retrieve_phase_2i_correction_params(self, xml_set_directory):
+        """
+        Retrieve parameters used in the correction of phase 2i of the workflow.
+
+        Parameters
+        -------------
+        xml_set_directory: str
+            Path to the XML set directory to include under 'save_dir' of the returned
+            dictionary.
+
+        Returns
+        -------
+        Dictionary of parameter names and values.
+        """
+        parameters = {
+            'save_dir': xml_set_directory,
+            'tree_dir_name': 'initial_tree',
+            'fasta_path': f'{xml_set_directory}/sequences.fasta'}
+        return parameters
 
     def retrieve_phase_2ii_params(self, xml_set_directory):
         """
@@ -878,6 +935,7 @@ class ComparativeWorkflowParams(WorkflowParams):
                 'root_strain_names',
                 'remove_root'])
             parameters['save_dir'] = xml_set_directory
+            parameters['tree_dir_name'] = 'initial_tree'
         else:
             parameters = None
         return parameters
@@ -897,6 +955,30 @@ class ComparativeWorkflowParams(WorkflowParams):
         else:
             params = None
         return params
+    
+    def retrieve_phase_2iii_correction_params(self, xml_set_directory):
+        """
+        Retrieve parameters used in the correction of phase 2iii of the workflow.
+
+        Parameters
+        -------------
+        xml_set_directory: str
+            Path to the XML set directory to include under 'save_dir' of the returned
+            dictionary.
+
+        Returns
+        -------
+        Dictionary of parameter names and values.
+        """
+        if os.path.exists(f'{xml_set_directory}/downsampled_sequences.fasta'):
+            parameters = {
+                'save_dir': xml_set_directory,
+                'tree_dir_name': 'downsampled_initial_tree',
+                'fasta_path': f'{xml_set_directory}/downsampled_sequences.fasta'}
+        else:
+            parameters = None
+        return parameters
+
 
     def retrieve_phase_2iv_params(self, xml_set_directory):
         """
@@ -907,9 +989,10 @@ class ComparativeWorkflowParams(WorkflowParams):
         Dictionary of parameter names and values.
         """
         if os.path.exists(f'{xml_set_directory}/downsampled_sequences.fasta'):
-            params = self.retrieve_params([xml_set_directory,
+            params = self.retrieve_params([
                                            'sample_id_field',
                                            'collection_date_field'])
+            params['save_dir'] = xml_set_directory
             params['fasta_path'] = f'{xml_set_directory}/downsampled_sequences.fasta'
             params['metadata_path'] = f'{xml_set_directory}/downsampled_metadata.csv'
             params['tree_dir_name'] = 'downsampled_initial_tree'
