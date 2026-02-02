@@ -32,7 +32,6 @@ class WorkflowVariationTest:
     name = None
     parameters_path = None
     workflow = None
-    xml_generation_notebooks = None
     xml_generation_notebook = None
     diagnostic_notebook= None
     tree_building_notebooks = None
@@ -42,6 +41,18 @@ class WorkflowVariationTest:
     initial_tree_building = False
     downsampling = False
     xml_generation = False
+    notebooks_in_xml_set_dirs = []
+    tree_building_notebooks = [
+        'Phase-2i-IQTree-Building.ipynb',
+        'Phase-2i-IQTree-Correction.ipynb',
+        'Phase-2ii-TreeTime-and-Downsampling.ipynb',
+                               ]
+    downsampled_tree_building_notebooks = [
+        'Phase-2iii-IQTree-Building-with-Downsampled-Data.ipynb',
+        'Phase-2iii-IQTree-Correction-with-Downsampled-Data.ipynb',
+        'Phase-2iv-TreeTime-with-Downsampled-Data.ipynb'
+                               ]
+    xml_set_labels = None
 
 
     def test_running_of_workflow(self, subtests, tmp_path):
@@ -79,22 +90,38 @@ class WorkflowVariationTest:
         else:
             should_not_be_generated += self.downsampled_tree_building_notebooks
         if self.xml_generation:
-            should_be_generated += self.xml_generation_notebooks
+            should_be_generated.append(self.xml_generation_notebook)
         else:
-            should_not_be_generated += self.xml_generation_notebooks
+            should_not_be_generated.append(self.xml_generation_notebook)
         should_be_generated += [self.beast_running_notebook, self.diagnostic_notebook]
         for notebook in should_be_generated:
-            _check_file_was_generated(
-                subtests=subtests,
-                filename=notebook,
-                directory=self.save_dir,
-                test_ran_list=test_ran_ok_list)
+            if notebook in self.notebooks_in_xml_set_dirs:
+                for xml_set_directory in self.xml_set_labels:
+                    _check_file_was_generated(
+                        subtests=subtests,
+                        filename=notebook,
+                        directory=f'{self.save_dir}/{xml_set_directory}',
+                        test_ran_list=test_ran_ok_list)
+            else:
+                _check_file_was_generated(
+                    subtests=subtests,
+                    filename=notebook,
+                    directory=self.save_dir,
+                    test_ran_list=test_ran_ok_list)
         for notebook in should_not_be_generated:
-            _check_file_was_not_generated(
-                subtests=subtests,
-                filename=notebook,
-                directory=self.save_dir,
-                test_ran_list=test_ran_ok_list)
+            if notebook in self.notebooks_in_xml_set_dirs:
+                for xml_set_directory in self.xml_set_labels:
+                    _check_file_was_not_generated(
+                        subtests=subtests,
+                        filename=notebook,
+                        directory=f'{self.save_dir}/{xml_set_directory}',
+                        test_ran_list=test_ran_ok_list)
+            else:
+                _check_file_was_not_generated(
+                    subtests=subtests,
+                    filename=notebook,
+                    directory=self.save_dir,
+                    test_ran_list=test_ran_ok_list)
         ### Unfortunately when running this section of certain tests from command
         ### line instead of pycharm pytest seems to get stuck running the notebook
         ### (some point after creating outputs_and_reports).
@@ -114,42 +141,20 @@ class WorkflowVariationTest:
 
 class SimpleWorkflowVariationTest(WorkflowVariationTest):
     diagnostic_notebook = 'Phase-5-Diagnosing-Outputs-and-Generate-Report.ipynb'
-    tree_building_notebooks = [
-        'Phase-2i-IQTree-Building.ipynb', 'Phase-2i-IQTree-Correction.ipynb', 'Phase-2ii-TreeTime-and-Downsampling.ipynb',
-                               ]
-    downsampled_tree_building_notebooks = [
-        'Phase-2iii-IQTree-Building-with-Downsampled-Data.ipynb', 'Phase-2iii-IQTree-Correction-with-Downsampled-Data.ipynb', 'Phase-2iv-TreeTime-with-Downsampled-Data.ipynb'
-                               ]
 
-    @property
-    def xml_generation_notebooks(self):
-        return [self.xml_generation_notebook]
 
 
 
 class ComparativeWorkflowVariationTest(WorkflowVariationTest):
     diagnostic_notebook =  'Phase-5-Diagnosing-XML-sets-and-Generate-Report.ipynb'
 
+    notebooks_in_xml_set_dirs = ['Phase-2i-IQTree-Correction.ipynb',
+                                 'Phase-2ii-TreeTime-and-Downsampling.ipynb',
+                                 'Phase-2iii-IQTree-Correction-with-Downsampled-Data.ipynb',
+                                 'Phase-2iv-TreeTime-with-Downsampled-Data.ipynb',
+                                 'Phase-3-Gen-BDSKY-Serial-xml.ipynb',
+                                 'Phase-3-Gen-Generic-xml.ipynb']
+
     @property
     def xml_set_labels(self):
         return list(self.parameters['xml_set_definitions'].keys())
-
-    @property
-    def tree_building_notebooks(self):
-        notebook_list = [
-                            'Phase-2i-IQTree-Building.ipynb', 'Phase-2i-IQTree-Correction.ipynb']
-        notebook_list += [f"{xml_set_directory}/Phase-2iv-TreeTime-with-Downsampled-Data.ipynb"
-                          for xml_set_directory in self.xml_set_labels]
-        return notebook_list
-
-    @property
-    def downsampled_tree_building_notebooks(self):
-        notebook_list = ['Phase-2iii-IQTree-Building-with-Downsampled-Data.ipynb', 'Phase-2iii-IQTree-Correction-with-Downsampled-Data.ipynb']
-        notebook_list += [f"{xml_set_directory}/Phase-2iv-TreeTime-with-Downsampled-Data.ipynb"
-                          for xml_set_directory in self.xml_set_labels]
-        return notebook_list
-
-    @property
-    def xml_generation_notebooks(self):
-        return [f"{xml_set_directory}/{self.xml_generation_notebook}"
-                for xml_set_directory in self.xml_set_labels]
