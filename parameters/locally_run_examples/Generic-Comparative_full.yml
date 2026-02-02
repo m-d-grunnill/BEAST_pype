@@ -1,6 +1,6 @@
 collection_date_field: 'sample collection date' #    Name of field in metadata_db containing collection dates of sequences. Should be formatted YYYY-MM-DD.
 fasta_path: example_data/COVID-19_JN.1_and_HV.1_Submission_Date/HV_1_and_JN_1_sequences.fasta #    Path to fasta file containing sequences to be placed into template xml.
-down_sample_to: 100 #    If provided the fasta file and initial tree file used to generate the BEAST 2 xml is downsampled to this amount.
+downsample_to: 100 #    If provided the fasta file and initial tree file used to generate the BEAST 2 xml is downsampled to this amount.
 metadata_path: example_data/COVID-19_JN.1_and_HV.1_Submission_Date/HV_1_and_JN_1_metadata.csv #    Path to csv or tsv containing metadata for sequences in fasta_path.
 number_of_beast_runs: 3 #    Number of chains to use (repeated runs to do) when running BEAST.
 overall_save_dir: Local-Test-Generic-Comparative_full #    Path to where you are saving all the runs of this workflow.

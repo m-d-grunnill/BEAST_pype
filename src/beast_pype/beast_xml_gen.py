@@ -11,8 +11,8 @@ import warnings
 def two_df_cols_to_dict(df, key, value):
     return df[[key, value]].set_index(key).to_dict()[value]
 
-def gen_xml_from_any_template(template_path,
-                              sequences_path,
+def gen_xml_from_any_template(template_xml_path,
+                              fasta_path,
                               metadata_path,
                               output_path,
                               sample_id_field='strain',
@@ -29,10 +29,10 @@ def gen_xml_from_any_template(template_path,
 
     Parameters
     ----------
-    template_path: str
+    template_xml_path: str
         Path to template_xml_path.
-    sequences_path: str
-        Path to sequences must be fasta_path.
+    fasta_path: str
+        Path to sequences must be a fasta file.
     metadata_path: str
         Path to metadata_update must be csv.
     sample_id_field: str, default 'strain'
@@ -71,8 +71,8 @@ def gen_xml_from_any_template(template_path,
     else:
         raise TypeError(
             f"metadata_path must be a csv or tsv file, ending with the appropriate file extension. Value given is {metadata_path}")
-    beast2xml = BEAST2XML(template=template_path)
-    seqs = FastaReads([sequences_path])
+    beast2xml = BEAST2XML(template=template_xml_path)
+    seqs = FastaReads([fasta_path])
     beast2xml.add_sequences(seqs)
     beast2xml.add_dates(date_data=metadata_path,
                         seperator=delimiter,
@@ -91,8 +91,8 @@ def gen_xml_from_any_template(template_path,
     )
 
 
-def gen_bdsky_serial_xml(template_path,
-                         sequences_path,
+def gen_bdsky_serial_xml(template_xml_path,
+                         fasta_path,
                          metadata_path,
                          output_path,
                          collection_date_field='date',
@@ -117,10 +117,10 @@ def gen_bdsky_serial_xml(template_path,
 
     Parameters
     ----------
-    template_path: str
+    template_xml_path: str
         Path to template_xml_path.
-    sequences_path: str
-        Path to sequences must be fasta_path.
+    fasta_path: str
+        Path to sequences must be a fasta file.
     metadata_path: str
         Path to metadata_update must be csv.
     output_path: str
@@ -205,8 +205,8 @@ def gen_bdsky_serial_xml(template_path,
                       "* An initial temporal tree. \n" +
                       "* origin_upper_height_addition \n" +
                       "* origin_start_addition")
-    beast2xml = BEAST2XML(template=template_path)
-    seqs = FastaReads([sequences_path])
+    beast2xml = BEAST2XML(template=template_xml_path)
+    seqs = FastaReads([fasta_path])
     beast2xml.add_sequences(seqs)
     beast2xml.add_dates(date_data=metadata_path,
                         seperator=delimiter,

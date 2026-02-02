@@ -7,12 +7,22 @@ class TestGenericComparativeFull(ComparativeWorkflowVariationTest):
     name = 'Test_Generic_Comparative_Full'
     parameters_path = 'parameters/locally_run_examples/Generic-Comparative_full.yml'
     workflow = workflow
-    variation = 'full'
+    initial_tree_building = True
+    downsampling = True
+    xml_generation = True
+    xml_generation_notebook = xml_generation_notebook
+
+class TestGenericComparativeNoDownsampling(ComparativeWorkflowVariationTest):
+    name = 'Test_Generic_Comparative_No_Downsampling'
+    parameters_path = 'parameters/locally_run_examples/Generic-Comparative_no_downsampling.yml'
+    workflow = workflow
+    initial_tree_building = True
+    xml_generation = True
     xml_generation_notebook = xml_generation_notebook
 
 class TestGenericComparativeNoInitialTree(ComparativeWorkflowVariationTest):
     name = 'Test_Generic_Comparative_No_Initial_Tree'
     parameters_path = 'parameters/locally_run_examples/Generic-Comparative_no-initial-tree.yml'
     workflow = workflow
-    variation = 'no initial tree'
+    xml_generation = True
     xml_generation_notebook = xml_generation_notebook
