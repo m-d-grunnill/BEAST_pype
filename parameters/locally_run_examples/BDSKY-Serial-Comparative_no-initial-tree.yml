@@ -14,7 +14,8 @@ collection_date_field: 'sample collection date' #Name of field in metadata_db co
 xml_set_definitions: # The definitions for the xml_sets you wish to use.
   #{Keys=The name used for the xml_set.: Values: Will be used with pandas DataFrame.query to separate out your data}
   HV.1: "`lineage name` == 'HV.1'"
-  JN.1: "`lineage name` == 'JN.1'"
+  JN.1: "`lineage name` in ['JN.1', 'JN.1.1', 'JN.1.10', 'JN.1.18', 'JN.1.19', 'JN.1.2', 'JN.1.22', 'JN.1.31', 'JN.1.39', 'JN.1.4', 'JN.1.4.5', 'JN.1.4.7', 'JN.1.41', 'JN.1.44', 'JN.1.45', 'JN.1.47.1', 'JN.1.5','JN.1.52', 'JN.1.55', 'JN.1.6', 'JN.1.60', 'JN.1.8', 'JN.1.8.3', 'JN.1.9', 'JN.11', 'JN.13', 'JN.18']"
+
 
 # Initial Tree Building & Downsampling
 use_initial_tree: False

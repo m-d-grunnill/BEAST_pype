@@ -1,7 +1,7 @@
 collection_date_field: 'sample collection date' #    Name of field in metadata_db containing collection dates of sequences. Should be formatted YYYY-MM-DD.
 fasta_path: example_data/COVID-19_JN.1_and_HV.1_Submission_Date/HV_1_and_JN_1_sequences.fasta #    Path to fasta file containing sequences to be placed into template xml.
-downsample_to: 100 #    If provided the fasta file and initial tree file used to generate the BEAST 2 xml is downsampled to this amount.
 metadata_path: example_data/COVID-19_JN.1_and_HV.1_Submission_Date/HV_1_and_JN_1_metadata.csv #    Path to csv or tsv containing metadata for sequences in fasta_path.
+downsample_to: 100 #    If provided the fasta file and initial tree file used to generate the BEAST 2 xml is downsampled to this amount.
 number_of_beast_runs: 3 #    Number of chains to use (repeated runs to do) when running BEAST.
 overall_save_dir: Local-Test-Generic-Comparative_full #    Path to where you are saving all the runs of this workflow.
 log_file_basename: BEAST # The definitions for the xml_sets you wish to use.
@@ -19,6 +19,6 @@ tree_log_every: 1000 #    How often to save a tree file during BEAST runs.
 xml_set_definitions: # The definitions for the xml_sets you wish to use.
   #{Keys=The name used for the xml_set.: Values: Will be used with pandas DataFrame.query to separate out your data}
   HV.1: "`lineage name` == 'HV.1'"
-  JN.1: "`lineage name` == 'JN.1'"
+  JN.1: "`lineage name` in ['JN.1', 'JN.1.1', 'JN.1.10', 'JN.1.18', 'JN.1.19', 'JN.1.2', 'JN.1.22', 'JN.1.31', 'JN.1.39', 'JN.1.4', 'JN.1.4.5', 'JN.1.4.7', 'JN.1.41', 'JN.1.44', 'JN.1.45', 'JN.1.47.1', 'JN.1.5','JN.1.52', 'JN.1.55', 'JN.1.6', 'JN.1.60', 'JN.1.8', 'JN.1.8.3', 'JN.1.9', 'JN.11', 'JN.13', 'JN.18']"
 
 

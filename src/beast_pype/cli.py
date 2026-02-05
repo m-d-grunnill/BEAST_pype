@@ -7,15 +7,15 @@ from datetime import datetime
 from papermill.iorw import read_yaml_file
 
 workflows_path = importlib_resources.path('beast_pype', 'workflows')
-available_workflows = [file for file in os.listdir(workflows_path) if file.endswith('.ipynb')]
+available_workflows = [file.name for file in workflows_path.glob('*.ipynb')]
 default_workflow_names = [
     file.replace('.ipynb', '')
     for file in available_workflows]
 
 reports_to_exclude = ['COVID-Strain-Surveillance.ipynb']
 reports_path = importlib_resources.path('beast_pype', 'report_templates')
-available_reports = [file for file in os.listdir(reports_path)
-                     if file.endswith('.ipynb') and file not in reports_to_exclude]
+available_reports = [file.name for file in reports_path.glob('*.ipynb')
+                     if not file.name in reports_to_exclude]
 default_report_names = [
     file.replace('.ipynb', '')
     for file in available_reports]

@@ -10,7 +10,7 @@ from papermill.iorw import load_notebook_node
 
 workflow_modules = importlib_resources.path('beast_pype', 'workflow_modules')
 reports_path = importlib_resources.path('beast_pype', 'report_templates')
-available_reports = [file.replace('.ipynb', '') for file in os.listdir(reports_path) if file.endswith('.ipynb')]
+available_reports = [file.name for file in reports_path.glob('*.ipynb')]
 
 def gen_xml_set_diag_notebook(save_dir,
                               directories_to_exclude=None):
