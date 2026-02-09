@@ -3,7 +3,8 @@ from beast_pype.outputs import read_log_file
 import nbformat as nbf
 import re
 import os
-import importlib.resources as importlib_resources
+from beast_pype.path_utils import path_to_workflow_modules
+
 
 def add_unreported_outputs(notebook_template_path,
                            merged_logs_path,
@@ -84,8 +85,8 @@ def _update_notebook_metadata(notebook_path, metadata_update, output_path = None
         nbf.write(notebook, f)
 
 def gen_mcc_notebook(merged_trees_path, output_path, as_version=4):
-    workflow_modules = importlib_resources.path('beast_pype', 'workflow_modules')
-    notebook = nbf.read(f"{workflow_modules}/Phase-5ii-Gen-MCC-Trees.ipynb", as_version=as_version)
+    workflow_modules_path = path_to_workflow_modules()
+    notebook = nbf.read(f"{workflow_modules_path}/Phase-5ii-Gen-MCC-Trees.ipynb", as_version=as_version)
     merged_tree_paths = [file for file in os.listdir(merged_trees_path) if file.endswith('merged.trees')]
     for merged_tree_path in merged_tree_paths:
         prefix = merged_tree_path.replace('merged.trees', '')

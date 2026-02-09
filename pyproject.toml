@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "beast_pype"
-version = "0.2.0"
+version = "0.2.2"
 dynamic = ["dependencies"]
 authors = [
     {name="Martin Grunnill", email="Martin.Grunnill@phac-aspc.gc.ca"},
