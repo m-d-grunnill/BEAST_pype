@@ -4,47 +4,45 @@ channels:
   - bioconda
 dependencies:
   # For unit testing
-  - conda-forge::pytest
-  - conda-forge::pytest-xdist
-  - conda-forge::psutil
+  - conda-forge::pytest>=9.0.2
+  - conda-forge::pytest-xdist>=3.8.0
+  - conda-forge::psutil>=7.2.2
   # BEAST istelf
-  - bioconda::beast2
+  - bioconda::beast2>=2.6.0
   # Python
   # beast2-xml has had the occaisonal issue with installation python 3.12
   # on some OSs. beast2-xml works on suggest python 3.10 sticking to python 3.10.
-  - conda-forge::python<3.11
+  - conda-forge::python>=3.10
   # Python Bioinformatics
-  - conda-forge::biopython
-  - bioconda::iqtree
-  - bioconda::treetime
-  - bioconda::seqkit
-  - conda-forge::ete3
+  - conda-forge::biopython>=1.86
+  - bioconda::iqtree>=3.0.1
+  - bioconda::treetime>=0.11.4
+  - bioconda::beast2-xml>=1.5.0
+  - bioconda::dark-matter>=5.1.2
+  - bioconda::seqkit>=2.12.0
+  - bioconda::iqtree>=3.0.1
+  - conda-forge::ete3>=3.1.1
   # Python Data Sci
-  - conda-forge::scipy
-  - conda-forge::numpy
-  - conda-forge::pandas
+  - conda-forge::scipy>=1.16.3
+  - conda-forge::python-dateutil>=2.9.0
+  - conda-forge::numpy>=2.4.0
+  - conda-forge::pandas>=2.3.3
   # Plotting figures.
-  - conda-forge::seaborn
-  - conda-forge::matplotlib
+  - conda-forge::seaborn >=0.13.2
+  - conda-forge::matplotlib-base>=3.10.8
   # MCMC diagnostics_of_selection
-  - conda-forge::arviz
-  - conda-forge::xarray
+  - conda-forge::arviz>=0.23.0
+  - conda-forge::xarray>=2025.12.0
   # Utils
-  - conda-forge::click
-  - conda-forge::pyyaml
-  - conda-forge::parallel
+  - conda-forge::click>=8.3.1
+  - conda-forge::pyyaml>=6.0.3
+  - conda-forge::parallel>=2051122
   # Jupyter & Jutyper based workflow
-  - conda-forge::jupyter
-  - conda-forge::papermill
-  - conda-forge::nbconvert
-  - conda-forge::nbformat
-  - conda-forge::ipywidgets
-  - conda-forge::bash_kernel
-  - conda-forge::ipykernel
-  # For packges on pip:
-  - conda-forge::pip
-  - pip: # Packages on pip:
-      - beast2-xml>=1.4.1
-      - dark-matter
-      - python-dateutil
-      - beast-pype
+  - conda-forge::jupyter>=1.1.1
+  - conda-forge::papermill>=2.6.0
+  - conda-forge::nbconvert>=7.16.6
+  - conda-forge::nbformat>=5.10.4
+  - conda-forge::ipywidgets>=8.1.8
+  - conda-forge::bash_kernel>=0.10.0
+  - conda-forge::ipykernel>=4.3.1
+

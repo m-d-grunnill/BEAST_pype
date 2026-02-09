@@ -1,6 +1,6 @@
 import nbformat as nbf
-import importlib.resources as importlib_resources
 import os
+from beast_pype.path_utils import path_to_workflow_modules, path_to_report_templates
 from papermill.iorw import load_notebook_node, write_ipynb
 from papermill.parameterize import parameterize_notebook
 from papermill.inspection import _infer_parameters
@@ -8,8 +8,8 @@ from papermill.iorw import load_notebook_node
 
 
 
-workflow_modules = importlib_resources.path('beast_pype', 'workflow_modules')
-reports_path = importlib_resources.path('beast_pype', 'report_templates')
+workflow_modules_path = path_to_workflow_modules()
+reports_path =  path_to_report_templates()
 available_reports = [file.name.replace('.ipynb', '') for file in reports_path.glob('*.ipynb')]
 
 def gen_xml_set_diag_notebook(save_dir,
@@ -36,8 +36,7 @@ def gen_xml_set_diag_notebook(save_dir,
     directories = [directory for directory in os.listdir(save_dir)
                    if os.path.isdir(os.path.join(save_dir, directory)) and
                    directory not in directories_to_exclude]
-    workflows_modules = importlib_resources.path('beast_pype', 'workflow_modules')
-    diag_notebook_path = f'{workflows_modules}/Phase-5-Diagnosing-XML-sets-and-Generate-Report.ipynb'
+    diag_notebook_path = f'{workflow_modules_path}/Phase-5-Diagnosing-XML-sets-and-Generate-Report.ipynb'
     diag_notebook = nbf.read(diag_notebook_path, as_version=4)
     for xml_set in directories:
         diag_notebook['cells'] += [
@@ -70,7 +69,7 @@ def gen_xml_set_diag_notebook(save_dir,
                 f"pipeline_run_info['Chains Used']['{xml_set}'] = deepcopy(sample_diag.selected_chains)\n" +
                 f"pipeline_run_info['Burn-In']['{xml_set}'] = deepcopy(sample_diag.burinin_percentage)\n" +
                 f"phase_5i_params = sample_diag.merging_outputs_params(output_path=outputs_and_reports_dir, xml_set='{xml_set}')\n" +
-                "phase_5i_log = execute_notebook(input_path=f'{workflow_modules}/Phase-5i-Merge-BEAST-outputs.ipynb',\n" +
+                "phase_5i_log = execute_notebook(input_path=f'{workflow_modules_path}/Phase-5i-Merge-BEAST-outputs.ipynb',\n" +
                  f"output_path=save_dir + '/{xml_set}/Phase-5i-Merge-BEAST-outputs.ipynb',\n" +
                 "\t\t\t\t\t\t\t\tparameters=phase_5i_params,\n" +
                 "\t\t\t\t\t\t\t\tprogress_bar=True,\n" +
@@ -210,7 +209,7 @@ def gen_beast_diagnostic_nb(beast_outputs,
             if not os.path.isfile(f"{beast_outputs}/{beast_xml_path}"):
                 beast_xml_path = "beast_outputs/beast.xml"
         diagnostic_save_name = f'{beast_outputs}/Phase-5-Diagnosing-Outputs-and-Generate-Report.ipynb'
-        diagnostic_nb = load_notebook_node(f'{workflow_modules}/Phase-5-Diagnosing-Outputs-and-Generate-Report.ipynb')
+        diagnostic_nb = load_notebook_node(f'{workflow_modules_path}/Phase-5-Diagnosing-Outputs-and-Generate-Report.ipynb')
     parameters['beast_xml_path'] = beast_xml_path
     parameters['report_template'] = report_template_path
     parameters['kernel_name'] = kernel_name

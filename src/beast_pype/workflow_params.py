@@ -11,11 +11,11 @@ from Bio import SeqIO
 from datetime import datetime
 from types import SimpleNamespace
 from pandas.tseries.offsets import DateOffset
-import importlib.resources as importlib_resources
+from beast_pype.path_utils import path_to_report_templates, path_to_workflow_modules, path_to_workflows
 
-
-report_templates_path = importlib_resources.path('beast_pype', 'report_templates')
-workflows_path = importlib_resources.path('beast_pype', 'workflows')
+report_templates_path = path_to_report_templates()
+workflow_modules_path = path_to_workflow_modules()
+workflows_path = path_to_workflows()
 
 def _gen_phase_4_params(
         save_dir,

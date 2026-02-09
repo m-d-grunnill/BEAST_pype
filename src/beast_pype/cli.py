@@ -1,20 +1,20 @@
 import click
-import importlib.resources as importlib_resources
 import os
 from beast_pype.nb_utils import execute_notebook
-from .diagnostics import gen_beast_diagnostic_nb
+from beast_pype.path_utils import path_to_workflows, path_to_report_templates
+from beast_pype.diagnostics import gen_beast_diagnostic_nb
 from datetime import datetime
 from papermill.iorw import read_yaml_file
 
 
-workflows_path = importlib_resources.path('beast_pype', 'workflows')
+workflows_path = path_to_workflows()
 available_workflows = [file.name for file in workflows_path.glob('*.ipynb')]
 default_workflow_names = [
     file.replace('.ipynb', '')
     for file in available_workflows]
 
 reports_to_exclude = ['COVID-Strain-Surveillance.ipynb']
-reports_path = importlib_resources.path('beast_pype', 'report_templates')
+reports_path = path_to_report_templates()
 available_reports = [file.name for file in reports_path.glob('*.ipynb')
                      if not file.name in reports_to_exclude]
 default_report_names = [
