@@ -53,6 +53,7 @@ class WorkflowVariationTest:
         'Phase-2iv-TreeTime-with-Downsampled-Data.ipynb'
                                ]
     xml_set_labels = None
+    start_timeout = 600
 
 
     def test_running_of_workflow(self, subtests, tmp_path):
@@ -75,7 +76,13 @@ class WorkflowVariationTest:
         self.save_dir = f"{parameters['overall_save_dir']}/{parameters['specific_run_save_dir']}"
         test_ran_ok_list = []
         runner = CliRunner()
-        result = runner.invoke(beast_pype, ['run-workflow','-k', self.kernel_name, self.workflow, tmp_parameters_path])
+        result = runner.invoke(beast_pype, args=[
+            'run-workflow',
+            '-k', self.kernel_name,
+            '--start_timeout', self.start_timeout,
+            self.workflow,
+            tmp_parameters_path
+        ])
         with subtests.test(f"Check for error generation: {result.exc_info}"):
             test_ran_ok_list.append(result.exit_code == 0)
             assert test_ran_ok_list[-1]

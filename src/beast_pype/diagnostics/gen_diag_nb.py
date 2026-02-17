@@ -73,7 +73,7 @@ def gen_xml_set_diag_notebook(save_dir,
                  f"output_path=save_dir + '/{xml_set}/Phase-5i-Merge-BEAST-outputs.ipynb',\n" +
                 "\t\t\t\t\t\t\t\tparameters=phase_5i_params,\n" +
                 "\t\t\t\t\t\t\t\tprogress_bar=True,\n" +
-                "\t\t\t\t\t\t\t\tnest_asyncio=True)"
+                "\t\t\t\t\t\t\t\tnest_asyncio=True, start_timeout=600)"
             )
         ]
 

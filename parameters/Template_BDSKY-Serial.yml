@@ -150,7 +150,7 @@ log_file_basename: # str, (required if not using a `ready_to_go_xml`)
 number_of_beast_runs: # int
 #    Number of chains to use (number of parallel runs to do) when running BEAST (e.g. 9).
 
-#seeds: # list of ints, (optional, can be missing from yml)
+#beast_beast_seeds: # list of ints, (optional, can be missing from yml)
 #    Seeds to use when running BEAST.
 #    If given, length of list should be the same as the number of chains (so each run has a designated seed).
 

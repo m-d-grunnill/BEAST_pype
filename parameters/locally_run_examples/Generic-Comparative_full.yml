@@ -1,12 +1,23 @@
-collection_date_field: 'sample collection date' #    Name of field in metadata_db containing collection dates of sequences. Should be formatted YYYY-MM-DD.
-fasta_path: example_data/COVID-19_JN.1_and_HV.1_Submission_Date/HV_1_and_JN_1_sequences.fasta #    Path to fasta file containing sequences to be placed into template xml.
-metadata_path: example_data/COVID-19_JN.1_and_HV.1_Submission_Date/HV_1_and_JN_1_metadata.csv #    Path to csv or tsv containing metadata for sequences in fasta_path.
-downsample_to: 100 #    If provided the fasta file and initial tree file used to generate the BEAST 2 xml is downsampled to this amount.
-number_of_beast_runs: 3 #    Number of chains to use (repeated runs to do) when running BEAST.
+collection_date_field: 'sampleCollectionDate' #    Name of field in metadata_db containing collection dates of sequences. Should be formatted YYYY-MM-DD.
+fasta_path: example_data/Measles/all_measles.fasta #    Path to fasta file containing sequences to be placed into template xml.
+metadata_path: example_data/Measles/all_measles_metadata.tsv #    Path to csv or tsv containing metadata for sequences in fasta_path.
+downsample_to: 200 #    If provided the fasta file and initial tree file used to generate the BEAST 2 xml is downsampled to this amount.
+number_of_beast_runs: 3 #Number of chains to use (repeated runs to do) when running BEAST.
+iqtree_seed: 42
+treetime_seed: 42
+downsampled_iqtree_seed: 42
+downsampled_treetime_seed: 42
+beast_seeds:
+  - 1
+  - 12
+  - 123
+  - 1234
+  - 12345
+  - 123456
 overall_save_dir: Local-Test-Generic-Comparative_full #    Path to where you are saving all the runs of this workflow.
 log_file_basename: BEAST # The definitions for the xml_sets you wish to use.
-sample_id_field: 'fasta header name' #    Name of field in metadata_db containing sequence IDs.
-template_xml_path: template_beast_xmls/Coalescent_Exponential_COVID-19_template.xml #    Path to template BEAST 2 xml.
+sample_id_field: 'accessionVersion' #    Name of field in metadata_db containing sequence IDs.
+template_xml_path: template_beast_xmls/Measles/Measles_coalescent_exp.xml #    Path to template BEAST 2 xml.
 
 chain_length: 5000 # Number of chains to use for BEAST runs.
 screen_log_every: 5000 #    How often to output to screen during BEAST runs.
@@ -18,7 +29,6 @@ tree_log_every: 1000 #    How often to save a tree file during BEAST runs.
 # Defining XML Sets (Partitioning Data)
 xml_set_definitions: # The definitions for the xml_sets you wish to use.
   #{Keys=The name used for the xml_set.: Values: Will be used with pandas DataFrame.query to separate out your data}
-  HV.1: "`lineage name` == 'HV.1'"
-  JN.1: "`lineage name` in ['JN.1', 'JN.1.1', 'JN.1.10', 'JN.1.18', 'JN.1.19', 'JN.1.2', 'JN.1.22', 'JN.1.31', 'JN.1.39', 'JN.1.4', 'JN.1.4.5', 'JN.1.4.7', 'JN.1.41', 'JN.1.44', 'JN.1.45', 'JN.1.47.1', 'JN.1.5','JN.1.52', 'JN.1.55', 'JN.1.6', 'JN.1.60', 'JN.1.8', 'JN.1.8.3', 'JN.1.9', 'JN.11', 'JN.13', 'JN.18']"
-
+ North_America: "`geoLocCountry` in ['USA', 'Canada', 'Mexico']"
+ Europe: "geoLocCountry in ['Italy', 'France', 'Hungary', 'Netherlands', 'Austria']"
 

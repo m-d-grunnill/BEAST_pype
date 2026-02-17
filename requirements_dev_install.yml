@@ -15,6 +15,7 @@ dependencies:
   - conda-forge::python>=3.10
   # Python Bioinformatics
   - conda-forge::biopython>=1.86
+  - bioconda::nextclade>=3.18.1
   - bioconda::iqtree>=3.0.1
   - bioconda::treetime>=0.11.4
   - bioconda::beast2-xml>=1.5.0
