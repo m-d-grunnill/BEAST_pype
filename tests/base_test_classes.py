@@ -66,8 +66,7 @@ class WorkflowVariationTest:
             if param in parameters:
                 parameters[param] = f"{self.start_working_dir}/{parameters[param]}"
         parameters['max_threads'] = 1  # This allows all tests to be run in parallel as it stops beast and IQ tree running parallel.
-        parameters['specific_run_save_dir'] = datetime.now().strftime(
-            "%Y-%m-%d_%H-%M-%S")
+        parameters['specific_run_save_dir'] = '2026-02-20_15-28-29' # datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         self.parameters = parameters
         tmp_parameters_path = f"{overall_save_dir}/parameters.yml"
         with open(tmp_parameters_path, 'w') as file:

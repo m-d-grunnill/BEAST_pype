@@ -6,7 +6,7 @@ combined_thread_instance_options: # Number of cpu cores and BEAST threads
   'stop': 3
 configurations:
   no_gpu:
-    number_of_beast_runs: 3 #Number of chains to use (repeated runs to do) when running BEAST.
+    number_of_beast_runs: 9 #Number of chains to use (repeated runs to do) when running BEAST.
 iqtree_seed: 42
 treetime_seed: 42
 downsampled_iqtree_seed: 42
@@ -20,7 +20,7 @@ beast_seeds:
 #  - 123456
 
 #  gpu:
-#    number_of_beast_runs: 3 #Number of chains to use (repeated runs to do) when running BEAST.
+#    number_of_beast_runs: 9 #Number of chains to use (repeated runs to do) when running BEAST.
 iqtree_seed: 42
 treetime_seed: 42
 downsampled_iqtree_seed: 42

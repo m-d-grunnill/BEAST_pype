@@ -3,17 +3,7 @@ fasta_path: example_data/Measles/all_measles.fasta #    Path to fasta file conta
 downsample_to: 200 #    If provided the fasta file and initial tree file used to generate the BEAST 2 xml is downsampled to this amount.
 metadata_path: example_data/Measles/all_measles_metadata.tsv #    Path to csv or tsv containing metadata for sequences in fasta_path.
 number_of_beast_runs: 3 #Number of chains to use (repeated runs to do) when running BEAST.
-iqtree_seed: 42
-treetime_seed: 42
-downsampled_iqtree_seed: 42
-downsampled_treetime_seed: 42
-beast_seeds:
-  - 1
-  - 12
-  - 123
-  - 1234
-  - 12345
-  - 123456
+seed_to_rule_them_all: 42 #    If provided, this seed is used for all BEAST runs. Otherwise, a random seed is generated for each run.
 overall_save_dir: SBATCH-Test-Generic-Comparative_full #    Path to where you are saving all the runs of this workflow.
 log_file_basename: BEAST # The definitions for the xml_sets you wish to use.
 sample_id_field: 'accessionVersion' #    Name of field in metadata_db containing sequence IDs.

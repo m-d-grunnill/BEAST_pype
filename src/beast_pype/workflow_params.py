@@ -4,7 +4,7 @@ from copy import deepcopy
 import yaml
 from papermill.inspection import _infer_parameters
 from papermill.iorw import load_notebook_node
-from numpy.random import randint
+import numpy as np
 import multiprocessing
 import pandas as pd
 from Bio import SeqIO
@@ -81,6 +81,7 @@ class WorkflowParams(SimpleNamespace):
     """Base Class responsible for setting up and checking workflow parameters."""
 
     workflow_name = None
+    not_to_be_recorded_as_params = ['sys', 'NamespaceMagics', 'get_ipython', 'debugpy', 'json', 'rng']
 
 
     def __init__(self, **kwargs):
@@ -212,23 +213,47 @@ class WorkflowParams(SimpleNamespace):
         if self.metadata_path is not None:
             metadata_df.to_csv(f'{self.save_dir}/metadata.csv', index=False)
 
-        if self.iqtree_seed is not None and (not isinstance(self.iqtree_seed, int) or self.iqtree_seed < 1):
-            raise ValueError('iqtree_seed must be an integer greater than or equal to 1.')
-        if self.treetime_seed is not None and (not isinstance(self.treetime_seed, int) or self.treetime_seed < 1):
-            raise ValueError('treetime_seed must be an integer greater than or equal to 1.')
-        if self.downsampled_iqtree_seed is not None and (not isinstance(self.downsampled_iqtree_seed, int) or self.downsampled_iqtree_seed < 1):
-            raise ValueError('downsampled_iqtree_seed must be an integer greater than or equal to 1.')
-        if self.downsampled_treetime_seed is not None and (not isinstance(self.downsampled_treetime_seed, int) or self.downsampled_treetime_seed < 1):
-            raise ValueError('downsampled_treetime_seed must be an integer greater than or equal to 1.')
-
-        if self.beast_seeds is not None:
-            if isinstance(self.beast_seeds, int):
-                self.beast_seeds = [self.beast_seeds]
-            if isinstance(self.beast_seeds, list):
-                if not all(isinstance(seed, int) and seed > 0 for seed in self.beast_seeds):
-                    raise ValueError('If beast_seeds is a list, all values must be integers greater than or equal to 1.')
+        if self.seed_to_rule_them_all is not None:
+            if not isinstance(self.seed_to_rule_them_all, int) or self.seed_to_rule_them_all < 1:
+                raise ValueError('seed_to_rule_them_all must be an integer greater than or equal to 1.')
+            self.rng = np.random.default_rng(self.seed_to_rule_them_all)
+            if self.iqtree_seed is not None:
+                raise ValueError('If seed_to_rule_them_all is given, iqtree_seed should not be given as well.')
             else:
-                raise TypeError('beast_seeds must be a list of integers or a single integer.')
+                self.iqtree_seed = self.rng.integers(low=0, high=int(9e6), size=1).tolist()[0]
+            if self.treetime_seed is not None:
+                raise ValueError('If seed_to_rule_them_all is given, treetime_seed should not be given as well.')
+            else:
+                self.treetime_seed = self.rng.integers(low=0, high=int(9e6), size=1).tolist()[0]
+            if self.downsampled_iqtree_seed is not None:
+                raise ValueError('If seed_to_rule_them_all is given, downsampled_iqtree_seed should not be given as well.')
+            else:
+                self.downsampled_iqtree_seed = self.rng.integers(low=0, high=int(9e6), size=1).tolist()[0]
+            if self.downsampled_treetime_seed is not None:
+                raise ValueError('If seed_to_rule_them_all is given, downsampled_treetime_seed should not be given as well.')
+            else:
+                self.downsampled_treetime_seed = self.rng.integers(low=0, high=int(9e6), size=1).tolist()[0]
+            if self.beast_seeds is not None:
+                raise ValueError('If seed_to_rule_them_all is given, beast_seeds should not be given as well.')
+        else:
+            self.rng = np.random.default_rng()
+            if self.iqtree_seed is not None and (not isinstance(self.iqtree_seed, int) or self.iqtree_seed < 1):
+                raise ValueError('iqtree_seed must be an integer greater than or equal to 1.')
+            if self.treetime_seed is not None and (not isinstance(self.treetime_seed, int) or self.treetime_seed < 1):
+                raise ValueError('treetime_seed must be an integer greater than or equal to 1.')
+            if self.downsampled_iqtree_seed is not None and (not isinstance(self.downsampled_iqtree_seed, int) or self.downsampled_iqtree_seed < 1):
+                raise ValueError('downsampled_iqtree_seed must be an integer greater than or equal to 1.')
+            if self.downsampled_treetime_seed is not None and (not isinstance(self.downsampled_treetime_seed, int) or self.downsampled_treetime_seed < 1):
+                raise ValueError('downsampled_treetime_seed must be an integer greater than or equal to 1.')
+
+            if self.beast_seeds is not None:
+                if isinstance(self.beast_seeds, int):
+                    self.beast_seeds = [self.beast_seeds]
+                if isinstance(self.beast_seeds, list):
+                    if not all(isinstance(seed, int) and seed > 0 for seed in self.beast_seeds):
+                        raise ValueError('If beast_seeds is a list, all values must be integers greater than or equal to 1.')
+                else:
+                    raise TypeError('beast_seeds must be a list of integers or a single integer.')
 
     def record_parameters(self, extras_dict={}):
         """
@@ -240,15 +265,16 @@ class WorkflowParams(SimpleNamespace):
             Dictionary of extra parameters to be recorded.
         """
         pipeline_run_info_path = f'{self.save_dir}/pipeline_run_info.yml'
+        recordable_params = {key: value for key, value in self.__dict__.items() if key not in self.not_to_be_recorded_as_params}
         if os.path.exists(pipeline_run_info_path):
             with open(pipeline_run_info_path, 'r') as fp:
                 to_record  = yaml.safe_load(fp)
             fp.close()
             if 'parameters' in to_record:
-                to_record['parameters'].update(self.__dict__)
+                to_record['parameters'].update(recordable_params)
             to_record.update(extras_dict)
         else:
-            to_record = {'parameters': self.__dict__, **extras_dict}
+            to_record = {'parameters': recordable_params, **extras_dict}
         with open(pipeline_run_info_path, 'w') as fp:
             yaml.dump(to_record, fp, sort_keys=True)
         fp.close()
@@ -429,8 +455,7 @@ class SimpleWorkflowParams(WorkflowParams):
         # If beast_seeds not given generate them.
         # BEASTs random number seed can select the same seed for multiple runs if they are launched close together in time (such as programmatically). Therefore, numpy is used to generate beast_seeds for running BEAST.
         if self.beast_seeds is None:
-
-            self.beast_seeds = randint(low=1, high=int(1e6), size=number_of_seeds).tolist()
+            self.beast_seeds = self.rng.integers(low=0, high=int(9e5), size=number_of_seeds).tolist()
 
     def retrieve_phase_2i_params(self):
         """
@@ -876,7 +901,7 @@ class ComparativeWorkflowParams(WorkflowParams):
         # If beast_seeds not given generate them.
         # BEASTs random number seed can select the same seed for multiple runs if they are launched close together in time (such as programmatically). Therefore, numpy is used to generate beast_seeds for running BEAST.
         if self.beast_seeds is None:
-            self.beast_seeds = randint(low=1, high=int(1e9), size=number_of_seeds).tolist()
+            self.beast_seeds = self.rng.integers(low=0, high=int(9e5), size=number_of_seeds).tolist()
 
     def gen_xml_set_directories(self):
         """
@@ -1075,10 +1100,10 @@ class ComparativeWorkflowParams(WorkflowParams):
         youngest_tip_date: datetime
             Youngest tip date.
         """
-        if self.downsample_to is None:
+        metadata_path = f'{xml_set_directory}/downsampled_metadata.csv'
+        if not os.path.exists(metadata_path):
             metadata_path = f'{xml_set_directory}/metadata.csv'
-        else:
-            metadata_path = f'{xml_set_directory}/downsampled_metadata.csv'
+            
         if metadata_path.endswith('.tsv'):
             sep = '\t'
         elif metadata_path.endswith('.csv'):
@@ -1341,7 +1366,7 @@ def setup_optimising_config(name,
 
 
     if 'beast_seeds' not in configuration:
-        configuration['beast_seeds'] = randint(low=1, high=int(1e6), size=configuration['number_of_beast_runs']).tolist()
+        configuration['beast_seeds'] = np.random.randint(low=1, high=int(1e6), size=configuration['number_of_beast_runs']).tolist()
     del configuration['number_of_beast_runs']
     save_dir = f'{save_dir}/{save_name}'
     os.makedirs(save_dir)

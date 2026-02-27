@@ -13,13 +13,13 @@ collection_date_field: 'sampleCollectionDate' #Name of field in metadata_db cont
 # Defining XML Sets (Partitioning Data)
 xml_set_definitions: # The definitions for the xml_sets you wish to use.
   #{Keys=The name used for the xml_set.: Values: Will be used with pandas DataFrame.query to separate out your data}
- North_America: "`geoLocCountry` in ['USA', 'Canada', 'Mexico']"
- Europe: "geoLocCountry in ['Italy', 'France', 'Hungary', 'Netherlands', 'Austria']"
+ Netherlands: "`geoLocCountry` == 'Netherlands'"
+ Austria: "geoLocCountry == 'Austria'"
 
 
 # Initial Tree Building & Downsampling
 use_initial_tree: true
-downsample_to: 200 #    If provided the fasta file and initial tree file used to generate the BEAST 2 xml is downsampled to this amount.
+downsample_to: 50 #    If provided the fasta file and initial tree file used to generate the BEAST 2 xml is downsampled to this amount.
 
 # BDSky Options
 rt_dims: 3 #    Number of Rt dimensions (time periods over which Rt is estimated).
@@ -28,23 +28,12 @@ zero_sampling_before_first_sample: True # Fix the sampling proportion to 0 for t
 
 #MCMC Tree/Logfile names Chain-lengths & Save Steps
 log_file_basename: BDSKY_Serial # If provided .tree, .log and .state files from running BEAST 2 will have this name prefixed by 'run-with-seed-{seed}-', number being that of the chain.
-chain_length: 50000 # Number of chains to use for BEAST runs.
-screen_log_every: 5000 #    How often to output to screen during BEAST runs.
-store_state_every: 1000 #    How often to store MCMC state during BEAST runs.
-trace_log_every: 1000 #    How often to save a log file during BEAST runs.
-tree_log_every: 1000 #    How often to save a tree file during BEAST runs.
+chain_length: 10000000 # Number of chains to use for BEAST runs.
+screen_log_every: 0.001 #    How often to output to screen during BEAST runs.
+store_state_every: 0.0001 #    How often to store MCMC state during BEAST runs.
+trace_log_every: 0.0001 #    How often to save a log file during BEAST runs.
+tree_log_every: 0.0001 #    How often to save a tree file during BEAST runs.
 
 #Running BEAST 2
-number_of_beast_runs: 3 #Number of chains to use (repeated runs to do) when running BEAST.
-iqtree_seed: 42
-treetime_seed: 42
-downsampled_iqtree_seed: 42
-downsampled_treetime_seed: 42
-beast_seeds:
-  - 1
-  - 12
-  - 123
-  - 1234
-  - 12345
-  - 123456
-
+number_of_beast_runs: 9 #Number of chains to use (repeated runs to do) when running BEAST.
+seed_to_rule_them_all: 42 #    If provided, this seed is used for all BEAST runs. Otherwise, a random seed is generated for each run.

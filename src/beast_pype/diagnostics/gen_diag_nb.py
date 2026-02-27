@@ -58,7 +58,7 @@ def gen_xml_set_diag_notebook(save_dir,
                 "* Middle display: KDE and trace plots, see [arviz.plot_trace documentation](https://python.arviz.org/en/stable/api/generated/arviz.plot_trace.html#arviz.plot_trace).\n" +
                 "* Bottom display: A table of statistics regarding the traces, see [arviz.summary documentation](https://python.arviz.org/en/stable/api/generated/arviz.summary.html#arviz.summary). Regarding these statistics:\n" +
                 "\t* Ideally the ESSs should be >= 200, see [arviz.ess documentation](https://python.arviz.org/en/stable/api/generated/arviz.ess.html#arviz.ess).\n" +
-                "\t* Ideally the r_hat should be close fo 1, see [arviz.rhat documentation](https://python.arviz.org/en/stable/api/generated/arviz.rhat.html#arviz.rhat).\n" +
+                "\t* Ideally the r_hat should be close fo 1 (<1.05), see [arviz.rhat documentation](https://python.arviz.org/en/stable/api/generated/arviz.rhat.html#arviz.rhat).\n" +
                 "\t* Markov Chain Standard Error MCSEs, see [arviz.mcse](https://python.arviz.org/en/stable/api/generated/arviz.mcse.html#arviz.mcse).\n\n"+
                 "After making your selection click on the cell below the widget and then keep pressing shift+enter to carry on with the rest of the cells in this notebook."
             ),
@@ -68,7 +68,7 @@ def gen_xml_set_diag_notebook(save_dir,
             nbf.v4.new_code_cell(
                 f"pipeline_run_info['Chains Used']['{xml_set}'] = deepcopy(sample_diag.selected_chains)\n" +
                 f"pipeline_run_info['Burn-In']['{xml_set}'] = deepcopy(sample_diag.burinin_percentage)\n" +
-                f"phase_5i_params = sample_diag.merging_outputs_params(output_path=outputs_and_reports_dir, xml_set='{xml_set}')\n" +
+                f"phase_5i_params = sample_diag.merging_outputs_params(output_path=outputs_and_reports_dir, kernel_name=kernel_name, xml_set='{xml_set}')\n" +
                 "phase_5i_log = execute_notebook(input_path=f'{workflow_modules_path}/Phase-5i-Merge-BEAST-outputs.ipynb',\n" +
                  f"output_path=save_dir + '/{xml_set}/Phase-5i-Merge-BEAST-outputs.ipynb',\n" +
                 "\t\t\t\t\t\t\t\tparameters=phase_5i_params,\n" +
@@ -132,7 +132,7 @@ def gen_xml_set_diag_notebook(save_dir,
             "This can take sometime. So you can look at the report whilst waiting this is done last."
         ),
         nbf.v4.new_code_cell(
-            "gen_mcc_notebook(outputs_and_reports_dir, 'Phase-5ii-Gen-MCC-Trees.ipynb')\n" +
+            "gen_mcc_notebook(outputs_and_reports_dir, 'Phase-5ii-Gen-MCC-Trees.ipynb', kernel_name=kernel_name)\n" +
             "mcc_tree_output = execute_notebook(input_path='Phase-5ii-Gen-MCC-Trees.ipynb',\n" +
             "output_path='Phase-5ii-Gen-MCC-Trees.ipynb',\n" +
             "progress_bar=True)\n"

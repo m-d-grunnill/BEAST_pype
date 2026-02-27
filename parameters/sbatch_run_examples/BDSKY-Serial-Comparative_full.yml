@@ -35,17 +35,7 @@ tree_log_every: 1000 #    How often to save a tree file during BEAST runs.
 
 #Running BEAST 2
 number_of_beast_runs: 3 #Number of chains to use (repeated runs to do) when running BEAST.
-iqtree_seed: 42
-treetime_seed: 42
-downsampled_iqtree_seed: 42
-downsampled_treetime_seed: 42
-beast_seeds:
-  - 1
-  - 12
-  - 123
-  - 1234
-  - 12345
-  - 123456
+seed_to_rule_them_all: 42 #    If provided, this seed is used for all BEAST runs. Otherwise, a random seed is generated for each run.
 
 sbatch_options_needing_a_value:
     '--cpus-per-task': 1             # Number of CPU cores per task

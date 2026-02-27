@@ -4,18 +4,8 @@ downsample_to: 375 #    If provided the fasta file and initial tree file used to
 initial_tree_type: Temporal #    Intial tree type to use. str (either 'Distance' or 'Temporal') or None
 log_file_basename: BDSKY_serial #    If provided .tree, .log and .state files from running BEAST 2 will have this name prefixed by 'run-with-seed-{seed}-'.
 metadata_path: example_data/COVID-19_JN.1_and_HV.1_Submission_Date/test_HV_1_and_JN_1_metadata.csv #    Path to csv or tsv containing metadata for sequences in fasta_path.
-number_of_beast_runs: 3 #Number of chains to use (repeated runs to do) when running BEAST.
-iqtree_seed: 42
-treetime_seed: 42
-downsampled_iqtree_seed: 42
-downsampled_treetime_seed: 42
-beast_seeds:
-  - 1
-  - 12
-  - 123
-  - 1234
-  - 12345
-  - 123456
+number_of_beast_runs: 9 #Number of chains to use (repeated runs to do) when running BEAST.
+seed_to_rule_them_all: 42 #    If provided, this seed is used for all BEAST runs. Otherwise, a random seed is generated for each run.
 origin_start_addition: 0.02737850787132101 #    Suggested infection period of pathogen. **Should be in years.** This + initial MLE tree height is used as starting value of origin.
 origin_upper_addition: 2 #    This + initial MLE tree height is used as upper value of origin prior.
 overall_save_dir: Local-Test-COVID-Strain-Surveillance #    Path to where you are saving all the runs of this workflow.

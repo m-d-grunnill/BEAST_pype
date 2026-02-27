@@ -1,9 +1,9 @@
 collection_date_field: 'sampleCollectionDate' #    Name of field in metadata_db containing collection dates of sequences. Should be formatted YYYY-MM-DD.
-fasta_path: example_data/Measles/european_measles.fasta #    Path to fasta file containing sequences to be placed into template xml.
+fasta_path: example_data/Measles/all_measles.fasta #    Path to fasta file containing sequences to be placed into template xml.
 initial_tree_type: Temporal #    Intial tree type to use. str (either 'Distance' or 'Temporal') or None
 downsample_to: 200 #    If provided the fasta file and initial tree file used to generate the BEAST 2 xml is downsampled to this amount.
 log_file_basename: BEAST #     If provided .tree, .log and .state files from running BEAST 2 will have this name prefixed by 'run-with-seed-{seed}-'.
-metadata_path: example_data/Measles/european_measles_metadata.tsv #      Path to csv or tsv containing metadata for sequences in fasta_path.number_of_beast_runs: 3 #Number of chains to use (repeated runs to do) when running BEAST.
+metadata_path: example_data/Measles/all_measles_metadata.tsv #      Path to csv or tsv containing metadata for sequences in fasta_path.number_of_beast_runs: 3 #Number of chains to use (repeated runs to do) when running BEAST.
 iqtree_seed: 42
 treetime_seed: 42
 downsampled_iqtree_seed: 42
