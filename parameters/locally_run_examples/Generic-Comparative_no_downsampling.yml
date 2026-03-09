@@ -1,6 +1,6 @@
 collection_date_field: 'sampleCollectionDate' #    Name of field in metadata_db containing collection dates of sequences. Should be formatted YYYY-MM-DD.
-fasta_path: example_data/Measles/all_measles.fasta #    Path to fasta file containing sequences to be placed into template xml.
-metadata_path: example_data/Measles/all_measles_metadata.tsv #    Path to csv or tsv containing metadata for sequences in fasta_path.
+fasta_path: example_data/Measles/Netherlands_2024_measles_D8_sequences.fasta #    Path to fasta file containing sequences to be placed into template xml.
+metadata_path: example_data/Measles/Netherlands_2024_measles_D8_metadata.csv #    Path to csv or tsv containing metadata for sequences in fasta_path.
 number_of_beast_runs: 9 #Number of chains to use (repeated runs to do) when running BEAST.
 seed_to_rule_them_all: 42 #    If provided, this seed is used for all BEAST runs. Otherwise, a random seed is generated for each run.
 overall_save_dir: Local-Test-Generic-Comparative_no_downsampling #    Path to where you are saving all the runs of this workflow.

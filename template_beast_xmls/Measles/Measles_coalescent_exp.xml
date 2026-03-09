@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><beast beautitemplate='Standard' beautistatus='' namespace="beast.core:beast.evolution.alignment:beast.evolution.tree.coalescent:beast.core.util:beast.evolution.nuc:beast.evolution.operators:beast.evolution.sitemodel:beast.evolution.substitutionmodel:beast.evolution.likelihood" required="" version="2.6">
+
+    <data
+id="2023-03-01
+56
+WGS
+D8"
+spec="Alignment"
+name="alignment">
+    </data>
+
+
+    
+
+<map name="Uniform" >beast.math.distributions.Uniform</map>
+<map name="Exponential" >beast.math.distributions.Exponential</map>
+<map name="LogNormal" >beast.math.distributions.LogNormalDistributionModel</map>
+<map name="Normal" >beast.math.distributions.Normal</map>
+<map name="Beta" >beast.math.distributions.Beta</map>
+<map name="Gamma" >beast.math.distributions.Gamma</map>
+<map name="LaplaceDistribution" >beast.math.distributions.LaplaceDistribution</map>
+<map name="prior" >beast.math.distributions.Prior</map>
+<map name="InverseGamma" >beast.math.distributions.InverseGamma</map>
+<map name="OneOnX" >beast.math.distributions.OneOnX</map>
+
+<run id="mcmc" spec="MCMC" chainLength="10000000" storeEvery="10000">
+    <state id="state" spec="State" storeEvery="1000">
+        <tree id="Tree.t:2023-03-01 56 WGS D8" spec="beast.evolution.tree.Tree" name="stateNode">
+            <trait id="dateTrait.t:2023-03-01 56 WGS D8" spec="beast.evolution.tree.TraitSet" dateFormat="yyyy-M-dd" traitname="date">
+                            <taxa id="TaxonSet.2023-03-01 56 WGS D8" spec="TaxonSet">
+                    <data idref="2023-03-01
+56
+WGS
+D8"
+name="alignment"/>
+                </taxa>
+            </trait>
+            <taxonset idref="TaxonSet.2023-03-01 56 WGS D8"/>
+        </tree>
+        <parameter id="clockRate.c:2023-03-01 56 WGS D8" spec="parameter.RealParameter" name="stateNode">5.0E-4</parameter>
+        <parameter id="ePopSize.t:2023-03-01 56 WGS D8" spec="parameter.RealParameter" name="stateNode">0.3</parameter>
+        <parameter id="growthRate.t:2023-03-01 56 WGS D8" spec="parameter.RealParameter" name="stateNode">3.0E-4</parameter>
+        <parameter id="kappa.s:2023-03-01 56 WGS D8" spec="parameter.RealParameter" lower="0.0" name="stateNode">2.0</parameter>
+        <parameter id="proportionInvariant.s:2023-03-01 56 WGS D8" spec="parameter.RealParameter" lower="0.0" name="stateNode" upper="1.0">0.939</parameter>
+        <parameter id="gammaShape.s:2023-03-01 56 WGS D8" spec="parameter.RealParameter" name="stateNode">0.5</parameter>
+        <parameter id="freqParameter.s:2023-03-01 56 WGS D8" spec="parameter.RealParameter" dimension="4" lower="0.0" name="stateNode" upper="1.0">0.25</parameter>
+    </state>
+    <init id="RandomTree.t:2023-03-01 56 WGS D8" spec="beast.evolution.tree.RandomTree" estimate="false" initial="@Tree.t:2023-03-01 56 WGS D8" taxa="@2023-03-01 56 WGS D8">
+        <populationModel id="ConstantPopulation0.t:2023-03-01 56 WGS D8" spec="ConstantPopulation">
+            <parameter id="randomPopSize.t:2023-03-01 56 WGS D8" spec="parameter.RealParameter" name="popSize">1.0</parameter>
+        </populationModel>
+    </init>
+    <distribution id="posterior" spec="util.CompoundDistribution">
+        <distribution id="prior" spec="util.CompoundDistribution">
+            <distribution id="CoalescentExponential.t:2023-03-01 56 WGS D8" spec="Coalescent">
+                <populationModel id="ExponentialGrowth.t:2023-03-01 56 WGS D8" spec="ExponentialGrowth" growthRate="@growthRate.t:2023-03-01 56 WGS D8" popSize="@ePopSize.t:2023-03-01 56 WGS D8"/>
+                <treeIntervals id="TreeIntervals.t:2023-03-01 56 WGS D8" spec="TreeIntervals" tree="@Tree.t:2023-03-01 56 WGS D8"/>
+            </distribution>
+            <prior id="ClockPrior.c:2023-03-01 56 WGS D8" name="distribution" x="@clockRate.c:2023-03-01 56 WGS D8">
+                <Gamma id="Gamma.8" name="distr">
+                    <parameter id="RealParameter.81" spec="parameter.RealParameter" estimate="false" name="alpha">5.008644</parameter>
+                    <parameter id="RealParameter.82" spec="parameter.RealParameter" estimate="false" name="beta">1.1170688114387846E-4</parameter>
+                </Gamma>
+            </prior>
+            <prior id="ePopSizePrior.t:2023-03-01 56 WGS D8" name="distribution" x="@ePopSize.t:2023-03-01 56 WGS D8">
+                <OneOnX id="OneOnX.3" name="distr"/>
+            </prior>
+            <prior id="FrequenciesPrior.s:2023-03-01 56 WGS D8" name="distribution" x="@freqParameter.s:2023-03-01 56 WGS D8">
+                <Uniform id="Uniform.3" name="distr"/>
+            </prior>
+            <prior id="GammaShapePrior.s:2023-03-01 56 WGS D8" name="distribution" x="@gammaShape.s:2023-03-01 56 WGS D8">
+                <Exponential id="Exponential.0" name="distr">
+                    <parameter id="RealParameter.0" spec="parameter.RealParameter" estimate="false" name="mean">1.0</parameter>
+                </Exponential>
+            </prior>
+            <prior id="GrowthRatePrior.t:2023-03-01 56 WGS D8" name="distribution" x="@growthRate.t:2023-03-01 56 WGS D8">
+                <LaplaceDistribution id="LaplaceDistribution.0" name="distr">
+                    <parameter id="RealParameter.88" spec="parameter.RealParameter" estimate="false" name="mu">0.0</parameter>
+                    <parameter id="RealParameter.89" spec="parameter.RealParameter" estimate="false" name="scale">1.0</parameter>
+                </LaplaceDistribution>
+            </prior>
+            <prior id="KappaPrior.s:2023-03-01 56 WGS D8" name="distribution" x="@kappa.s:2023-03-01 56 WGS D8">
+                <LogNormal id="LogNormalDistributionModel.0" name="distr">
+                    <parameter id="RealParameter.5" spec="parameter.RealParameter" estimate="false" name="M">1.0</parameter>
+                    <parameter id="RealParameter.6" spec="parameter.RealParameter" estimate="false" name="S">1.25</parameter>
+                </LogNormal>
+            </prior>
+            <prior id="PropInvariantPrior.s:2023-03-01 56 WGS D8" name="distribution" x="@proportionInvariant.s:2023-03-01 56 WGS D8">
+                <Uniform id="Uniform.1" name="distr"/>
+            </prior>
+        </distribution>
+        <distribution id="likelihood" spec="util.CompoundDistribution" useThreads="true">
+            <distribution id="treeLikelihood.2023-03-01 56 WGS D8" spec="ThreadedTreeLikelihood" data="@2023-03-01 56 WGS D8" tree="@Tree.t:2023-03-01 56 WGS D8">
+                <siteModel id="SiteModel.s:2023-03-01 56 WGS D8" spec="SiteModel" gammaCategoryCount="4" proportionInvariant="@proportionInvariant.s:2023-03-01 56 WGS D8" shape="@gammaShape.s:2023-03-01 56 WGS D8">
+                    <parameter id="mutationRate.s:2023-03-01 56 WGS D8" spec="parameter.RealParameter" estimate="false" name="mutationRate">1.0</parameter>
+                    <substModel id="hky.s:2023-03-01 56 WGS D8" spec="HKY" kappa="@kappa.s:2023-03-01 56 WGS D8">
+                        <frequencies id="estimatedFreqs.s:2023-03-01 56 WGS D8" spec="Frequencies" frequencies="@freqParameter.s:2023-03-01 56 WGS D8"/>
+                    </substModel>
+                </siteModel>
+                <branchRateModel id="StrictClock.c:2023-03-01 56 WGS D8" spec="beast.evolution.branchratemodel.StrictClockModel" clock.rate="@clockRate.c:2023-03-01 56 WGS D8"/>
+            </distribution>
+        </distribution>
+        <distribution id="fossilCalibrations" spec="util.CompoundDistribution"/>
+    </distribution>
+    <operator id="StrictClockRateScaler.c:2023-03-01 56 WGS D8" spec="ScaleOperator" parameter="@clockRate.c:2023-03-01 56 WGS D8" weight="3.0"/>
+    <operator id="strictClockUpDownOperator.c:2023-03-01 56 WGS D8" spec="UpDownOperator" scaleFactor="0.75" weight="3.0">
+        <parameter idref="clockRate.c:2023-03-01 56 WGS D8" name="up"/>
+        <tree idref="Tree.t:2023-03-01 56 WGS D8" name="down"/>
+    </operator>
+    <operator id="CoalescentExponentialTreeScaler.t:2023-03-01 56 WGS D8" spec="ScaleOperator" scaleFactor="0.5" tree="@Tree.t:2023-03-01 56 WGS D8" weight="3.0"/>
+    <operator id="CoalescentExponentialTreeRootScaler.t:2023-03-01 56 WGS D8" spec="ScaleOperator" rootOnly="true" scaleFactor="0.5" tree="@Tree.t:2023-03-01 56 WGS D8" weight="3.0"/>
+    <operator id="CoalescentExponentialUniformOperator.t:2023-03-01 56 WGS D8" spec="Uniform" tree="@Tree.t:2023-03-01 56 WGS D8" weight="30.0"/>
+    <operator id="CoalescentExponentialSubtreeSlide.t:2023-03-01 56 WGS D8" spec="SubtreeSlide" tree="@Tree.t:2023-03-01 56 WGS D8" weight="15.0"/>
+    <operator id="CoalescentExponentialNarrow.t:2023-03-01 56 WGS D8" spec="Exchange" tree="@Tree.t:2023-03-01 56 WGS D8" weight="0.0"/>
+    <operator id="CoalescentExponentialWide.t:2023-03-01 56 WGS D8" spec="Exchange" isNarrow="false" tree="@Tree.t:2023-03-01 56 WGS D8" weight="3.0"/>
+    <operator id="CoalescentExponentialWilsonBalding.t:2023-03-01 56 WGS D8" spec="WilsonBalding" tree="@Tree.t:2023-03-01 56 WGS D8" weight="3.0"/>
+    <operator id="ePopSizeScaler.t:2023-03-01 56 WGS D8" spec="ScaleOperator" parameter="@ePopSize.t:2023-03-01 56 WGS D8" weight="3.0"/>
+    <operator id="GrowthRateRandomWalk.t:2023-03-01 56 WGS D8" spec="RealRandomWalkOperator" parameter="@growthRate.t:2023-03-01 56 WGS D8" weight="3.0" windowSize="1.0"/>
+    <operator id="KappaScaler.s:2023-03-01 56 WGS D8" spec="ScaleOperator" parameter="@kappa.s:2023-03-01 56 WGS D8" scaleFactor="0.5" weight="0.1"/>
+    <operator id="proportionInvariantScaler.s:2023-03-01 56 WGS D8" spec="ScaleOperator" parameter="@proportionInvariant.s:2023-03-01 56 WGS D8" scaleFactor="0.5" weight="0.1"/>
+    <operator id="gammaShapeScaler.s:2023-03-01 56 WGS D8" spec="ScaleOperator" parameter="@gammaShape.s:2023-03-01 56 WGS D8" scaleFactor="0.5" weight="0.1"/>
+    <operator id="FrequenciesExchanger.s:2023-03-01 56 WGS D8" spec="DeltaExchangeOperator" delta="0.01" weight="0.1">
+        <parameter idref="freqParameter.s:2023-03-01 56 WGS D8"/>
+    </operator>
+    <logger id="tracelog" spec="Logger" fileName="2023-03-01 56 WGS D8_HKY_coalexp_50M.log" logEvery="10000" model="@posterior" sanitiseHeaders="true" sort="smart">
+        <log idref="posterior"/>
+        <log idref="likelihood"/>
+        <log idref="prior"/>
+        <log idref="treeLikelihood.2023-03-01 56 WGS D8"/>
+        <log id="TreeHeight.t:2023-03-01 56 WGS D8" spec="beast.evolution.tree.TreeHeightLogger" tree="@Tree.t:2023-03-01 56 WGS D8"/>
+        <parameter idref="clockRate.c:2023-03-01 56 WGS D8" name="log"/>
+        <log idref="CoalescentExponential.t:2023-03-01 56 WGS D8"/>
+        <parameter idref="ePopSize.t:2023-03-01 56 WGS D8" name="log"/>
+        <parameter idref="growthRate.t:2023-03-01 56 WGS D8" name="log"/>
+        <parameter idref="kappa.s:2023-03-01 56 WGS D8" name="log"/>
+        <parameter idref="proportionInvariant.s:2023-03-01 56 WGS D8" name="log"/>
+        <parameter idref="gammaShape.s:2023-03-01 56 WGS D8" name="log"/>
+        <parameter idref="freqParameter.s:2023-03-01 56 WGS D8" name="log"/>
+    </logger>
+    <logger id="screenlog" spec="Logger" logEvery="10000">
+        <log idref="posterior"/>
+        <log idref="likelihood"/>
+        <log idref="prior"/>
+    </logger>
+    <logger id="treelog.t:2023-03-01 56 WGS D8" spec="Logger" fileName="023-03-01 56 WGS D8_HKY_coalexp_50M.trees" logEvery="10000" mode="tree">
+        <log id="TreeWithMetaDataLogger.t:2023-03-01 56 WGS D8" spec="beast.evolution.tree.TreeWithMetaDataLogger" tree="@Tree.t:2023-03-01 56 WGS D8"/>
+    </logger>
+    <operatorschedule id="OperatorSchedule" spec="OperatorSchedule"/>
+</run>
+</beast>

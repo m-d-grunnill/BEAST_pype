@@ -1,31 +1,36 @@
-overall_save_dir: SBATCH-Test-Optimising #    Path to where you are saving all the runs of this workflow.
+overall_save_dir: Sbatch_Example-Optimising #    Path to where you are saving all the runs of this workflow.
 ready_to_go_xml:  example_data/COVID-19_JN.1/Coalescent_Exponential_ready_to_go.xml #    Path to a BEAST 2 xml that you wish to run unaltered. If provided phases 2i, 2ii and 3 are skipped.
-combined_cpu_thread_instance_options: # Number of cpu cores and BEAST threads
+combined_thread_instance_options: # Number of cpu cores and BEAST threads
   'start': 1
   'step': 1
   'stop': 3
 configurations:
   no_gpu:
-    number_of_beast_runs: 3 #    Number of chains to use (repeated runs to do) when running BEAST.
-    sbatch_options_needing_a_value:
-      '--time': 0-01:00:00 # Maximum runtime (D-HH:MM:SS)
-      '--mem': 10G      # RAM to use.
-      #'--partition':  If needed uncomment and fill in the name of a partition to use. 
-#  one_gpu:
-#    number_of_beast_runs: 3 #    Number of chains to use (repeated runs to do) when running BEAST.
-#    sbatch_options_needing_a_value:
-#      '--time': 0-01:00:00 # Maximum runtime (D-HH:MM:SS)
-#      '--mem': 10G      # RAM to use.
-#      #'--partition':  If needed uncomment and fill in the name of a partition to use. 
-#      '--gpus': 1
-#    beast_options_without_a_value:
-#      - '-beagle_GPU'
-#  two_gpus:
-#    number_of_beast_runs: 3 #    Number of chains to use (repeated runs to do) when running BEAST.
-#    sbatch_options_needing_a_value:
-#      '--time': 0-01:00:00 # Maximum runtime (D-HH:MM:SS)
-#      '--mem': 10G      # RAM to use.
-#      #'--partition':  If needed uncomment and fill in the name of a partition to use. 
-#      '--gpus': 2
+    number_of_beast_runs: 9 #Number of chains to use (repeated runs to do) when running BEAST.
+iqtree_seed: 42
+treetime_seed: 42
+downsampled_iqtree_seed: 42
+downsampled_treetime_seed: 42
+beast_seeds:
+  - 1
+  - 12
+  - 123
+#  - 1234
+#  - 12345
+#  - 123456
+
+#  gpu:
+#    number_of_beast_runs: 9 #Number of chains to use (repeated runs to do) when running BEAST.
+iqtree_seed: 42
+treetime_seed: 42
+downsampled_iqtree_seed: 42
+downsampled_treetime_seed: 42
+beast_seeds:
+  - 1
+  - 12
+  - 123
+#  - 1234
+#  - 12345
+#  - 123456
 #    beast_options_without_a_value:
 #      - '-beagle_GPU'

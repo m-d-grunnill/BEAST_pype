@@ -1,8 +1,8 @@
 collection_date_field: 'sampleCollectionDate' #    Name of field in metadata_db containing collection dates of sequences. Should be formatted YYYY-MM-DD.
-fasta_path: example_data/Measles/all_measles.fasta #    Path to fasta file containing sequences to be placed into template xml.
+fasta_path: example_data/Measles/Netherlands_2024_measles_D8_sequences.fasta #    Path to fasta file containing sequences to be placed into template xml.
 use_initial_tree: True
 log_file_basename: BDSKY_serial #    If provided .tree, .log and .state files from running BEAST 2 will have this name prefixed by 'run-with-seed-{seed}-'.
-metadata_path: example_data/Measles/all_measles_metadata.tsv #    Path to csv or tsv containing metadata for sequences in fasta_path.
+metadata_path: example_data/Measles/Netherlands_2024_measles_D8_metadata.csv #    Path to csv or tsv containing metadata for sequences in fasta_path.
 overall_save_dir: Local-Test-BDSKY_change_times #    Path to where you are saving all the runs of this workflow.
 rt_partitions: #Instructions for setting rt_change date, going backwards from youngest xml_set in fasta_path until rt_partitions["end"]  is reached.
   # {'unit': 'days, weeks or years', 'every': int/float, 'end': date str YYYY-MM-DD}

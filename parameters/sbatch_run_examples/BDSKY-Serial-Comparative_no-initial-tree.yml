@@ -1,20 +1,20 @@
 # Example Parameters for running the BDSKY-Serial-Comparative.ipynb workflow.
 
 # Running an Instance of this Workflow
-overall_save_dir: SBATCH-Test-BDSKY-Serial-Comparative_no-initial-tree # Path to where you are saving all the runs of this workflow.
+overall_save_dir: Sbatch_Example-BDSKY-Serial-Comparative_no-initial-tree # Path to where you are saving all the runs of this workflow.
 
 # General Inputs
 template_xml_path: template_beast_xmls/Measles/Measles_BDKSY-Serial.xml #    Path to template BEAST 2 xml. #Path to template BEAST 2 xml.
-fasta_path: example_data/Measles/all_measles.fasta # Path to fasta file containing sequences to be placed into template xml.
-metadata_path: example_data/Measles/all_measles_metadata.tsv # Path to csv or tsv containing metadata for sequences in fasta_path.
+fasta_path: example_data/Measles/Netherlands_2024_measles_sequences.fasta # Path to fasta file containing sequences to be placed into template xml.
+metadata_path: example_data/Measles/Netherlands_2024_measles_metadata.csv # Path to csv or tsv containing metadata for sequences in fasta_path.
 sample_id_field: 'accessionVersion' #    Name of field in metadata_db containing sequence IDs.
 collection_date_field: 'sampleCollectionDate' #Name of field in metadata_db containing collection dates of sequences. Should be formatted YYYY-MM-DD.
 
 # Defining XML Sets (Partitioning Data)
 xml_set_definitions: # The definitions for the xml_sets you wish to use.
   #{Keys=The name used for the xml_set.: Values: Will be used with pandas DataFrame.query to separate out your data}
-  HV.1: "`lineage name` == 'HV.1'"
-  JN.1: "`lineage name` == 'JN.1'"
+ D8: "`genotype` == 'D8'"
+ B3: "`genotype` == 'B3'"
 
 # Initial Tree Building & Downsampling
 use_initial_tree: False
@@ -26,18 +26,19 @@ zero_sampling_before_first_sample: True # Fix the sampling proportion to 0 for t
 
 #MCMC Tree/Logfile names Chain-lengths & Save Steps
 log_file_basename: BDSKY_Serial # If provided .tree, .log and .state files from running BEAST 2 will have this name prefixed by 'run-with-seed-{seed}-', number being that of the chain.
-chain_length: 50000 # Number of chains to use for BEAST runs.
-screen_log_every: 5000 #    How often to output to screen during BEAST runs.
-store_state_every: 1000 #    How often to store MCMC state during BEAST runs.
-trace_log_every: 1000 #    How often to save a log file during BEAST runs.
-tree_log_every: 1000 #    How often to save a tree file during BEAST runs.
+chain_length: 10000000 # Number of chains to use for BEAST runs.
+screen_log_every: 0.001 #    How often to output to screen during BEAST runs.
+store_state_every: 0.0001 #    How often to store MCMC state during BEAST runs.
+trace_log_every: 0.0001 #    How often to save a log file during BEAST runs.
+tree_log_every: 0.0001 #    How often to save a tree file during BEAST runs.
 
 #Running BEAST 2
-number_of_beast_runs: 3 #Number of chains to use (repeated runs to do) when running BEAST.
+number_of_beast_runs: 9 #Number of chains to use (repeated runs to do) when running BEAST.
 seed_to_rule_them_all: 42 #    If provided, this seed is used for all BEAST runs. Otherwise, a random seed is generated for each run.
 
 sbatch_options_needing_a_value:
-  '--cpus-per-task': 1             # Number of CPU cores per task
-  '--time': 0-01:00:00 # Maximum runtime (D-HH:MM:SS)
-  '--mem': 16G      # RAM to use.
-  #'--partition':  If needed uncomment and fill in the name of a partition to use. 
+    '--cpus-per-task': 1             # Number of CPU cores per task
+    '--time': 3-00:00:00 # Maximum runtime (D-HH:MM:SS)
+    '--mem': 4G      # RAM to use.
+#    '--partition':  # If needed uncomment and fill in the name of a partition to use.
+#    '-A': # If needed uncomment and fill in the account to use.
