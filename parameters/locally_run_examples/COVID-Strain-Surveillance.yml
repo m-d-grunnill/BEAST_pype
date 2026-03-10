@@ -5,9 +5,9 @@ downsample_to: 250 #    If provided the fasta file and initial tree file used to
 initial_tree_type: Temporal #    Intial tree type to use. str (either 'Distance' or 'Temporal') or None
 log_file_basename: COVID-Sur #    If provided .tree, .log and .state files from running BEAST 2 will have this name prefixed by 'run-with-seed-{seed}-'.
 number_of_beast_runs: 9 #    Number of chains to use (repeated runs to do) when running BEAST.
-origin_start_addition: 0.02737850787132101 #    Suggested infection period of pathogen. **Should be in years.** This + initial MLE tree height is used as starting value of origin.
+origin_start_addition: 0.0136986301369863 #    Suggested infection period of pathogen. **Should be in years.** This + initial MLE tree height is used as starting value of origin.
 origin_upper_addition: 2 #    This + initial MLE tree height is used as upper value of origin prior.
-overall_save_dir: 250_Mid-June-2025-COVID_store_1000 #    Path to where you are saving all the runs of this workflow.
+overall_save_dir: Local_Example-COVID-Surveillance #    Path to where you are saving all the runs of this workflow.
 rt_partition_freq: #Instructions for setting rt_partitions dates, going backwards from youngest xml_set in fasta_path until rt_partitions["end"]  is reached.
   # {'unit': 'days, weeks or years', 'every': int/float, 'end': date str YYYY-MM-DD}
   #     Instructions for setting rt_partitions date, going backwards from the youngest date in all the metadata (all xml_sets/strains)
@@ -127,5 +127,5 @@ screen_log_every: 0.005 #    How often to output to screen during BEAST runs.
 store_state_every: 1000 #    How often to store MCMC state during BEAST runs.
 trace_log_every: 1000 #    How often to save a log file during BEAST runs.
 tree_log_every: 1000 #    How often to save a tree file during BEAST runs.
-max_threads: 20
+max_threads: 4
 seed_to_rule_them_all: 42 #    If provided, this seed is used for all BEAST runs. Otherwise, a random seed is generated for each run.

@@ -36,8 +36,8 @@ class TestBDSKYSerialNoInitialTree(SimpleWorkflowVariationTest):
     xml_generation = True
     xml_generation_notebook = xml_generation_notebook
 
-# class TestBDSKYSerialXmlReadyToGo(SimpleWorkflowVariationTest):
-#     name = 'Test_BDSKY-Serial_XML_Ready_To_Go'
-#     parameters_path = 'tests/parameters/BDSKY-Serial_xml-ready-to-go.yml'
-#     workflow = workflow
-#     xml_generation_notebook = xml_generation_notebook
+class TestBDSKYSerialXmlReadyToGo(SimpleWorkflowVariationTest):
+    name = 'Test_BDSKY-Serial_XML_Ready_To_Go'
+    parameters_path = 'tests/parameters/BDSKY-Serial_xml-ready-to-go.yml'
+    workflow = workflow
+    xml_generation_notebook = xml_generation_notebook

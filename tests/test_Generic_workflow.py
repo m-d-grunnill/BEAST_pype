@@ -27,8 +27,8 @@ class TestGenericNoInitialTree(SimpleWorkflowVariationTest):
     xml_generation = True
     xml_generation_notebook = xml_generation_notebook
 
-# class TestGenericXmlReadyToGo(SimpleWorkflowVariationTest):
-#     name = 'Test_Generic_XML_Ready_To_Go'
-#     parameters_path = 'tests/parameters/Generic_xml-ready-to-go.yml'
-#     workflow = workflow
-#     xml_generation_notebook = xml_generation_notebook
+class TestGenericXmlReadyToGo(SimpleWorkflowVariationTest):
+    name = 'Test_Generic_XML_Ready_To_Go'
+    parameters_path = 'tests/parameters/Generic_xml-ready-to-go.yml'
+    workflow = workflow
+    xml_generation_notebook = xml_generation_notebook

@@ -41,7 +41,7 @@ name="alignment"/>
         <parameter id="kappa.s:2023-03-01 56 WGS D8" spec="parameter.RealParameter" lower="0.0" name="stateNode">2.0</parameter>
         <parameter id="proportionInvariant.s:2023-03-01 56 WGS D8" spec="parameter.RealParameter" lower="0.0" name="stateNode" upper="1.0">0.939</parameter>
         <parameter id="gammaShape.s:2023-03-01 56 WGS D8" spec="parameter.RealParameter" name="stateNode">0.5</parameter>
-        <parameter id="origin_BDSKY_Serial.t:2023-03-01 56 WGS D8" spec="parameter.RealParameter" lower="0.0" name="stateNode" upper="Infinity">30.0</parameter>
+        <parameter id="origin_BDSKY_Serial.t:2023-03-01 56 WGS D8" spec="parameter.RealParameter" lower="0.0" name="stateNode" upper="Infinity">15.0</parameter>
         <parameter id="becomeUninfectiousRate_BDSKY_Serial.t:2023-03-01 56 WGS D8" spec="parameter.RealParameter" lower="0.0" name="stateNode" upper="Infinity">20.27777777777778</parameter>
         <parameter id="reproductiveNumber_BDSKY_Serial.t:2023-03-01 56 WGS D8" spec="parameter.RealParameter" dimension="5" lower="0.0" name="stateNode" upper="Infinity">1.75</parameter>
         <parameter id="samplingProportion_BDSKY_Serial.t:2023-03-01 56 WGS D8" spec="parameter.RealParameter" lower="0.0" name="stateNode" upper="1.0">0.01</parameter>
@@ -82,7 +82,7 @@ name="alignment"/>
                 </LogNormal>
             </prior>
             <prior id="originPrior_BDSKY_Serial.t:2023-03-01 56 WGS D8" name="distribution" x="@origin_BDSKY_Serial.t:2023-03-01 56 WGS D8">
-                <Uniform id="Uniform.10" name="distr" upper="50.0"/>
+                <Uniform id="Uniform.10" name="distr" upper="20.0"/>
             </prior>
             <prior id="PropInvariantPrior.s:2023-03-01 56 WGS D8" name="distribution" x="@proportionInvariant.s:2023-03-01 56 WGS D8">
                 <Uniform id="Uniform.1" name="distr"/>

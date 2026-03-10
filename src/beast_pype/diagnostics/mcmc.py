@@ -184,6 +184,8 @@ def plot_traces(posterior, parameters, labels=None, legend=True):
     """
     num_params = len(parameters)
     fig, axs = plt.subplots(nrows=num_params, ncols=2, figsize=(13, 2*num_params))
+    if num_params == 1:
+        axs = axs.reshape((1, 2))
     plt.subplots_adjust(hspace=0.4)
     traces = az.plot_trace(posterior,
                            axes=axs,

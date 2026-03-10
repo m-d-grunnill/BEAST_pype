@@ -24,15 +24,17 @@ downsample_to: 35 #    If provided the fasta file and initial tree file used to 
 # BDSky Options
 rt_dims: 3 #    Number of Rt dimensions (time periods over which Rt is estimated).
 zero_sampling_before_first_sample: True # Fix the sampling proportion to 0 for the period before the first xml_set.
+origin_start_addition: 0.049315068493150684 #    Suggested infection period of pathogen. **Should be in years.** This + initial MLE tree height is used as starting value of origin.
+origin_upper_addition: 5 #    This + initial MLE tree height is used as upper value of origin prior.
 
 
 #MCMC Tree/Logfile names Chain-lengths & Save Steps
 log_file_basename: BDSKY_Serial # If provided .tree, .log and .state files from running BEAST 2 will have this name prefixed by 'run-with-seed-{seed}-', number being that of the chain.
-chain_length: 10000000 # Number of chains to use for BEAST runs.
-screen_log_every: 0.001 #    How often to output to screen during BEAST runs.
-store_state_every: 0.0001 #    How often to store MCMC state during BEAST runs.
-trace_log_every: 0.0001 #    How often to save a log file during BEAST runs.
-tree_log_every: 0.0001 #    How often to save a tree file during BEAST runs.
+chain_length: 5e6 # Number of chains to use for BEAST runs.
+screen_log_every: 1e4 #    How often to output to screen during BEAST runs.
+store_state_every: 1e3 #    How often to store MCMC state during BEAST runs.
+trace_log_every: 1e3 #    How often to save a log file during BEAST runs.
+tree_log_every: 1e3 #    How often to save a tree file during BEAST runs.
 
 #Running BEAST 2
 number_of_beast_runs: 9 #Number of chains to use (repeated runs to do) when running BEAST.

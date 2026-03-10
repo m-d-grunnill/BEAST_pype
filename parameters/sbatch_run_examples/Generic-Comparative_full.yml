@@ -9,11 +9,11 @@ log_file_basename: BEAST # The definitions for the xml_sets you wish to use.
 sample_id_field: 'accessionVersion' #    Name of field in metadata_db containing sequence IDs.
 template_xml_path: template_beast_xmls/Measles/Measles_coalescent_exp.xml #    Path to template BEAST 2 xml.
 
-chain_length: 10000000 # Number of chains to use for BEAST runs.
-screen_log_every: 0.001 #    How often to output to screen during BEAST runs.
-store_state_every: 0.0001 #    How often to store MCMC state during BEAST runs.
-trace_log_every: 0.0001 #    How often to save a log file during BEAST runs.
-tree_log_every: 0.0001 #    How often to save a tree file during BEAST runs.
+chain_length: 5e6 # Number of chains to use for BEAST runs.
+screen_log_every: 1e4 #    How often to output to screen during BEAST runs.
+store_state_every: 1e3 #    How often to store MCMC state during BEAST runs.
+trace_log_every: 1e3 #    How often to save a log file during BEAST runs.
+tree_log_every: 1e3 #    How often to save a tree file during BEAST runs.
 
 # Defining XML Sets (Partitioning Data)
 xml_set_definitions: # The definitions for the xml_sets you wish to use.
