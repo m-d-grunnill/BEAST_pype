@@ -121,7 +121,7 @@ sub_lineages_mapping:
     - PQ.15
     - PQ.16
 sample_id_field: 'fasta header name' #    Name of field in metadata_db containing sequence IDs.
-template_xml_path: template_beast_xmls/BDSKY_serial_COVID-19_template.xml #    Path to template BEAST 2 xml.
+template_xml_path: template_beast_xmls/COVID/BDSKY_serial_COVID-19_template.xml #    Path to template BEAST 2 xml.
 chain_length: 20000000 # Number of chains to use for BEAST runs.
 screen_log_every: 0.005 #    How often to output to screen during BEAST runs.
 store_state_every: 1000 #    How often to store MCMC state during BEAST runs.

@@ -11,9 +11,9 @@ rt_dims: 3 #    Number of Rt dimensions (time periods over which Rt is estimated
 zero_sampling_before_first_sample: True # Fix the sampling proportion to 0 for the period before the first xml_set.
 sample_id_field: 'accessionVersion' #    Name of field in metadata_db containing sequence IDs.
 template_xml_path: template_beast_xmls/Measles/Measles_BDKSY-Serial.xml #    Path to template BEAST 2 xml.
-chain_length: 5e6 # Number of chains to use for BEAST runs.
-screen_log_every: 1e4 #    How often to output to screen during BEAST runs.
-store_state_every: 1e3 #    How often to store MCMC state during BEAST runs.
-trace_log_every: 1e3 #    How often to save a log file during BEAST runs.
-tree_log_every: 1e3 #    How often to save a tree file during BEAST runs.
+chain_length: 5000000 # Number of chains to use for BEAST runs.
+screen_log_every: 10000 #    How often to output to screen during BEAST runs.
+store_state_every: 1000 #    How often to store MCMC state during BEAST runs.
+trace_log_every: 1000 #    How often to save a log file during BEAST runs.
+tree_log_every: 1000 #    How often to save a tree file during BEAST runs.
 

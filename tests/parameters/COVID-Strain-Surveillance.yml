@@ -1,7 +1,6 @@
 fasta_path: example_data/COVID-19_Mid-June-2025/sequences.fasta #    Path to fasta file containing sequences to be placed into template xml.
 metadata_path: example_data/COVID-19_Mid-June-2025/metadata.csv #    Path to csv or tsv containing metadata for sequences in fasta_path.
 collection_date_field: 'sample collection date' #    Name of field in metadata_db containing collection dates of sequences. Should be formatted YYYY-MM-DD.
-downsample_to: 250 #    If provided the fasta file and initial tree file used to generate the BEAST 2 xml is downsampled to this amount.
 initial_tree_type: Temporal #    Intial tree type to use. str (either 'Distance' or 'Temporal') or None
 log_file_basename: COVID-Sur #    If provided .tree, .log and .state files from running BEAST 2 will have this name prefixed by 'run-with-seed-{seed}-'.
 number_of_beast_runs: 1 #    Number of chains to use (repeated runs to do) when running BEAST.
@@ -31,9 +30,8 @@ rt_partition_freq: #Instructions for setting rt_partitions dates, going backward
 #    unit: weeks
 #    amount: 4
 lineage_field: 'lineage name'
-dr_strain: LP.8.1.1
+dr_strain: LP.8.1
 voi_strains:
-  - LP.8.1
   - NB.1.8.1
 sub_lineages_mapping:
   LP.8.1:
@@ -70,37 +68,6 @@ sub_lineages_mapping:
     - LP.8.1.13
     - LP.8.1.14
     - LP.8.1.15
-  LP.8.1.1:
-    - LP.8.1.1
-    - NY.1
-    - NY.3
-    - NY.3.1
-    - NY.3.1.1
-    - NY.3.2
-    - NY.4
-    - NY.4.1
-    - NY.5
-    - NY.6
-    - NY.7
-    - NY.7.1
-    - NY.7.1.1
-    - NY.7.2
-    - NY.8
-    - NY.9
-    - NY.10
-    - NY.11
-    - NY.11.1
-    - NY.12
-    - NY.12.1
-    - NY.13
-    - NY.14
-    - NY.15
-    - NY.16
-    - NY.16.1
-    - NY.16.2
-    - NY.17
-    - NY.17.1
-    - NY.17.2
   NB.1.8.1:
     - NB.1.8.1
     - PQ.1
@@ -121,11 +88,10 @@ sub_lineages_mapping:
     - PQ.15
     - PQ.16
 sample_id_field: 'fasta header name' #    Name of field in metadata_db containing sequence IDs.
-template_xml_path: template_beast_xmls/BDSKY_serial_COVID-19_template.xml #    Path to template BEAST 2 xml.
+template_xml_path: template_beast_xmls/COVID/BDSKY_serial_COVID-19_template.xml #    Path to template BEAST 2 xml.
 chain_length: 50000 # Number of chains to use for BEAST runs.
 screen_log_every: 5000 #    How often to output to screen during BEAST runs.
 store_state_every: 1000 #    How often to store MCMC state during BEAST runs.
 trace_log_every: 1000 #    How often to save a log file during BEAST runs.
 tree_log_every: 1000 #    How often to save a tree file during BEAST runs.
-max_threads: 20
 seed_to_rule_them_all: 42 #    If provided, this seed is used for all BEAST runs. Otherwise, a random seed is generated for each run.
