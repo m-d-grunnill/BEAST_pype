@@ -101,8 +101,9 @@ def get_slurm_job_stats(job_ids):
     run_info_batch['Allocated RAM (GB)'] = run_info_batch['Allocated RAM (GB)'].str.replace('G', '').astype(float)
     run_info_batch['Elapsed'] = pd.to_timedelta(run_info_batch['Elapsed'].str.replace('-', ' days '))
     run_info_batch['CPUTime'] = pd.to_timedelta(run_info_batch['CPUTime'].str.replace('-', ' days '))
-    colon_counts = run_info_batch['TotalCPU'].str.count(':')
-    run_info_batch['TotalCPU'][colon_counts == 1] = '00:' + run_info_batch['TotalCPU'][colon_counts == 1]
+    for i, val in enumerate(run_info_batch['TotalCPU'].str.count(':') == 1):
+        if val:
+            run_info_batch.loc[i, 'TotalCPU'] = '00:' + run_info_batch.loc[i, 'TotalCPU']
     if any(run_info_batch['TotalCPU'].str.contains('-', regex=False)):
         run_info_batch['TotalCPU'].str.replace('-', ' days ')
     run_info_batch['TotalCPU'] = pd.to_timedelta(run_info_batch['TotalCPU'])

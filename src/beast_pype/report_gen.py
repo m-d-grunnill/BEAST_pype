@@ -84,9 +84,12 @@ def _update_notebook_metadata(notebook_path, metadata_update, output_path = None
     with open(output_path , 'w') as f:
         nbf.write(notebook, f)
 
-def gen_mcc_notebook(merged_trees_path, output_path, as_version=4):
+def gen_mcc_notebook(merged_trees_path, output_path, kernel_name='beast_pype', as_version=4):
     workflow_modules_path = path_to_workflow_modules()
     notebook = nbf.read(f"{workflow_modules_path}/Phase-5ii-Gen-MCC-Trees.ipynb", as_version=as_version)
+    notebook['cells'].append(nbf.v4.new_code_cell(
+        f'source activate {kernel_name}'
+    ))
     merged_tree_paths = [file for file in os.listdir(merged_trees_path) if file.endswith('merged.trees')]
     for merged_tree_path in merged_tree_paths:
         prefix = merged_tree_path.replace('merged.trees', '')

@@ -78,8 +78,14 @@ def beast_pype():
                    'phase 2ii (as these Jupyter notebooks use the `bash` kernel_name).\n' +
                    'If not given "beast_pype" is used.'
               )
+@click.option('--start_timeout', '-t', default=None, type=int,
+              help='Time in seconds to wait for the kernel to start before raising an error when launching a jupyter notebook.\n' +
+                   'If not given 60 seconds (1 minutes) is used.'
+              )
 def run_workflow(workflow,
-                 parameters, kernel_name):
+                 parameters,
+                 kernel_name,
+                 start_timeout):
     """
     WORKFLOW: Workflow you wish to execute, or a path to jupyter notebook to be run  as a workflow.\n
     PARAMETERS: Path to YAML file containing parameters.
@@ -94,13 +100,14 @@ def run_workflow(workflow,
     os.makedirs(parameters['overall_save_dir'], exist_ok=True)
     save_dir = f"{parameters['overall_save_dir']}/{parameters['specific_run_save_dir']}"
     os.makedirs(save_dir)
+    parameters['start_timeout'] = start_timeout
     execute_notebook(
         input_path=workflow,
         output_path=f"{save_dir}/{workflow_save_name}",
         parameters=parameters,
         kernel_name=kernel_name,
         progress_bar=True,
-        nest_asyncio=True
+        nest_asyncio=True, start_timeout=start_timeout
     )
 
 @beast_pype.command(context_settings=dict(help_option_names=['-h', '--help']))

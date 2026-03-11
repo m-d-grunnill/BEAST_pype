@@ -14,7 +14,9 @@ def get_lib_resource_path(package, resource):
     resource_path: pathlib.PosixPath
         Path to the resource.
     """
-    resource_path, = importlib_resources.path(package, resource).args
+    resource_path = importlib_resources.path(package, resource)
+    if hasattr(resource_path, 'args'):
+        resource_path, = resource_path.args
     return resource_path
 
 def path_to_workflows():

@@ -184,6 +184,8 @@ def plot_traces(posterior, parameters, labels=None, legend=True):
     """
     num_params = len(parameters)
     fig, axs = plt.subplots(nrows=num_params, ncols=2, figsize=(13, 2*num_params))
+    if num_params == 1:
+        axs = axs.reshape((1, 2))
     plt.subplots_adjust(hspace=0.4)
     traces = az.plot_trace(posterior,
                            axes=axs,
@@ -410,7 +412,7 @@ class BEASTDiag:
         }
         return lc_args
 
-    def merging_outputs_params(self, output_path, xml_set=None):
+    def merging_outputs_params(self, output_path, kernel_name = 'beast_pype', xml_set=None):
         if xml_set is None:
             output_prefix = f'{output_path}/'
         else:
@@ -419,6 +421,7 @@ class BEASTDiag:
             **self.logcombiner_args(output_prefix, suffix='.log'),
             **self.logcombiner_args(output_prefix, suffix='.trees')
         }
+        params['kernel_name'] = kernel_name
         return params
 
 

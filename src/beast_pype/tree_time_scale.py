@@ -18,6 +18,7 @@ def timescale(ftree, falignment, fdates, reroot='least-squares', clock_rate=None
               clock_filter=None, remove_root=True, coalescent_tc="opt",
               sample_id_field = None,
               collection_date_field = 'date',
+              rng_seed=None,
                **kwargs):
     """
     Timescale a phylogenetic tree using tree time.
@@ -68,7 +69,9 @@ def timescale(ftree, falignment, fdates, reroot='least-squares', clock_rate=None
         first column that contains 'name', 'strain', 'accession'
     collection_date_field : str, default='date'
         Name of column containing taxon names in fdates. If None, will use
-        a column that contains the substring 'date'
+        a column that contains the substring 'date'.
+    rng_seed: int, optional
+        Seed for random number generator.
 
     kwargs: dict, default None
         Key word arguments to pass to TreeTime.run.
@@ -83,7 +86,7 @@ def timescale(ftree, falignment, fdates, reroot='least-squares', clock_rate=None
     dates = parse_dates(fdates, name_col=sample_id_field, date_col=collection_date_field)
 
     time_tree = TreeTime(gtr='JC69', tree=ftree, aln=falignment, dates=dates,
-                         verbose=1, use_fft=True, precision='auto', rng_seed=None)
+                         verbose=1, use_fft=True, precision='auto', rng_seed=rng_seed)
 
     if clock_filter is not None:
         time_tree.clock_filter(reroot=reroot, n_iqd=clock_filter, plot=False)

@@ -5,14 +5,13 @@ workflow = 'COVID-Strain-Surveillance'
 
 class TestCOVIDStrainSurveillance(ComparativeWorkflowVariationTest):
     name = 'Test_COVID_Strain_Surveillance'
-    parameters_path = 'parameters/locally_run_examples/COVID-Strain-Surveillance.yml'
+    parameters_path = 'tests/parameters/COVID-Strain-Surveillance.yml'
     workflow = workflow
     initial_tree_building = True
-    downsampling = True
+    downsampling = False
     xml_generation = True
     xml_generation_notebook = xml_generation_notebook
 
     @property
     def xml_set_labels(self):
         return [f'VOI_{strain}' for strain in self.parameters['voi_strains']] + [f"DR_{self.parameters['dr_strain']}"]
-
