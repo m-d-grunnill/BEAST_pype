@@ -78,7 +78,7 @@ def beast_pype():
                    'phase 2ii (as these Jupyter notebooks use the `bash` kernel_name).\n' +
                    'If not given "beast_pype" is used.'
               )
-@click.option('--start_timeout', '-t', default=None, type=int,
+@click.option('--start_timeout', '-t', default=60, type=int,
               help='Time in seconds to wait for the kernel to start before raising an error when launching a jupyter notebook.\n' +
                    'If not given 60 seconds (1 minutes) is used.'
               )
