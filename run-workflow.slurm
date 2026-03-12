@@ -8,7 +8,8 @@
 ### Depending on how slurm is configured on the HPC you are using you may have
 ### to add the name of a partition to use. If so remove the first # below and add
 ### the name after the -p:
-##SBATCH --partition= # Partition or queue name
+#SBATCH --partition= # Partition name (if required by your HPC)
+#SBATCH --account= # Account name for billing (if required by your HPC)
 ##### More sbatch options can be found at https://slurm.schedmd.com/sbatch.html
 ###### The following are deactivated by the double hash instead of single.
 #### I could not get the this command below to work:
