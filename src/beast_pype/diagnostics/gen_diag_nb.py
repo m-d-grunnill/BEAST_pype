@@ -111,7 +111,7 @@ def gen_xml_set_diag_notebook(save_dir,
         nbf.v4.new_code_cell(
             "report_params = {'save_dir': outputs_and_reports_dir, 'beast_xml_path':beast_xml_path, 'xml_set_label': xml_set_label}\n" +
             "output_report_path = f'{outputs_and_reports_dir}/BEAST_pype-Report.ipynb'\n" +
-            "add_unreported_outputs(report_template, outputs_and_reports_dir, output_report_path, xml_set_comparisons=True)\n" +
+            "add_unreported_outputs(parameters_report_template, outputs_and_reports_dir, output_report_path, xml_set_comparisons=True)\n" +
             "output = execute_notebook(\n" +
             "\tinput_path=output_report_path,\n" +
             "\toutput_path=output_report_path,\n" +
@@ -136,14 +136,34 @@ def gen_xml_set_diag_notebook(save_dir,
             "mcc_tree_output = execute_notebook(input_path='Phase-5ii-Gen-MCC-Trees.ipynb',\n" +
             "output_path='Phase-5ii-Gen-MCC-Trees.ipynb',\n" +
             "progress_bar=True)\n"
-        )
+        ),
+        nbf.v4.new_markdown_cell(
+            "## Produce Tree Report\n\n"            
+        ),
+        nbf.v4.new_code_cell(
+            "tree_report_path = f'{outputs_and_reports_dir}/Tree_Report.ipynb'\n" +
+            "gen_tree_report(tree_report_path, xml_set_comparisons=True)\n" +
+            "tree_report_output = execute_notebook(input_path=tree_report_path,\n" +
+            "output_path=tree_report_path,\n" +
+            "progress_bar=True,\n" +
+            "kernel_name=f'{kernel_name}_R')\n"
+        ),
+         nbf.v4.new_markdown_cell(
+             "### Convert Report on Trees from Jupyter Notebook to HTML\n" +
+             "This also removes code cells."
+         ),
+         nbf.v4.new_code_cell(
+             "%%bash -l -s {tree_report_path}\n" +
+             "source activate beast_pype\n" +
+             "jupyter nbconvert --to html --no-input $@"
+         )
     ]
 
     with open(f'{save_dir}/Phase-5-Diagnosing-XML-sets-and-Generate-Report.ipynb', 'w') as f:
         nbf.write(diag_notebook, f)
 
 def gen_beast_diagnostic_nb(beast_outputs,
-                            report_template,
+                            parameters_report_template,
                             kernel_name='beast_pype',
                             beast_xml_path=None, **kwargs):
     """
@@ -161,7 +181,7 @@ def gen_beast_diagnostic_nb(beast_outputs,
             'COVID-Strain-Surveillance' or 'Generic-Comparative') this should contain
             subdirectories each containing the BEAST 2 outputs you wish to diagnose and compare.
         Note in both cases beast outputs can be contained in a subdirectory labeled `beast_outputs`.
-    report_template: str
+    parameters_report_template: str
         Name of a valid report template to use to generate report.
     kernel_name: str, default 'beast_pype'
         Name of Jupyter python kernel_name to use when running diagnostic & report template notebooks.
@@ -177,21 +197,21 @@ def gen_beast_diagnostic_nb(beast_outputs,
 
 
     """
-    if report_template not in available_reports:
+    if parameters_report_template not in available_reports:
         raise ValueError('The value for report_template must be one of the following: \n{}'.format(', '.join(available_reports)))
-    report_template_path = f"{reports_path}/{report_template}.ipynb"
-    report_nb = load_notebook_node(report_template_path)
+    report_template_path = f"{reports_path}/{parameters_report_template}.ipynb"
+    parameters_report_nb = load_notebook_node(report_template_path)
     accepted_parameters = set([parameter.name
-                           for parameter in _infer_parameters(report_nb)])
+                           for parameter in _infer_parameters(parameters_report_nb)])
     invalid_params = set(kwargs.keys()) - accepted_parameters
     if invalid_params:
         raise ValueError(
-            f'The following parameters that have been supplied for {report_template} as kwargs are invalid: \n {", ".join(invalid_params)}')
+            f'The following parameters that have been supplied for {parameters_report_template} as kwargs are invalid: \n {", ".join(invalid_params)}')
     parameters = kwargs
     comparative_reports = ['BDSKY-Serial-Comparative',
                            'COVID-Strain-Surveillance',
                            'Generic-Comparative']
-    if report_template in comparative_reports:
+    if parameters_report_template in comparative_reports:
         if beast_xml_path is None:
             beast_xml_path = {}
             for entry in os.listdir(beast_outputs):
@@ -211,7 +231,7 @@ def gen_beast_diagnostic_nb(beast_outputs,
         diagnostic_save_name = f'{beast_outputs}/Phase-5-Diagnosing-Outputs-and-Generate-Report.ipynb'
         diagnostic_nb = load_notebook_node(f'{workflow_modules_path}/Phase-5-Diagnosing-Outputs-and-Generate-Report.ipynb')
     parameters['beast_xml_path'] = beast_xml_path
-    parameters['report_template'] = report_template_path
+    parameters['parameters_report_template'] = parameters_report_template
     parameters['kernel_name'] = kernel_name
     diagnostic_nb['metadata']['kernelspec']['name'] = kernel_name
     diagnostic_nb['metadata']['kernelspec']['display_name'] = kernel_name

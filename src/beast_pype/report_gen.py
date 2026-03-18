@@ -1,9 +1,11 @@
+from PIL.Image import init
 import pandas as pd
 from beast_pype.outputs import read_log_file
 import nbformat as nbf
 import re
 import os
-from beast_pype.path_utils import path_to_workflow_modules
+from beast_pype.path_utils import path_to_workflow_modules, path_to_report_templates
+from copy import deepcopy
 
 
 def add_unreported_outputs(notebook_template_path,
@@ -102,3 +104,83 @@ def gen_mcc_notebook(merged_trees_path, output_path, kernel_name='beast_pype', a
         ))
     with open(output_path , 'w') as f:
         nbf.write(notebook, f)
+
+def gen_tree_report(output_report_path, xml_set_comparisons=False, as_version=4):
+    """Generate a notebook report for tree outputs of BEAST_pype.
+
+    Parameters
+    ----------
+    output_report_path : str
+        Path to save the report notebook to.
+    xml_set_comparisons : bool, optional
+        Wheather xml_set comparisons were made, by default False.
+    as_version : int, optional
+        Jupyter notebook version to use, by default 4
+    """
+    if xml_set_comparisons:
+        mcc_files = [f for f in os.listdir("outputs_and_reports") if f.endswith("mcc_tree.nexus")]
+        xml_set_dict = {f"## {file.replace('_mcc_tree.nexus', '')}\n" :
+                        {'directory': file.replace('_mcc_tree.nexus', ''),
+                        'mcc_file':  file}
+                        for file in mcc_files}
+        heading_hashes = '###'
+    else:
+        xml_set_dict = {'' : {'directory': os.getcwd(), 'mcc_file': "mcc_tree.nexus"}}
+        heading_hashes = '##'
+
+    
+    start_nb = nbf.read(f"{path_to_report_templates()}/Trees_Report_Start.ipynb", as_version=as_version)
+    tree_report_nb = deepcopy(start_nb)
+    mcc_nb = nbf.read(f"{path_to_report_templates()}/MCC_Report_Start.ipynb", as_version=as_version)
+    initial_tree_nb = nbf.read(f"{path_to_report_templates()}/Initial_Trees_Report.ipynb", as_version=as_version)
+    downsampled_nb = nbf.read(f"{path_to_report_templates()}/Downsampled_Trees_Report.ipynb", as_version=as_version)
+    for xml_set_label, xml_set_sub_dict in xml_set_dict.items():
+        if os.file.exists(f"{xml_set_sub_dict['directory']}/downsampled_metadata.csv"):
+            mcc_metadata = f"{xml_set_sub_dict['directory']}/downsampled_metadata.csv"
+        else:
+            mcc_metadata = f"{xml_set_sub_dict['directory']}/metadata.csv"
+        tree_report_nb['cells'] += [
+            nbf.v4.new_markdown_cell(f"{xml_set_label}{heading_hashes} MCC Summary Tree Plot of BEAST Runs"),
+            nbf.v4.new_code_cell(
+                f"mcc_tree_path <- 'outputs_and_reports/{xml_set_sub_dict['mcc_file']}'\n" +
+                f"mcc_metadata_path <- '{mcc_metadata}'"            
+            )] + mcc_nb['cells']
+
+        if os.path.exists(f"{xml_set_sub_dict['directory']}/downsampled_tree"):
+            tree_report_nb['cells'] += [
+                nbf.v4.new_markdown_cell(f"{heading_hashes} Downsampled Tree Plot"),
+                nbf.v4.new_code_cell(
+                    f"downsampled_tree_node_ci_path <- '{xml_set_sub_dict['directory']}/downsampled_tree/treetime_node_confidence.csv'\n" +
+                    f"downsampled_metadata_path <- '{xml_set_sub_dict['directory']}/metadata.csv'\n" +
+                    f"downsampled_tree_path <- '{xml_set_sub_dict['directory']}/downsampled_tree/treetime.nwk'"
+                )]
+            tree_report_nb['cells'] += downsampled_nb['cells']
+            tree_report_nb['cells'] +=  [
+                nbf.v4.new_markdown_cell(
+                    f"{heading_hashes}# Root-to-tip Plot & Stats.\n\n" +
+                    f"![]({xml_set_sub_dict['directory']}/downsampled_initial_tree/treetime_root_to_tip.png)"
+                ),
+                nbf.v4.new_code_cell(
+                    f"cat(readLines('{xml_set_sub_dict['directory']}/downsampled_initial_tree/treetime_clock_model_stats.yml'), sep = '\\n')"
+                )]
+
+        if os.path.exists(f"{xml_set_sub_dict['directory']}/initial_tree"):
+            tree_report_nb['cells'] += [
+                nbf.v4.new_markdown_cell(f"{heading_hashes} Initial Tree Plot"),
+                nbf.v4.new_code_cell(
+                    f"initial_tree_node_ci_path <- '{xml_set_sub_dict['directory']}/initial_tree/treetime_node_confidence.csv'\n" +
+                    f"initial_metadata_path <- '{xml_set_sub_dict['directory']}/metadata.csv'\n" +
+                    f"initial_tree_path <- '{xml_set_sub_dict['directory']}/initial_tree/treetime.nwk'"
+                )]
+            tree_report_nb['cells'] += initial_tree_nb['cells']
+            tree_report_nb['cells'] +=  [
+                nbf.v4.new_markdown_cell(
+                    f"{heading_hashes}# Root-to-tip Plot & Stats.\n\n" +
+                    f"![]({xml_set_sub_dict['directory']}/initial_tree/treetime_root_to_tip.png)"
+                ),
+                nbf.v4.new_code_cell(
+                    f"cat(readLines('{xml_set_sub_dict['directory']}/initial_tree/treetime_clock_model_stats.yml'), sep = '\\n')"
+                )]
+
+    with open(output_report_path , 'w') as f:
+        nbf.write(tree_report_nb, f)
