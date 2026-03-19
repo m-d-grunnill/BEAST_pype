@@ -128,14 +128,14 @@ def gen_tree_report(output_report_path, xml_set_comparisons=False, as_version=4)
         xml_set_dict = {'' : {'directory': os.getcwd(), 'mcc_file': "mcc_tree.nexus"}}
         heading_hashes = '##'
 
-    
-    start_nb = nbf.read(f"{path_to_report_templates()}/Trees_Report_Start.ipynb", as_version=as_version)
+    tree_report_components_path = f"{path_to_report_templates()}/tree_report_components"
+    start_nb = nbf.read(f"{tree_report_components_path}/Trees_Report_Start.ipynb", as_version=as_version)
     tree_report_nb = deepcopy(start_nb)
-    mcc_nb = nbf.read(f"{path_to_report_templates()}/MCC_Report_Start.ipynb", as_version=as_version)
-    initial_tree_nb = nbf.read(f"{path_to_report_templates()}/Initial_Trees_Report.ipynb", as_version=as_version)
-    downsampled_nb = nbf.read(f"{path_to_report_templates()}/Downsampled_Trees_Report.ipynb", as_version=as_version)
+    mcc_nb = nbf.read(f"{tree_report_components_path}/MCC_Tree_Report.ipynb", as_version=as_version)
+    initial_tree_nb = nbf.read(f"{tree_report_components_path}/Initial_Trees_Report.ipynb", as_version=as_version)
+    downsampled_nb = nbf.read(f"{tree_report_components_path}/Downsampled_Initial_Trees_Report.ipynb", as_version=as_version)
     for xml_set_label, xml_set_sub_dict in xml_set_dict.items():
-        if os.file.exists(f"{xml_set_sub_dict['directory']}/downsampled_metadata.csv"):
+        if os.path.exists(f"{xml_set_sub_dict['directory']}/downsampled_metadata.csv"):
             mcc_metadata = f"{xml_set_sub_dict['directory']}/downsampled_metadata.csv"
         else:
             mcc_metadata = f"{xml_set_sub_dict['directory']}/metadata.csv"
@@ -146,22 +146,28 @@ def gen_tree_report(output_report_path, xml_set_comparisons=False, as_version=4)
                 f"mcc_metadata_path <- '{mcc_metadata}'"            
             )] + mcc_nb['cells']
 
-        if os.path.exists(f"{xml_set_sub_dict['directory']}/downsampled_tree"):
+        if os.path.exists(f"{xml_set_sub_dict['directory']}/downsampled_initial_tree"):
             tree_report_nb['cells'] += [
-                nbf.v4.new_markdown_cell(f"{heading_hashes} Downsampled Tree Plot"),
+                nbf.v4.new_markdown_cell(f"{heading_hashes} Downsampled Initial Tree Plot"),
                 nbf.v4.new_code_cell(
-                    f"downsampled_tree_node_ci_path <- '{xml_set_sub_dict['directory']}/downsampled_tree/treetime_node_confidence.csv'\n" +
-                    f"downsampled_metadata_path <- '{xml_set_sub_dict['directory']}/metadata.csv'\n" +
-                    f"downsampled_tree_path <- '{xml_set_sub_dict['directory']}/downsampled_tree/treetime.nwk'"
+                    f"downsampled_tree_node_ci_path <- '{xml_set_sub_dict['directory']}/downsampled_initial_tree/treetime_node_confidence.csv'\n" +
+                    f"downsampled_metadata_path <- '{xml_set_sub_dict['directory']}/downsampled_metadata.csv'\n" +
+                    f"downsampled_tree_path <- '{xml_set_sub_dict['directory']}/downsampled_initial_tree/treetime.nwk'\n" +
+                    f"downsampled_tree_rtp <- '{xml_set_sub_dict['directory']}/downsampled_initial_tree/treetime_root_to_tip.png'\n" +
+                    f"downsampled_tree_stats <- '{xml_set_sub_dict['directory']}/downsampled_initial_tree/treetime_clock_model_stats.yml'"
+
                 )]
             tree_report_nb['cells'] += downsampled_nb['cells']
             tree_report_nb['cells'] +=  [
                 nbf.v4.new_markdown_cell(
-                    f"{heading_hashes}# Root-to-tip Plot & Stats.\n\n" +
-                    f"![]({xml_set_sub_dict['directory']}/downsampled_initial_tree/treetime_root_to_tip.png)"
+                    f"{heading_hashes}# Root-to-tip Plot & Stats.\n\n" 
                 ),
                 nbf.v4.new_code_cell(
-                    f"cat(readLines('{xml_set_sub_dict['directory']}/downsampled_initial_tree/treetime_clock_model_stats.yml'), sep = '\\n')"
+                    "img <- png::readPNG(downsampled_tree_rtp)\n" +
+                    "grid::grid.raster(img)"
+                ),
+                nbf.v4.new_code_cell(
+                    f"cat(readLines(downsampled_tree_stats), sep = '\\n')"
                 )]
 
         if os.path.exists(f"{xml_set_sub_dict['directory']}/initial_tree"):
@@ -170,17 +176,23 @@ def gen_tree_report(output_report_path, xml_set_comparisons=False, as_version=4)
                 nbf.v4.new_code_cell(
                     f"initial_tree_node_ci_path <- '{xml_set_sub_dict['directory']}/initial_tree/treetime_node_confidence.csv'\n" +
                     f"initial_metadata_path <- '{xml_set_sub_dict['directory']}/metadata.csv'\n" +
-                    f"initial_tree_path <- '{xml_set_sub_dict['directory']}/initial_tree/treetime.nwk'"
+                    f"initial_tree_path <- '{xml_set_sub_dict['directory']}/initial_tree/treetime.nwk'\n" +
+                    f"initial_tree_rtp <- '{xml_set_sub_dict['directory']}/initial_tree/treetime_root_to_tip.png'\n" +
+                    f"initial_tree_stats <- '{xml_set_sub_dict['directory']}/initial_tree/treetime_clock_model_stats.yml'"
                 )]
             tree_report_nb['cells'] += initial_tree_nb['cells']
             tree_report_nb['cells'] +=  [
                 nbf.v4.new_markdown_cell(
-                    f"{heading_hashes}# Root-to-tip Plot & Stats.\n\n" +
-                    f"![]({xml_set_sub_dict['directory']}/initial_tree/treetime_root_to_tip.png)"
+                    f"{heading_hashes}# Root-to-tip Plot & Stats.\n\n"
                 ),
                 nbf.v4.new_code_cell(
-                    f"cat(readLines('{xml_set_sub_dict['directory']}/initial_tree/treetime_clock_model_stats.yml'), sep = '\\n')"
-                )]
+                    "img <- png::readPNG(initial_tree_rtp)\n" +
+                    "grid::grid.raster(img)"
+                ),
+                nbf.v4.new_code_cell(
+                    f"cat(readLines(initial_tree_stats), sep = '\\n')"
+                )
+                ]
 
     with open(output_report_path , 'w') as f:
         nbf.write(tree_report_nb, f)

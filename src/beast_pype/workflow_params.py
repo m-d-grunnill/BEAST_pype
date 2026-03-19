@@ -590,10 +590,10 @@ class SimpleWorkflowParams(WorkflowParams):
         Dictionary of parameter names and values.
         """
         phase_5_params_dict = self.retrieve_params(['kernel_name'])
-        if self.report_template is None:
-            phase_5_params_dict['report_template'] = self.default_report_template
+        if self.parameters_report_template is None:
+            phase_5_params_dict['parameters_report_template'] = self.default_parameters_report_template
         else:
-            phase_5_params_dict['report_template'] = self.report_template
+            phase_5_params_dict['parameters_report_template'] = self.parameters_report_template
         return phase_5_params_dict
 
     def tip_date_range(self):
@@ -629,7 +629,7 @@ class GenericWorkflowParams(SimpleWorkflowParams):
 
     workflow_name = 'Generic'
     associated_workflow = f"{workflows_path}/Generic.ipynb"
-    default_report_template = "Generic"
+    default_parameters_report_template = "Generic"
 
     def __init__(self, **kwargs):
         """
@@ -760,7 +760,7 @@ class BDSKYSerialWorkflowParams(SimpleWorkflowParams):
 
     workflow_name = 'BDSKY-Serial'
     associated_workflow = f"{workflows_path}/BDSKY-Serial.ipynb"
-    default_report_template = "BDSKY-Serial"
+    default_parameters_report_template = "BDSKY-Serial"
 
     def __init__(self, **kwargs):
         """
@@ -1078,10 +1078,10 @@ class ComparativeWorkflowParams(WorkflowParams):
         else:
             phase_5_params_dict = {'xml_set_label': 'xml set',
                                    **self.retrieve_params(['kernel_name'])}
-        if self.report_template is None:
-            phase_5_params_dict['report_template'] = self.default_report_template
+        if self.parameters_report_template is None:
+            phase_5_params_dict['parameters_report_template'] = self.default_parameters_report_template
         else:
-            phase_5_params_dict['report_template'] = self.report_template
+            phase_5_params_dict['parameters_report_template'] = self.parameters_report_template
         return phase_5_params_dict
 
     def tip_date_range(self, xml_set_directory):
@@ -1121,7 +1121,7 @@ class GenericComparativeWorkflowParams(ComparativeWorkflowParams):
 
     workflow_name = 'Generic Comparative'
     associated_workflow = f"{workflows_path}/Generic-Comparative.ipynb"
-    default_report_template = "Generic-Comparative"
+    default_parameters_report_template = "Generic-Comparative"
 
     def __init__(self, **kwargs):
         """
@@ -1148,7 +1148,7 @@ class BDSKYSerialComparativeWorkflowParams(ComparativeWorkflowParams):
 
     workflow_name = 'BDSKY-Serial Comparative'
     associated_workflow = f"{workflows_path}/BDSKY-Serial-Comparative.ipynb"
-    default_report_template = "BDSKY-Serial-Comparative"
+    default_parameters_report_template = "BDSKY-Serial-Comparative"
 
     def __init__(self, **kwargs):
         """
