@@ -121,11 +121,15 @@ def gen_tree_report(output_report_path, xml_set_comparisons=False, as_version=4)
         mcc_files = [f for f in os.listdir("outputs_and_reports") if f.endswith("mcc_tree.nexus")]
         xml_set_dict = {f"## {file.replace('_mcc_tree.nexus', '')}\n" :
                         {'directory': file.replace('_mcc_tree.nexus', ''),
-                        'mcc_file':  file}
+                        'mcc_file':  file,
+                        'mcc_data_path': f"outputs_and_reports/{file.replace('_mcc_tree.nexus', '')}_mcc_tree_data.csv"
+                        }
                         for file in mcc_files}
         heading_hashes = '###'
     else:
-        xml_set_dict = {'' : {'directory': os.getcwd(), 'mcc_file': "mcc_tree.nexus"}}
+        xml_set_dict = {'' : {'directory': os.getcwd(),
+         'mcc_file': "mcc_tree.nexus",
+         'mcc_data_path': "outputs_and_reports/mcc_tree_data.csv"}}
         heading_hashes = '##'
 
     tree_report_components_path = f"{path_to_report_templates()}/tree_report_components"
@@ -143,7 +147,8 @@ def gen_tree_report(output_report_path, xml_set_comparisons=False, as_version=4)
             nbf.v4.new_markdown_cell(f"{xml_set_label}{heading_hashes} MCC Summary Tree Plot of BEAST Runs"),
             nbf.v4.new_code_cell(
                 f"mcc_tree_path <- 'outputs_and_reports/{xml_set_sub_dict['mcc_file']}'\n" +
-                f"mcc_metadata_path <- '{mcc_metadata}'"            
+                f"mcc_metadata_path <- '{mcc_metadata}'\n" +
+                f"mcc_tree_data_path <- '{xml_set_sub_dict['mcc_data_path']}'"          
             )] + mcc_nb['cells']
 
         if os.path.exists(f"{xml_set_sub_dict['directory']}/downsampled_initial_tree"):
