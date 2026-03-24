@@ -113,11 +113,11 @@ def gen_xml_set_diag_notebook(save_dir,
             "output_report_path = f'{outputs_and_reports_dir}/BEAST_pype-Report.ipynb'\n" +
             "add_unreported_outputs(parameters_report_template, outputs_and_reports_dir, output_report_path, xml_set_comparisons=True)\n" +
             "output = execute_notebook(\n" +
-            "\tinput_path=output_report_path,\n" +
-            "\toutput_path=output_report_path,\n" +
-            "\tparameters=report_params,\n" +
-            "\tkernel_name=kernel_name,\n" +
-            "\tprogress_bar=True)"),
+            "\t\tinput_path=output_report_path,\n" +
+            "\t\toutput_path=output_report_path,\n" +
+            "\t\tparameters=report_params,\n" +
+            "\t\tkernel_name=kernel_name,\n" +
+            "\t\tprogress_bar=True)"),
         nbf.v4.new_markdown_cell(
             "### Convert Output Report from Jupyter Notebook to Notebook\n" +
             "This also removes code cells."
@@ -134,19 +134,23 @@ def gen_xml_set_diag_notebook(save_dir,
         nbf.v4.new_code_cell(
             "gen_mcc_notebook(outputs_and_reports_dir, 'Phase-5ii-Gen-MCC-Trees.ipynb', kernel_name=kernel_name)\n" +
             "mcc_tree_output = execute_notebook(input_path='Phase-5ii-Gen-MCC-Trees.ipynb',\n" +
-            "output_path='Phase-5ii-Gen-MCC-Trees.ipynb',\n" +
-            "progress_bar=True)\n"
+            "\t\toutput_path='Phase-5ii-Gen-MCC-Trees.ipynb',\n" +
+            "\t\tprogress_bar=True)\n"
         ),
         nbf.v4.new_markdown_cell(
             "## Produce Tree Report\n\n"            
         ),
         nbf.v4.new_code_cell(
             "tree_report_path = f'{outputs_and_reports_dir}/Tree_Report.ipynb'\n" +
-            "gen_tree_report(tree_report_path, xml_set_comparisons=True)\n" +
+            "gen_tree_report(tree_report_path,\n"+ 
+                "\t\tplot_width=12, #Plot widths in inches.\n"+
+                "\t\tplot_height=6, #Plot heights in inches.\n"+
+                "\t\tplot_res=120, #PPI for rasterization (resolution) of tree plots.\n"+
+                "\t\txml_set_comparisons=True)\n" +
             "tree_report_output = execute_notebook(input_path=tree_report_path,\n" +
-            "output_path=tree_report_path,\n" +
-            "progress_bar=True,\n" +
-            "kernel_name=f'{kernel_name}_R')\n"
+                "\t\toutput_path=tree_report_path,\n" +
+                "\t\tprogress_bar=True,\n" +
+                "\t\tkernel_name=f'{kernel_name}_R')\n"
         ),
          nbf.v4.new_markdown_cell(
              "### Convert Report on Trees from Jupyter Notebook to HTML\n" +

@@ -105,15 +105,21 @@ def gen_mcc_notebook(merged_trees_path, output_path, kernel_name='beast_pype', a
     with open(output_path , 'w') as f:
         nbf.write(notebook, f)
 
-def gen_tree_report(output_report_path, xml_set_comparisons=False, as_version=4):
+def gen_tree_report(output_report_path, plot_width=12, plot_height=6, plot_res=120, xml_set_comparisons=False, as_version=4):
     """Generate a notebook report for tree outputs of BEAST_pype.
 
     Parameters
     ----------
     output_report_path : str
         Path to save the report notebook to.
+    plot_width : float or int, optional
+        Width of tree plots in inches, by default 12. See https://search.r-project.org/CRAN/refmans/repr/html/repr-options.html.
+    plot_height : float or int, optional
+        Height of tree plots in inches, by default 6. See https://search.r-project.org/CRAN/refmans/repr/html/repr-options.html.
+    plot_res : int, optional
+        PPI for rasterization (resolution), by default 120. See https://search.r-project.org/CRAN/refmans/repr/html/repr-options.html.
     xml_set_comparisons : bool, optional
-        Wheather xml_set comparisons were made, by default False.
+        Whether xml_set comparisons were made, by default False.
     as_version : int, optional
         Jupyter notebook version to use, by default 4
     """
@@ -138,6 +144,11 @@ def gen_tree_report(output_report_path, xml_set_comparisons=False, as_version=4)
     mcc_nb = nbf.read(f"{tree_report_components_path}/MCC_Tree_Report.ipynb", as_version=as_version)
     initial_tree_nb = nbf.read(f"{tree_report_components_path}/Initial_Trees_Report.ipynb", as_version=as_version)
     downsampled_nb = nbf.read(f"{tree_report_components_path}/Downsampled_Initial_Trees_Report.ipynb", as_version=as_version)
+
+    tree_report_nb['cells'].append(
+        nbf.v4.new_code_cell(
+            "# Set plot size for tree plots, see https://search.r-project.org/CRAN/refmans/repr/html/repr-options.html.\n" +
+            f"options(repr.plot.width = {str(plot_width)}, repr.plot.height = {str(plot_height)}, repr.plot.res={str(plot_res)})" ))
     for xml_set_label, xml_set_sub_dict in xml_set_dict.items():
         if os.path.exists(f"{xml_set_sub_dict['directory']}/downsampled_metadata.csv"):
             mcc_metadata = f"{xml_set_sub_dict['directory']}/downsampled_metadata.csv"
