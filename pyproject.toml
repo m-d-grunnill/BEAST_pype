@@ -72,7 +72,7 @@ dependencies = [
     { pip = 'seaborn'},
     { pip = 'matplotlib'},
 # MCMC diagnostics_of_selection
-    { pip = 'arviz == 0.24.0'},
+    { pip = 'arviz == 0.23.4'},
     { pip = 'xarray'},
 # Utils
     { pip = 'click'},
