@@ -27,7 +27,7 @@ classifiers = [
 # find our project
 keywords = [
     "Phylodynamics",
-    "Epimediology",
+    "Epidemiology",
     "Ecology",
     "Virology",
     'Genomics'
@@ -45,7 +45,7 @@ where = ["src"]
 "*" = ["*.ipynb"]
 
 
-### Package Dependancy setup via setuptools and unidep
+### Package dependency setup via setuptools and unidep
 [tool.hatch.metadata.hooks.unidep]
 # Enable the unidep plugin
 
@@ -86,17 +86,17 @@ dependencies = [
     { pip = 'bash_kernel'},
     { pip = 'ipykernel'},
     { pip = 'nbformat'},
-    { pip = 'ipywidgets'}
-    { conda = 'r-irkernel'}
+    { pip = 'ipywidgets'},
+    { conda = 'r-irkernel'},
 # R components
-    { conda = 'bioconductor-treeio'}
-    { conda = 'bioconductor-ggtree'}
-    { conda = 'r-ggplot2'}
-    { conda = 'r-readr'}
-    { conda = 'r-lubridate'}
-    { conda = 'r-dplyr'}
-    { conda = 'r-png'}
-    { conda = 'r-tidyr'}
+    { conda = 'bioconductor-treeio'},
+    { conda = 'bioconductor-ggtree'},
+    { conda = 'r-ggplot2'},
+    { conda = 'r-readr'},
+    { conda = 'r-lubridate'},
+    { conda = 'r-dplyr'},
+    { conda = 'r-png'},
+    { conda = 'r-tidyr'},
     { conda = 'r-htmltools'}
 ]
 
@@ -104,4 +104,4 @@ dependencies = [
 Homepage = "https://github.com/m-d-grunnill/BEAST_pype"
 Repository = "https://github.com/m-d-grunnill/BEAST_pype"
 Issues = "https://github.com/m-d-grunnill/BEAST_pype/issues"
-Documentaion = "https://github.com/m-d-grunnill/BEAST_pype/wiki"
+Documentation = "https://github.com/m-d-grunnill/BEAST_pype/wiki"
