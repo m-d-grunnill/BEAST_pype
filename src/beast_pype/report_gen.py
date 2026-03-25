@@ -1,6 +1,7 @@
 from PIL.Image import init
 import pandas as pd
 from beast_pype.outputs import read_log_file
+from beast2xml import BEAST2XML
 import nbformat as nbf
 import re
 import os
@@ -150,15 +151,14 @@ def gen_tree_report(output_report_path, plot_width=12, plot_height=6, plot_res=1
             "# Set plot size for tree plots, see https://search.r-project.org/CRAN/refmans/repr/html/repr-options.html.\n" +
             f"options(repr.plot.width = {str(plot_width)}, repr.plot.height = {str(plot_height)}, repr.plot.res={str(plot_res)})" ))
     for xml_set_label, xml_set_sub_dict in xml_set_dict.items():
-        if os.path.exists(f"{xml_set_sub_dict['directory']}/downsampled_metadata.csv"):
-            mcc_metadata = f"{xml_set_sub_dict['directory']}/downsampled_metadata.csv"
-        else:
-            mcc_metadata = f"{xml_set_sub_dict['directory']}/metadata.csv"
+        beast_xml = BEAST2XML(f"{xml_set_sub_dict['directory']}/beast.xml")
+        youngest_tip_year_decimal = beast_xml.extract_youngest_year_decimal()
         tree_report_nb['cells'] += [
             nbf.v4.new_markdown_cell(f"{xml_set_label}{heading_hashes} MCC Summary Tree Plot of BEAST Runs"),
             nbf.v4.new_code_cell(
                 f"mcc_tree_path <- 'outputs_and_reports/{xml_set_sub_dict['mcc_file']}'\n" +
-                f"mcc_metadata_path <- '{mcc_metadata}'\n" +
+                f"beast_youngest_tip_decimal <- {str(youngest_tip_year_decimal)}" +
+                    " # Extracted using python via BEAST2XML.extract_youngest_year_decimal from the package beast2xml.\n" +
                 f"mcc_tree_data_path <- '{xml_set_sub_dict['mcc_data_path']}'"          
             )] + mcc_nb['cells']
 

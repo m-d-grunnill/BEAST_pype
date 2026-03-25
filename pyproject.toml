@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "beast_pype"
-version = "0.2.5"
+version = "0.3.0"
 dynamic = ["dependencies"]
 authors = [
     {name="Martin Grunnill", email="Martin.Grunnill@phac-aspc.gc.ca"},
@@ -72,7 +72,7 @@ dependencies = [
     { pip = 'seaborn'},
     { pip = 'matplotlib'},
 # MCMC diagnostics_of_selection
-    { pip = 'arviz'},
+    { pip = 'arviz == 0.24.0'},
     { pip = 'xarray'},
 # Utils
     { pip = 'click'},
@@ -87,8 +87,18 @@ dependencies = [
     { pip = 'ipykernel'},
     { pip = 'nbformat'},
     { pip = 'ipywidgets'}
+    { conda = 'r-irkernel'}
+# R components
+    { conda = 'bioconductor-treeio'}
+    { conda = 'bioconductor-ggtree'}
+    { conda = 'r-ggplot2'}
+    { conda = 'r-readr'}
+    { conda = 'r-lubridate'}
+    { conda = 'r-dplyr'}
+    { conda = 'r-png'}
+    { conda = 'r-tidyr'}
+    { conda = 'r-htmltools'}
 ]
-
 
 [project.urls]
 Homepage = "https://github.com/m-d-grunnill/BEAST_pype"
