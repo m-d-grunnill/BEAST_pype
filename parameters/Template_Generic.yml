@@ -19,10 +19,17 @@ overall_save_dir: # str
 #    Sub-directory of overall_save_dir you wish to save all the files from this instance of this workflow.
 #    If not given a timestamp of format 'YYYY-MM-DD_hour-min-sec' is used instead.
 
-max_threads: # int, (default, can be missing from yml)
+max_threads: # int, (optional, can be missing from yml)
 #    The maximum number of threads to use when calling gnu parallel in phases 2i and 4. If not given and BEAST_pype is running
 #    in a SLURM job the SLURM environment variable `SLURM_CPUS_PER_TASK` is used. If not given and BEAST_pype is NOT running in
 #    a SLURM job the number of cores available minus 1 is used (`multiprocessing.cpu_count() - 1`).
+
+# kernel_name: str, (default 'beast_pype', can be missing from yml)
+#     Name of Jupyter python kernel to use when running workflow. This is also the name of the conda environment to use in phases 4 &
+#     phase 2ii (as these Jupyter notebooks use the `bash` kernel).
+
+# start_timeout: int, (default 60, can be missing from yml) 
+#     Seconds to wait for a notebook to start before raising an error. This is used in all phases. If not provided the default is 60 seconds (1 minute).
 
 
 # General Inputs
@@ -54,6 +61,9 @@ sample_id_field: # str, (required if not using a `ready_to_go_xml`)
 
 collection_date_field: # str, (required if not using a `ready_to_go_xml`)
 #    Name of field in metadata_db containing collection dates of sequences. Should be formatted YYYY-MM-DD.
+
+# seed_to_rule_them_all: # int, (optional, can be missing from yml)
+#     If provided this seed is used to seed a random number generator and all other seeds in the workflow are generated from  that random number generator. Thus, ensuring the same seed is used across all steps of the workflow for reproducibility. If not provided individual seeds can be provided for each step of the workflow that requires a seed (see below).
 
 
 # Add pre-made Initial Tree
@@ -92,19 +102,43 @@ initial_tree_type: # str (either 'Distance' or 'Temporal') or None, (default, ca
 #    if 'Temporal' and initial_tree_path is not provided the TreeTime tree from Phase-2ii-and-2iv-TreeTime-and-Downsampling.ipynb
 #    is used for the initial tree.
 
-#root_strain_names: # list of strings, (optional, can be missing from yml)
-#     IDs of sequences used to root 'Temporal' initial_tree removed from fasta file and initial tree file used to generate
-#    the BEAST 2 xml (e.g. ...).
+# iqtree_seed: # int, (optional, can be missing from yml)
+#     Seed to use when building IQtree distance tree in phase 2i.
 
-#downsample_to: # int, (optional, can be missing from yml)
-#    Available if not using a `ready_to_go_xml` and generating an initial tree file.
-#    If not given downsampling will not occur. When given down sampling only
-#   occurs if there are more sequences than the value given.
-#    If downsampling occurs the following are saved in  '{overall_save_dir}/{specific_run_save_dir}/' and used in generating
-#    a BEAST 2 xml in phase 3:
-#    #    initial_trees/downsampled_time.nwk: # A downsampled temporal tree.
-#    #    downsampled_sequences.fasta: # Fasta file containing downsamplec sequences.
-#    #    downsampled_metadata.csv: # the down sampled metadata.
+# treetime_seed: # int, (optional, can be missing from yml)
+#     Seed to use when building TreeTime temporal tree and downsampling in phase 2ii.
+
+# downsampled_iqtree_seed: # int, (optional, can be missing from yml)
+#     Seed to use when building IQtree distance tree in phase 2iii.
+
+# downsampled_treetime_seed: # int, (optional, can be missing from yml)
+#     Seed to use when building TreeTime temporal tree in phase 2iv
+
+# initial_tree_type: # str (either 'Distance' or 'Temporal') or None, default 'Temporal'
+#     Intial tree type to use.
+#     If 'Distance' and initial_tree_path is not provided the IQtree tree from Phase-2i-IQTree.ipynb is used for the
+#     initial tree and phase 2ii is skipped.
+#     if 'Temporal' and initial_tree_path is not provided the TreeTime tree from Phase-2ii-TreeTime-Tree-Building.ipynb
+#     is used for the initial tree.
+
+# initial_tree_path: # str, opional
+#     Path to initial tree to use in generating a BEAST 2 xml. Should be .nwk file (Newick format).
+#     If provided phases 2i and 2ii are skiped.
+#     If a distance tree is used set initial_tree_type to 'Distance'.
+#     If a temporal tree is used set initial_tree_type to 'Temporal'.
+
+# root_strain_names: # list of strings, (optional, can be missing from yml)
+#      IDs of sequences used to root 'Temporal' initial_tree. These sequences/nodes are removed from fasta file and initial tree file used to generate
+#     the BEAST 2 xml.
+
+# downsample_to: # int, (optional, can be missing from yml)
+#     Available if not using a `ready_to_go_xml` and generating an initial tree file.
+#     If not given downsampling will not occur. When given down sampling only occurs if there are more sequences than the value given.
+#     If downsampling occurs the following are saved in  '{overall_save_dir}/{specific_run_save_dir}/' and used in generating
+#     a BEAST 2 xml in phase 3:
+#         initial_trees/downsampled_time.nwk:  A downsampled temporal tree.
+#         downsampled_sequences.fasta:  Fasta file containing downsamplec sequences.
+#         downsampled_metadata.csv:  the down sampled metadata.
 
 
 #MCMC Tree/Logfile names Chain-lengths & Save Steps
@@ -113,7 +147,7 @@ log_file_basename: # str, (required if not using a `ready_to_go_xml`)
 #    If provided .tree, .log and .state files from running BEAST 2 will have this name prefixed by 'run-with-seed-{seed}-',
 #    number being that of the chain.
 
-#chain_length:  # int, optional (can be missing from yml)
+#chain_length:  # int, (optional, can be missing from yml) 
 #    Suggested value 10000000
 #    Number of chains to use for BEAST runs.
 #    If not given value in template_xml_path will be used.
