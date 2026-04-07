@@ -1,7 +1,7 @@
 # Example Parameters for running the BDSKY-Serial-Comparative.ipynb workflow.
 
 # Running an Instance of this Workflow
-overall_save_dir: Local_Example-BDSKY-Serial-Comparative_full # Path to where you are saving all the runs of this workflow.
+overall_save_dir: Local_Example_BDSKY_Serial_Comparative_full # Path to where you are saving all the runs of this workflow.
 
 # General Inputs
 template_xml_path: template_beast_xmls/Measles/Measles_BDKSY-Serial.xml #    Path to template BEAST 2 xml. #Path to template BEAST 2 xml.

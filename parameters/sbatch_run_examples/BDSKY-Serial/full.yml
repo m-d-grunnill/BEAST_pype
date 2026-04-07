@@ -6,7 +6,7 @@ log_file_basename: BDSKY_serial #    If provided .tree, .log and .state files fr
 metadata_path: example_data/Measles/Netherlands_2024_measles_D8_metadata.csv #    Path to csv or tsv containing metadata for sequences in fasta_path.
 origin_start_addition: 0.049315068493150684 #    Suggested infection period of pathogen. **Should be in years.** This + initial MLE tree height is used as starting value of origin.
 origin_upper_addition: 5 #    This + initial MLE tree height is used as upper value of origin prior.
-overall_save_dir: Sbatch_Example-BDSKY-Serial_full #    Path to where you are saving all the runs of this workflow.
+overall_save_dir: Sbatch_Example_BDSKY_Serial_full #    Path to where you are saving all the runs of this workflow.
 rt_dims: 3 #    Number of Rt dimensions (time periods over which Rt is estimated).
 zero_sampling_before_first_sample: True # Fix the sampling proportion to 0 for the period before the first xml_set.
 sample_id_field: 'accessionVersion' #    Name of field in metadata_db containing sequence IDs.

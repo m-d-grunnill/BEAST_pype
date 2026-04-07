@@ -3,7 +3,7 @@ fasta_path: example_data/Measles/Netherlands_2024_measles_D8_sequences.fasta #  
 use_initial_tree: False #    If False an initial tree will not be generated skipping Phases 2i and 2ii. As such, in phase 4 BEAST 2 generate its own initial tree.
 log_file_basename: BDSKY_serial #    If provided .tree, .log and .state files from running BEAST 2 will have this name prefixed by 'run-with-seed-{seed}-'.
 metadata_path: example_data/Measles/Netherlands_2024_measles_D8_metadata.csv #      Path to csv or tsv containing metadata for sequences in fasta_path.
-overall_save_dir: Sbatch_Example-BDSKY-Serial_no-initial-tree #    Path to where you are saving all the runs of this workflow.
+overall_save_dir: Sbatch_Example_BDSKY_Serial_no_initial_tree #    Path to where you are saving all the runs of this workflow.
 rt_dims: 3 #    Number of Rt dimensions (time periods over which Rt is estimated).
 zero_sampling_before_first_sample: True # Fix the sampling proportion to 0 for the period before the first xml_set.
 sample_id_field: 'accessionVersion' #    Name of field in metadata_db containing sequence IDs.

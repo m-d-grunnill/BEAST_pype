@@ -6,7 +6,7 @@ number_of_beast_runs: 9 #Number of chains to use (repeated runs to do) when runn
 seed_to_rule_them_all: 42 #    If provided, this seed is used for all BEAST runs. Otherwise, a random seed is generated for each run.
 origin_start_addition: 0.049315068493150684 #    Suggested infection period of pathogen. **Should be in years.** This + initial MLE tree height is used as starting value of origin.
 origin_upper_addition: 5 #    This + initial MLE tree height is used as upper value of origin prior.
-overall_save_dir: Sbatch_Example-BDSKY-Serial_no_downsampling #    Path to where you are saving all the runs of this workflow.
+overall_save_dir: Sbatch_Example_BDSKY_Serial_no_downsampling #    Path to where you are saving all the runs of this workflow.
 rt_dims: 3 #    Number of Rt dimensions (time periods over which Rt is estimated).
 zero_sampling_before_first_sample: True # Fix the sampling proportion to 0 for the period before the first xml_set.
 sample_id_field: 'accessionVersion' #    Name of field in metadata_db containing sequence IDs.

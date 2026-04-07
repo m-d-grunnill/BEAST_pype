@@ -5,7 +5,7 @@ log_file_basename: BEAST #     If provided .tree, .log and .state files from run
 metadata_path: example_data/Measles/Netherlands_2024_measles_D8_metadata.csv #      Path to csv or tsv containing metadata for sequences in fasta_path.
 number_of_beast_runs: 9 #Number of chains to use (repeated runs to do) when running BEAST.
 seed_to_rule_them_all: 42 #    If provided, this seed is used for all BEAST runs. Otherwise, a random seed is generated for each run.
-overall_save_dir: Local_Example-Generic_no-initial-tree #    Path to where you are saving all the runs of this workflow.
+overall_save_dir: Local_Example_Generic_no_initial_tree #    Path to where you are saving all the runs of this workflow.
 sample_id_field: 'accessionVersion' #    Name of field in metadata_db containing sequence IDs.
 template_xml_path: template_beast_xmls/Measles/Measles_coalescent_exp.xml #    Path to template BEAST 2 xml.
 chain_length: 5000000 # Number of chains to use for BEAST runs.
