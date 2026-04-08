@@ -24,6 +24,12 @@ max_threads: # int, (default, can be missing from yml)
 #    in a SLURM job the SLURM environment variable `SLURM_CPUS_PER_TASK` is used. If not given and BEAST_pype is NOT running in
 #    a SLURM job the number of cores available minus 1 is used (`multiprocessing.cpu_count() - 1`).
 
+# kernel_name: # str, default 'beast_pype'
+#     Name of Jupyter python kernel to use when running workflow. This is also the name of the conda environment to use in phases 4 &
+#     phase 2ii (as these Jupyter notebooks use the `bash` kernel).
+
+# start_timeout: # int, default 60
+#     Seconds to wait for a notebook to start before raising an error. This is used in all phases. If not provided the default is 60 seconds (1 minute).
 
 #General Inputs
 #----------------
@@ -42,6 +48,10 @@ sample_id_field: # str, (required)
 
 collection_date_field: # str, (required)
 #    Name of field in metadata_db containing collection dates of sequences. Should be formatted YYYY-MM-DD.
+
+# seed_to_rule_them_all: # int, optional
+#     If provided this seed is used to seed a random number generator and all other seeds in the workflow are generated from  that random number generator. Thus, ensuring the same seed is used across all steps of the workflow for reproducibility. If not provided individual seeds can be provided for each step of the workflow that requires a seed (see below).
+
 
 #Defining XML Sets (Partitioning/Segregating Data)
 #--------------------------------------------
@@ -85,6 +95,24 @@ initial_tree_type: # str (either 'Distance' or 'Temporal') or null (None in pyth
 #    initial tree and phase 2ii is skipped.
 #    if 'Temporal' the TreeTime tree from Phase-2ii-and-2iv-TreeTime-and-Downsampling.ipynb
 #    is used for the initial tree.
+
+# iqtree_seed: # int, optional
+#     Seed to use when building IQtree distance tree in phase 2i.
+
+# treetime_seed: #int, optional
+#     Seed to use when building TreeTime temporal tree and downsampling in phase 2ii.
+
+# downsampled_iqtree_seed: # int, optional
+#     Seed to use when building IQtree distance tree in phase 2iii.
+
+# downsampled_treetime_seed: # int, optional
+#     Seed to use when building TreeTime temporal tree in phase 2iv
+
+# root_strain_names: # list of strings, optional
+#     IDs of sequences used to root 'Temporal' initial_tree. These sequences/nodes are removed from fasta file and initial tree file used to generate the BEAST 2 xml.
+
+# remove_root: # bool, default False
+#     If True, remove the root after rerooting. This is useful if the root is not a real sample and is only used for rooting purposes.
 
 downsample_to: # int
 #    If the number sequences in a fasta file is above this the number of sequences is cut to this number via downsampling.
@@ -137,7 +165,7 @@ log_file_basename: # str, (required if not using a `ready_to_go_xml`)
 number_of_beast_runs: # int
 #    Number of chains to use (number of parallel runs to do) when running BEAST (e.g. 9).
 
-#beast_beast_seeds: # list of ints, (optional, can be missing from yml)
+#beast_seeds: # list of ints, (optional, can be missing from yml)
 #    Seeds to use when running BEAST.
 #    If given, length of list should be the same as the number of chains (so each run has a designated seed).
 
@@ -193,4 +221,15 @@ sbatch_options_needing_a_value:
   '--mem':  # RAM to use.
   '--partition': # Many slurm clusters require you to name a partition to use.
 
-#sbatch_options_without_a_value:
+# sbatch_options_without_a_value: #list of strs
+#    Options not requiring a value to pass to sbatch.
+#     See https://slurm.schedmd.com/sbatch.html.
+
+
+# Final Report Settings
+# -----------------------------
+# parameters_report_template: # str, defaults to None
+#     Parameter Report to use. None value will use Generic-Comparative.
+
+xml_set_label: # str, defaults to None
+#     Term to use when pertaining xml sets on axis in figures or columns in tables (E.G. "Strain", "Country" and "Province/State"). If none value given "xml_set" is used.

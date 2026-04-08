@@ -58,6 +58,7 @@ def timescale(ftree, falignment, fdates, reroot='least-squares', clock_rate=None
              into :math:`IQD\cdot n_iqd` interval (:math:`IQD` is the interval between
             75\ :sup:`th` and 25\ :sup:`th` percentiles)
     remove_root: bool, default True
+        If True, remove the root after rerooting. This is useful if the root is not a real sample and is only used for rooting purposes.
     coalescent_tc: : float, str
            Value used in
            If not None, use coalescent model to correct the branch lengths by
