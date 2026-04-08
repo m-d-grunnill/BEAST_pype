@@ -1,4 +1,4 @@
-# Data files that are not wuorth keeping:
+# Data files that are not worth keeping:
 *-delim.fasta.log
 *-delim.iqtree.log
 # Others
@@ -16,8 +16,12 @@ VirusSeq_downloads/
 
 # Has name of NML partition
 run-workflow-on-pancakes.slurm
-example_data/JN1_Subset_NGDB_VirusSeq.py
-/parameters/pancakes_tests/
+parameters/pancakes_run_examples/
+
+# Folders from example workflow runs
+Pancakes_Example*/
+Local_Example*/
+
 
 # R stuff
 .Rhistory
