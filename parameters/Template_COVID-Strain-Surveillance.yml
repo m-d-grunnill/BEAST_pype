@@ -1,0 +1,231 @@
+# Template Parameter yml for running the COVID-Strain-Surveillance.ipynb workflow. 
+# This workflow makes comparisons between different strains of COVID-19, using the BDSKY-Serial model.
+# Effectively this is a wrapper/modification for the [BDSKY Serial Comparative Workflow](https://github.com/m-d-grunnill/BEAST_pype/wiki/BDSKY-Serial-Comparative-Workflow).
+
+#Running an Instance of this Workflow
+#-------------------------------------------
+overall_save_dir:  # str
+#    Path to where you are saving all the runs of this workflow.
+
+#specific_run_save_dir: # str, optional (can be missing from yml)
+#    Sub-directory of overall_save_dir you wish to save the outputs from this workflow.
+#    If null (None in python), 'null (None in python)' or an empty string a timestamp of format 'YYYY-MM-DD_hour-min-sec' is used instead.
+
+max_threads:  #int, default (can be missing from yml) null (None in python)
+#    The maximum number of threads to use when calling gnu parallel in phases 2i and 4. If null (None in python) and BEAST_pype is running
+#    in a SLURM job the SLURM environment variable `SLURM_CPUS_PER_TASK` is used. If null (None in python) and BEAST_pype is NOT running in
+#    a SLURM job the number of cores available minus 1 is used (`multiprocessing.cpu_count() - 1`).
+
+# kernel_name: # str, default 'beast_pype'
+#     Name of Jupyter python kernel to use when running workflow. This is also the name of the conda environment to use in phases 4 &
+#     phase 2ii (as these Jupyter notebooks use the `bash` kernel).
+
+# start_timeout: # int, default 60
+#     Seconds to wait for a notebook to start before raising an error. This is used in all phases. If not provided the default is 60 seconds (1 minute).
+
+#General Inputs
+#----------------
+template_xml_path: # str
+#    Path to template BEAST 2 xml.
+
+fasta_path: #str
+#    Path to fasta file containing sequences to be placed into template xml.
+
+metadata_path: #str
+#    Path to csv or tsv containing metadata for sequences in fasta_path.
+
+sample_id_field: #str
+#    Name of field in metadata_db containing sequence IDs.
+
+collection_date_field: #str
+#    Name of field in metadata_db containing collection dates of sequences. Should be formatted YYYY-MM-DD.
+
+# seed_to_rule_them_all: # int, optional
+#    If provided this seed is used to seed a random number generator and all other seeds in the workflow are generated from  that random number generator. Thus, ensuring the same seed is used across all steps of the workflow for reproducibility. If not provided individual seeds can be provided for each step of the workflow that requires a seed (see below).
+
+# Defining XML Sets (Partitioning Data for various strains of COVID)
+# ------------------------------------------------------------------------
+lineage_field: # str
+#     Field in metadata listing the lineage name of a sequence.
+
+dr_strain: # str
+#     Name  of dominant resident (DR) lineage.
+
+voi_strains: # list of strs
+#     Names  of Variant Of Interest (VOI) lineages.
+
+sub_lineage_map: # dict {str: list of strs}
+#     Dictionary defining sub lineages of dr_strain and voi_strains.
+
+data_filter: #str
+#    Optional can be an empty string or 'null (None in python)'. Additional filter applieid to metadata_db when selecting
+#    sequences and metadata to be used on pipeline. Must conform to [pandas documentation](https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.query.html), see further [example](https://www.slingacademy.com/article/pandas-working-with-the-dataframe-query-method-5-examples/).
+
+#Initial Tree Building & Downsampling
+#------------------
+use_initial_tree:  #bool, default (can be missing from yml) True
+#    If False an initial tree will not be generated skipping Phases 2i and 2ii. As such, in phase 4 BEAST 2 generate its own
+#    initial tree.
+
+initial_tree_type: #str (either 'Distance' or 'Temporal') or null (None in python), default (can be missing from yml) 'Temporal'
+#    Intial tree type to use.
+#    If 'Distance' the IQtree tree from Phase-2i-and-2iii-IQTree-Building.ipynb is used for the
+#    initial tree and phase 2ii is skipped.
+#    if 'Temporal' the TreeTime tree from Phase-2ii-and-2iv-TreeTime-and-Downsampling.ipynb
+#    is used for the initial tree.
+
+# iqtree_seed: # int, optional
+#     Seed to use when building IQtree distance tree in phase 2i.
+
+# treetime_seed: # int, optional
+#     Seed to use when building TreeTime temporal tree and downsampling in phase 2ii.
+
+# downsampled_iqtree_seed: # int, optional
+#     Seed to use when building IQtree distance tree in phase 2iii.
+
+# downsampled_treetime_seed: # int, optional
+#     Seed to use when building TreeTime temporal tree in phase 2iv
+
+# root_strain_names: list of strings, optional
+#      IDs of sequences used to root 'Temporal' initial_tree. These sequences/nodes are removed from fasta file and initial tree file used to generate
+#     the BEAST 2 xml.
+
+# remove_root: # bool, default False
+#         If True, remove the root after rerooting. This is useful if the root is not a real sample and is only used for rooting purposes.
+
+downsample_to: #int
+#    If the number sequences in a fasta file is above this the number of sequences is cut to this number via downsampling.
+
+#BDSky Options
+#------------------
+origin_start_addition: #float, optional (can be missing from yml)
+#    Suggested infection period of pathogen. **Should be in years.** This + initial MLE tree height is used as starting value of origin.
+
+origin_upper_addition: #float/int, optional (can be missing from yml)
+#    This + initial MLE tree height is used as upper value of origin prior.
+
+origin_prior: #dict {'lower': float, 'upper': float, 'start': float}, optional (can be missing from yml)
+#    Details of the origin prior assumed to be uniformly distributed.
+
+rt_partition_freq: # dict of strings {'unit': 'days, weeks or years', 'every': int/float}
+#     Instructions for setting rt_partition dates, going backwards from the youngest date in all the metadata (all xml_sets/strains)
+#     For VOI strains the endpoint is the youngest date out of the oldest dates for each of the VOI strains' metadata.
+#     For the DR stain the last partition goes backwards one more 'unit' multiplied by 'every' from the VOI strains.
+#     Alternatively, you can set the DR stain the last partition by including 'dr_extra_offset' with its own 'unit' and 'amount'.
+
+
+sampling_prop_partition_freq: # dict of strings {'unit': 'days, weeks or years', 'every': int/float}
+#     Instructions for setting sampling_prop_partition dates, going backwards from the youngest date in all the metadata (all xml_sets/strains)
+#     For VOI strains the endpoint is the youngest date out of the oldest dates for each of the VOI strains' metadata.
+#     For the DR stain the last partition goes backwards one more 'unit' multiplied by 'every' from the VOI strains.
+#     Alternatively, you can set the DR stain the last partition by including 'dr_extra_offset' with its own 'unit' and 'amount'.
+
+# zero_sampling_before_first_sample: #bool, default (can be missing from yml) False
+#    If true fix the sampling proportion to 0 for the period before the first xml_set.
+
+
+#MCMC Tree/Logfile names Chain-lengths & Save Steps
+#------------------
+log_file_basename: # str, (required if not using a `ready_to_go_xml`)
+#    If provided .tree, .log and .state files from running BEAST 2 will have this name prefixed by 'run-with-seed-{seed}-',
+#    number being that of the chain.
+
+#chain_length:  # int, optional (can be missing from yml)
+#    Suggested value 10000000
+#    Number of chains to use for BEAST runs.
+#    If not given value in template_xml_path will be used.
+
+#trace_log_every: # int > 1 or float between 0 and 1 optional (can be missing from yml)
+#    Suggested value 0.0001.
+#    How often to save a log file during BEAST runs.
+#    If float the save will happen as multiple of the chain_length rounded to the nearest integer.
+#    If not given value in template_xml_path will be used.
+
+#tree_log_every: # int > 1 or float between 0 and 1 optional (can be missing from yml)
+#    Suggested value 0.0001.
+#    How often to save a log file during BEAST runs.
+#    If float the save will happen as multiple of the chain_length rounded to the nearest integer.
+#    If not given value in template_xml_path will be used.
+
+#screen_log_every: # int > 1 or float between 0 and 1 optional (can be missing from yml)
+#    Suggested value 0.005.
+#    How often to save a log file during BEAST runs.
+#    If float the save will happen as multiple of the chain_length rounded to the nearest integer.
+#    If not given value in template_xml_path will be used.
+
+#store_state_every: # int > 1 or float between 0 and 1 optional (can be missing from yml)
+#    Suggested value 0.0001.
+#    How often to save a log file during BEAST runs.
+#    If float the save will happen as multiple of the chain_length rounded to the nearest integer.
+#    If not given value in template_xml_path will be used.
+
+
+# Running BEAST 2
+# --------------------
+number_of_beast_runs: # int
+#    Number of chains to use (number of parallel runs to do) when running BEAST (e.g. 9).
+
+#beast_seeds: # list of ints, (optional, can be missing from yml)
+#    Seeds to use when running BEAST.
+#    If given, length of list should be the same as the number of chains (so each run has a designated seed).
+
+# Using a GPU when running BEAST 2
+# ---------------------------------------------------------------------------------------------------
+# Would you like to use a GPU when running BEAST 2?
+# If so then:
+# * Keep  `beast_options_without_a_value:` and   `'-beagle_GPU'` as is.
+# Otherwise:
+# * Comment out `beast_options_without_a_value:` and   `'-beagle_GPU'`
+
+beast_options_without_a_value: # list of strs
+  - '-beagle_GPU'
+#    Options not needing a value to pass to BEAST 2.
+#    For instance to use a GPU when running BEAST 2 this would be `['-beagle_GPU']`.
+#    See https://www.beast2.org/2021/03/31/command-line-options.html.
+
+# Use multiple cores/threads when running BEAST 2.
+#-------------------------------------------------------------------------
+# Would you like to use multiple cores/threads when running BEAST 2?
+# If so then:
+# * Alter the 3 after `'-threads'` to the number of cores/threads to use when
+#    running BEAST 2?
+# Otherwise:
+# * Comment out `beast_options_needing_a_value:` and   `'-threads'`
+
+beast_options_needing_a_value: # dict
+  '-threads':
+#    Option needing a value to pass to BEAST 2.
+#    For instance to use 3 threads when running BEAST 2 this would be: {'-threads': 3}.
+#    See https://www.beast2.org/2021/03/31/command-line-options.html.
+
+# Using a SLURM when running BEAST 2
+# ---------------------------------------------------------------------------------------------------
+# Would you like each BEAST 2 run (MCMC chain) to run in a SLURM `sbatch` call.
+# If so then:
+# * Keep  `sbatch_options_needing_a_value:`.
+# * Alter the entries under `sbatch_options_needing_a_value:` to your requirements.
+#     * If not using a GPU comment out `'--gpus':.
+#     * It is suggested that `--cpus-per-task` match the '-threads' entry in beast_options_needing_a_value.
+#     * Max runtime`(--time`) should be increased to more than an hour.
+# * If there are options you wish to pass to sbatch not requiring a value:
+#    - Uncomment `sbatch_options_without_a_value`.
+#    - Add those options under `sbatch_options_without_a_value` as a list (see https://yamline.com/tutorial/).
+# Otherwise:
+# * Comment out everything below.
+sbatch_options_needing_a_value:
+#  Options requiring a value to pass to sbatch.
+#  See https://slurm.schedmd.com/sbatch.html.
+  '--cpus-per-task':   # Number of CPU cores to use (suggest matching '-threads' entry in beast_options_needing_a_value).
+#  '--gpus':  # Number of GPU cores to use
+  '--time': # Maximum runtime (D-HH:MM:SS)
+  '--mem':  # RAM to use.
+  '--partition': # Many slurm clusters require you to name a partition to use.
+
+# sbatch_options_without_a_value: #list of strs
+#    Options not requiring a value to pass to sbatch.
+#     See https://slurm.schedmd.com/sbatch.html.
+
+# Final Report Settings
+# -----------------------------
+xml_set_label: 'COVID Strain' # str, defaults to 'COVID Strain'
+#     Term to use when pertaining xml sets on axis in figures or columns in tables (E.G. "Strain", "Country" and "Province/State"). If none value given "xml_set" is used.
