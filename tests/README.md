@@ -13,6 +13,12 @@ pip install .
 ```bash
 pytest -n NUMBER_OF_CPUS_TO_USE tests/
 ```
-**Notes:** 
-* NUMBER_OF_CPUS_TO_USE can be `logical` to run on all CPUs detected by the OS. BEWARE if working on a High Performance Cluster the detection method when using logical may detect more CPUs than allocated to you.
-* It is not recommended that you run these tests from a HPC (like the one at NML). Doing so will cause the tests to fail with `RuntimeError("Kernel didn't respond in 60 seconds")`.
+**Note** NUMBER_OF_CPUS_TO_USE can be `logical` to run on all CPUs detected by the OS. BEWARE if working on a High Performance Cluster the detection method when using logical may detect more CPUs than allocated to you.
+
+# A note on running these tests with little RAM 
+
+If you do not have much RAM you may tests may well fail with the error `RuntimeError("Kernel didn't respond in 60 seconds")`. There are 2 solutions to this:
+1. Run the tests serially via the command `pytest -n 1 tests/`.
+2. Within the file `base_test_classes.py` alter the class `WorkflowVariationTest's` `start_timeout` attribute to be 600 (i.e. 10 minutes) or higher.
+
+Unfortunately, these solutions can greatly increase the run time of all these tests.
