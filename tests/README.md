@@ -1,6 +1,6 @@
-# Unit Tests
+# Regression Tests
 
-Unit testing is done using [PyTest](https://docs.pytest.org/en/stable/). To run all unit tests follow the instructions below. 
+Testing is done using [PyTest](https://docs.pytest.org/en/stable/). To run all unit tests follow the instructions below. 
 Note these instructions assume you are at the root of the repository.
 1. If you have not installed the version of beast_pype you wish to test into the beast_pype environment do so via:
 ```bash
