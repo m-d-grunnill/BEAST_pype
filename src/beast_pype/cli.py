@@ -152,7 +152,7 @@ def diagnose_results(report_template,
 
     gen_beast_diagnostic_nb(
         beast_outputs=beast_outputs,
-        report_template=report_template,
+        parameters_report_template=report_template,
         beast_xml_path=beast_xml_path,
         kernel_name=kernel_name,
         **parameters_final)
