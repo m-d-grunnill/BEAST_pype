@@ -17,7 +17,7 @@ pytest -n NUMBER_OF_CPUS_TO_USE tests/
 
 # A note on running these tests with little RAM 
 
-If you do not have much RAM you may tests may well fail with the error `RuntimeError("Kernel didn't respond in 60 seconds")`. There are 2 solutions to this:
+If you do not have much RAM tests may well fail with the error `RuntimeError("Kernel didn't respond in 60 seconds")`. There are 2 solutions to this:
 1. Run the tests serially via the command `pytest -n 1 tests/`.
 2. Within the file `base_test_classes.py` alter the class `WorkflowVariationTest's` `start_timeout` attribute to be 600 (i.e. 10 minutes) or higher.
 
