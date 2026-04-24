@@ -3,6 +3,11 @@
 This directory houses some [template-xml](Glossary-of-Terms.md#template-xml)s for use with BEAST_pype workflows.
 Below are some notes on the specific templates.
 
+Sequence data in these template xmls:
+* Fasta: `example_data/COVID-19_Mid-June-2025/sequences.fasta`.
+* Metadata: `example_data/COVID-19_Mid-June-2025/metadata.csv`
+* Notes on data curation:  `example_data/COVID-19_Mid-June-2025/Curating_COVID_data.ipynb`
+
 ## [BDSKY_serial_COVID-19_template.xml](BDSKY_serial_COVID-19_template.xml)
 
 Birth Death Skyline Serial (BDSky serial) template for COVID-19.

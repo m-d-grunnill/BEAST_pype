@@ -8,7 +8,12 @@ The chain lengths and storage options are set to the defaults of 10,000,000 and 
 
 Descriptions of model priors for these are found in [Description_of_priors_in_templates.ipynb](Description_of_priors_in_templates.ipynb).
 
-Sequence and metadata used to make these templates is found in `example_data/Measles/Netherlands_2024_measles_D8_metadata.csv` and `example_data/Measles/Netherlands_2024_measles_D8_sequences.fasta`, respectively.
+Sequence data in these template xmls:
+* Fasta: `example_data/Measles/Netherlands_2024_measles_D8_sequences.fasta`
+* Metadata: ``example_data/Measles/Netherlands_2024_measles_D8_metadata.csv` 
+* Notes on data curation:  `example_data/Measles/Collating data.ipynb`
+
+Sequence and metadata used to make these templates is found in `example_data/Measles/Netherlands_2024_measles_D8_metadata.csv` and , respectively.
 
 ## BDSKY-serial template for BDSKY-Serial workflow.
 File: Measles_BDKSY-Serial.xml
