@@ -37,7 +37,7 @@ class WorkflowVariationTest:
     tree_building_notebooks = None
     downsampled_tree_building_notebooks = None
     beast_running_notebook = 'Phase-4-GNU-Parallel-Running-BEAST.ipynb'
-    kernel_name = 'beast_pype'
+    kernel_name = 'dev_beast_pype'
     initial_tree_building = False
     downsampling = False
     xml_generation = False
@@ -53,7 +53,7 @@ class WorkflowVariationTest:
         'Phase-2iv-TreeTime-with-Downsampled-Data.ipynb'
                                ]
     xml_set_labels = None
-    start_timeout = None
+    start_timeout = 600bea
 
 
     def test_running_of_workflow(self, subtests, tmp_path):

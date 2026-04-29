@@ -10,6 +10,9 @@ runs_of_pipeline/
 runs_of_pipeline_Test/
 VirusSeq_downloads/
 
+#Any folders caused by running tests
+Test_*
+
 # VS code stuff
 .vscode/
 .idea/
