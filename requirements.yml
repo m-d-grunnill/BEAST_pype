@@ -8,7 +8,7 @@ dependencies:
   - conda-forge::pytest-xdist>=3.8.0
   - conda-forge::psutil>=7.2.2
   # BEAST istelf
-  - bioconda::beast2>=2.6.0
+  - bioconda::beast2>=2.7.7
   # Python
   # beast2-xml has had the occaisonal issue with installation python 3.12
   # on some OSs. beast2-xml works on suggest python 3.10 sticking to python 3.10.
