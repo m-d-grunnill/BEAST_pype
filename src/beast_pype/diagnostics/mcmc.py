@@ -402,8 +402,10 @@ class BEASTDiag:
         if suffix not in ['.log', '.trees']:
             raise ValueError("suffix must be either '.log', '.trees'.")
         output_file = f'{output_pretfix}{output_file}{suffix}'
-        selected_files = [f"{self.directory}/{chain}{suffix}"
-                              for chain in self.selected_chains]
+        selected_files = [f"{self.directory}/{file}"
+                        for file in os.listdir(self.directory)
+                        if any(file.startswith(chain) for chain in self.selected_chains) and file.endswith(suffix)
+        ]
         name_pre_fix = suffix.replace('.', '')
         lc_args = {
             f'{name_pre_fix}_file_burnin':  self.burinin_percentage,

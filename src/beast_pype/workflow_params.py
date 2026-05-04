@@ -589,7 +589,7 @@ class SimpleWorkflowParams(WorkflowParams):
         -------
         Dictionary of parameter names and values.
         """
-        phase_5_params_dict = self.retrieve_params(['kernel_name'])
+        phase_5_params_dict = self.retrieve_params(['kernel_name', 'topology'])
         if self.parameters_report_template is None:
             phase_5_params_dict['parameters_report_template'] = self.default_parameters_report_template
         else:
@@ -1074,10 +1074,10 @@ class ComparativeWorkflowParams(WorkflowParams):
         """
         if self.xml_set_label is not None:
             phase_5_params_dict = self.retrieve_params([
-                'xml_set_label', 'kernel_name'])
+                'xml_set_label', 'kernel_name', 'topology'])
         else:
             phase_5_params_dict = {'xml_set_label': 'xml set',
-                                   **self.retrieve_params(['kernel_name'])}
+                                   **self.retrieve_params(['kernel_name', 'topology'])}
         if self.parameters_report_template is None:
             phase_5_params_dict['parameters_report_template'] = self.default_parameters_report_template
         else:
