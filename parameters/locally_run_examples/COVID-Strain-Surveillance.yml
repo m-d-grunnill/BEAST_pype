@@ -129,3 +129,4 @@ trace_log_every: 1000 #    How often to save a log file during BEAST runs.
 tree_log_every: 1000 #    How often to save a tree file during BEAST runs.
 max_threads: 4
 seed_to_rule_them_all: 42 #    If provided, this seed is used for all BEAST runs. Otherwise, a random seed is generated for each run.
+summary_tree_low_memory: False #    Whether to use low memory option when using BEAST 2's TreeAnnotator to summarize merged BEAST trees. Doing so will take more time. See BEAST2's TreeAnnotator documentation.

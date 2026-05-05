@@ -87,7 +87,7 @@ def _update_notebook_metadata(notebook_path, metadata_update, output_path = None
     with open(output_path , 'w') as f:
         nbf.write(notebook, f)
 
-def gen_summary_tree_notebook(merged_trees_path, output_path, topology, kernel_name='beast_pype', as_version=4):
+def gen_summary_tree_notebook(merged_trees_path, output_path, topology, summary_tree_low_memory=False, kernel_name='beast_pype', as_version=4):
     workflow_modules_path = path_to_workflow_modules()
     notebook = nbf.read(f"{workflow_modules_path}/Phase-5ii-Gen-Summary-Trees.ipynb", as_version=as_version)
     notebook['cells'].append(nbf.v4.new_code_cell(
@@ -101,12 +101,13 @@ def gen_summary_tree_notebook(merged_trees_path, output_path, topology, kernel_n
                 f"## Producing {prefix.replace('_','')} Summary Tree."
             ))
         notebook['cells'].append(nbf.v4.new_code_cell(
-            f"treeannotator -burnin 0 -topology {topology} {merged_trees_path}/{prefix}merged.trees {merged_trees_path}/{prefix}{topology}_summary_tree.nexus"
+            f"treeannotator -burnin 0 -topology {topology} -lowMem {str(summary_tree_low_memory).lower()} " +
+             "{merged_trees_path}/{prefix}merged.trees {merged_trees_path}/{prefix}{topology}_summary_tree.nexus"
         ))
     with open(output_path , 'w') as f:
         nbf.write(notebook, f)
 
-def gen_tree_report(output_report_path, topology, plot_width=12, plot_height=6, plot_res=120, xml_set_comparisons=False, as_version=4):
+def gen_tree_report(output_report_path, topology, collection_date_field, plot_width=12, plot_height=6, plot_res=120, xml_set_comparisons=False, as_version=4):
     """Generate a notebook report for tree outputs of BEAST_pype.
 
     Parameters
@@ -116,6 +117,8 @@ def gen_tree_report(output_report_path, topology, plot_width=12, plot_height=6, 
     topology : str
         Topology to use for merged BEAST tree summarization and plotting, e.g. "MCC" or "CCD0". 
         See BEAST2's TreeAnnotator documentation or https://www.beast2.org/2024/06/24/what-is-new-in-v2.7.7.html for more details on tree summarization methods.
+    collection_date_field : str
+        Name of field in metadata_db containing collection dates of sequences. Should be formatted YYYY-MM-DD
     plot_width : float or int, optional
         Width of tree plots in inches, by default 12. See https://search.r-project.org/CRAN/refmans/repr/html/repr-options.html.
     plot_height : float or int, optional
@@ -152,7 +155,8 @@ def gen_tree_report(output_report_path, topology, plot_width=12, plot_height=6, 
     tree_report_nb['cells'].append(
         nbf.v4.new_code_cell(
             "# Set plot size for tree plots, see https://search.r-project.org/CRAN/refmans/repr/html/repr-options.html.\n" +
-            f"options(repr.plot.width = {str(plot_width)}, repr.plot.height = {str(plot_height)}, repr.plot.res={str(plot_res)})" ))
+            f"options(repr.plot.width = {str(plot_width)}, repr.plot.height = {str(plot_height)}, repr.plot.res={str(plot_res)})\n" +
+            f"collection_date_field <- '{collection_date_field}' # Set collection date field used in matadata."))
     for xml_set_label, xml_set_sub_dict in xml_set_dict.items():
         beast_xml = BEAST2XML(f"{xml_set_sub_dict['directory']}/beast.xml")
         youngest_tip_year_decimal = beast_xml.extract_youngest_year_decimal()

@@ -132,7 +132,7 @@ def gen_xml_set_diag_notebook(save_dir,
             "This can take sometime. So you can look at the report whilst waiting this is done last."
         ),
         nbf.v4.new_code_cell(
-            "gen_summary_tree_notebook(outputs_and_reports_dir, 'Phase-5ii-Gen-Summary-Trees.ipynb', topology, kernel_name=kernel_name)\n" +
+            "gen_summary_tree_notebook(outputs_and_reports_dir, 'Phase-5ii-Gen-Summary-Trees.ipynb', topology, summary_tree_low_memory, kernel_name=kernel_name)\n" +
             "mcc_tree_output = execute_notebook(input_path='Phase-5ii-Gen-Summary-Trees.ipynb',\n" +
             "\t\toutput_path='Phase-5ii-Gen-Summary-Trees.ipynb',\n" +
             "\t\tprogress_bar=True)\n"
@@ -144,6 +144,7 @@ def gen_xml_set_diag_notebook(save_dir,
             "tree_report_path = f'{outputs_and_reports_dir}/Tree_Report.ipynb'\n" +
             "gen_tree_report(tree_report_path,\n"+
                 "\t\ttopology=topology,\n"+
+                "\t\tcollection_date_field=collection_date_field,\n"+
                 "\t\tplot_width=12, #Plot widths in inches.\n"+
                 "\t\tplot_height=6, #Plot heights in inches.\n"+
                 "\t\tplot_res=120, #PPI for rasterization (resolution) of tree plots.\n"+
@@ -170,6 +171,8 @@ def gen_xml_set_diag_notebook(save_dir,
 def gen_beast_diagnostic_nb(beast_outputs,
                             parameters_report_template,
                             topology="CCD0",
+                            summary_tree_low_memory=False,
+                            collection_date_field="collection date",
                             kernel_name='beast_pype',
                             beast_xml_path=None, **kwargs):
     """
@@ -191,7 +194,13 @@ def gen_beast_diagnostic_nb(beast_outputs,
         Name of a valid report template to use to generate report.
     topology : str
         Topology to use for merged BEAST tree summarization and plotting, e.g. "MCC" or "CCD0". 
-        See BEAST2's TreeAnnotator documentation or https://www.beast2.org/2024/06/24/what-is-new-in-v2.7.7.html for more details on tree summarization methods.
+        See BEAST2's TreeAnnotator documentation or https://www.beast2.org/2024/06/24/what-is-new-in-v2.7.7.html
+        for more details on tree summarization methods.
+    summary_tree_low_memory: bool, defaults to False
+        Whether to use low memory option when using BEAST 2's TreeAnnotator to summarize merged BEAST trees.
+        Doing so will take more time. See BEAST2's TreeAnnotator documentation.
+    collection_date_field: str, default "collection date"
+        Name of field in metadata_db containing collection dates of sequences. Should be formatted YYYY-MM-DD.
     kernel_name: str, default 'beast_pype'
         Name of Jupyter python kernel_name to use when running diagnostic & report template notebooks.
     beast_xml_path: str or dict of strings, optional
@@ -245,6 +254,8 @@ def gen_beast_diagnostic_nb(beast_outputs,
     parameters['parameters_report_template'] = parameters_report_template
     parameters['kernel_name'] = kernel_name
     parameters['topology'] = topology
+    parameters['collection_date_field'] = collection_date_field 
+    parameters['summary_tree_low_memory'] = summary_tree_low_memory
     diagnostic_nb['metadata']['kernelspec']['name'] = kernel_name
     diagnostic_nb['metadata']['kernelspec']['display_name'] = kernel_name
     diagnostic_nb = parameterize_notebook(diagnostic_nb, parameters, kernel_name)
