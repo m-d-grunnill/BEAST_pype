@@ -34,7 +34,6 @@ lineage_field: 'lineage name'
 dr_strain: LP.8.1.1
 voi_strains:
   - LP.8.1
-  - NB.1.8.1
 sub_lineages_mapping:
   LP.8.1:
     - LP.8.1
@@ -101,25 +100,6 @@ sub_lineages_mapping:
     - NY.17
     - NY.17.1
     - NY.17.2
-  NB.1.8.1:
-    - NB.1.8.1
-    - PQ.1
-    - PQ.1.1
-    - PQ.2
-    - PQ.3
-    - PQ.4
-    - PQ.5
-    - PQ.6
-    - PQ.7
-    - PQ.8
-    - PQ.9
-    - PQ.10
-    - PQ.11
-    - PQ.12
-    - PQ.13
-    - PQ.14
-    - PQ.15
-    - PQ.16
 sample_id_field: 'fasta header name' #    Name of field in metadata_db containing sequence IDs.
 template_xml_path: template_beast_xmls/COVID/BDSKY_serial_COVID-19_template.xml #    Path to template BEAST 2 xml.
 chain_length: 20000000 # Number of chains to use for BEAST runs.
@@ -129,7 +109,7 @@ trace_log_every: 1000 #    How often to save a log file during BEAST runs.
 tree_log_every: 1000 #    How often to save a tree file during BEAST runs.
 max_threads: 20
 seed_to_rule_them_all: 42 #    If provided, this seed is used for all BEAST runs. Otherwise, a random seed is generated for each run.
-summary_tree_low_memory: False #    Whether to use low memory option when using BEAST 2's TreeAnnotator to summarize merged BEAST trees. Doing so will take more time. See BEAST2's TreeAnnotator documentation.
+summary_tree_low_memory: True #    Whether to use low memory option when using BEAST 2's TreeAnnotator to summarize merged BEAST trees. Doing so will take more time. See BEAST2's TreeAnnotator documentation.
 
 sbatch_options_needing_a_value:
     '--cpus-per-task': 1             # Number of CPU cores per task

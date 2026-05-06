@@ -4,7 +4,7 @@
 
 BEAST_pype is a pipeline with the aim of automating and parallelizing many of the steps involved in phylodynamics using 
 [BEAST 2](https://www.beast2.org/). The [workflows](https://github.com/m-d-grunnill/BEAST_pype/wiki) 
-expedite phylodynamic analyses using [BEAST 2](https://www.beast2.org/) via a series of python-based Jupyter Notebooks. 
+expedite phylodynamic analyses using [BEAST 2](https://www.beast2.org/) via a series of python, bash and R based Jupyter Notebooks. 
 
 BEAST_pype was concieved with the aim to speed up and automate the use of BEAST-2 analyses for routine public health use at the Public Health Agency of Canada.  
 Activities include running routine analyses on continuously circulating viruses, such as SARS-CoV-2 or Influenza, to extract epidemiological parameters of interest for surviellance. Also, for accelerating research or outbreak investigations that require several experimental runs for optimization and more rapid results generation.  

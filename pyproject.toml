@@ -56,8 +56,8 @@ allow-direct-references = true
 channels = ["conda-forge", 'bioconda']
 dependencies = [
     # Bioinformatics
-    { conda = 'beast2'},
-    { pip = 'beast2-xml >= 1.4.1'},
+    { conda = 'beast2 >= 2.6.3'},
+    { pip = 'beast2-xml >= 1.6.2'},
     { pip = 'dark-matter'},
     { pip = 'biopython'},
     { conda = 'iqtree'},

@@ -102,7 +102,7 @@ def gen_summary_tree_notebook(merged_trees_path, output_path, topology, summary_
             ))
         notebook['cells'].append(nbf.v4.new_code_cell(
             f"treeannotator -burnin 0 -topology {topology} -lowMem {str(summary_tree_low_memory).lower()} " +
-             "{merged_trees_path}/{prefix}merged.trees {merged_trees_path}/{prefix}{topology}_summary_tree.nexus"
+            f"{merged_trees_path}/{prefix}merged.trees {merged_trees_path}/{prefix}{topology}_summary_tree.nexus"
         ))
     with open(output_path , 'w') as f:
         nbf.write(notebook, f)
