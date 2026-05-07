@@ -87,9 +87,9 @@ def _update_notebook_metadata(notebook_path, metadata_update, output_path = None
     with open(output_path , 'w') as f:
         nbf.write(notebook, f)
 
-def gen_mcc_notebook(merged_trees_path, output_path, kernel_name='beast_pype', as_version=4):
+def gen_summary_tree_notebook(merged_trees_path, output_path, topology, summary_tree_low_memory=False, kernel_name='beast_pype', as_version=4):
     workflow_modules_path = path_to_workflow_modules()
-    notebook = nbf.read(f"{workflow_modules_path}/Phase-5ii-Gen-MCC-Trees.ipynb", as_version=as_version)
+    notebook = nbf.read(f"{workflow_modules_path}/Phase-5ii-Gen-Summary-Trees.ipynb", as_version=as_version)
     notebook['cells'].append(nbf.v4.new_code_cell(
         f'source activate {kernel_name}'
     ))
@@ -98,21 +98,27 @@ def gen_mcc_notebook(merged_trees_path, output_path, kernel_name='beast_pype', a
         prefix = merged_tree_path.replace('merged.trees', '')
         if prefix != '':
             notebook['cells'].append(nbf.v4.new_markdown_cell(
-                f"## Producing {prefix.replace('_','')} MCC tree."
+                f"## Producing {prefix.replace('_','')} Summary Tree."
             ))
         notebook['cells'].append(nbf.v4.new_code_cell(
-            f"treeannotator -burnin 0 {merged_trees_path}/{prefix}merged.trees {merged_trees_path}/{prefix}mcc_tree.nexus"
+            f"treeannotator -burnin 0 -topology {topology} -lowMem {str(summary_tree_low_memory).lower()} " +
+            f"{merged_trees_path}/{prefix}merged.trees {merged_trees_path}/{prefix}{topology}_summary_tree.nexus"
         ))
     with open(output_path , 'w') as f:
         nbf.write(notebook, f)
 
-def gen_tree_report(output_report_path, plot_width=12, plot_height=6, plot_res=120, xml_set_comparisons=False, as_version=4):
+def gen_tree_report(output_report_path, topology, collection_date_field, plot_width=12, plot_height=6, plot_res=120, xml_set_comparisons=False, as_version=4):
     """Generate a notebook report for tree outputs of BEAST_pype.
 
     Parameters
     ----------
     output_report_path : str
         Path to save the report notebook to.
+    topology : str
+        Topology to use for merged BEAST tree summarization and plotting, e.g. "MCC" or "CCD0". 
+        See BEAST2's TreeAnnotator documentation or https://www.beast2.org/2024/06/24/what-is-new-in-v2.7.7.html for more details on tree summarization methods.
+    collection_date_field : str
+        Name of field in metadata_db containing collection dates of sequences. Should be formatted YYYY-MM-DD
     plot_width : float or int, optional
         Width of tree plots in inches, by default 12. See https://search.r-project.org/CRAN/refmans/repr/html/repr-options.html.
     plot_height : float or int, optional
@@ -125,42 +131,43 @@ def gen_tree_report(output_report_path, plot_width=12, plot_height=6, plot_res=1
         Jupyter notebook version to use, by default 4
     """
     if xml_set_comparisons:
-        mcc_files = [f for f in os.listdir("outputs_and_reports") if f.endswith("mcc_tree.nexus")]
-        xml_set_dict = {f"## {file.replace('_mcc_tree.nexus', '')}\n" :
-                        {'directory': file.replace('_mcc_tree.nexus', ''),
-                        'mcc_file':  file,
-                        'mcc_data_path': f"outputs_and_reports/{file.replace('_mcc_tree.nexus', '')}_mcc_tree_data.csv"
+        summary_tree_files = [f for f in os.listdir("outputs_and_reports") if f.endswith("summary_tree.nexus")]
+        xml_set_dict = {f"## {file.replace(f'_{topology}_summary_tree.nexus', '')}\n" :
+                        {'directory': file.replace(f'_{topology}_summary_tree.nexus', ''),
+                        'summary_file':  file,
+                        'summary_data_path': f"outputs_and_reports/{file.replace('_summary_tree.nexus', '')}_summary_tree_data.csv"
                         }
-                        for file in mcc_files}
+                        for file in summary_tree_files}
         heading_hashes = '###'
     else:
         xml_set_dict = {'' : {'directory': os.getcwd(),
-         'mcc_file': "mcc_tree.nexus",
-         'mcc_data_path': "outputs_and_reports/mcc_tree_data.csv"}}
+         'summary_file': f"{topology}_summary_tree.nexus",
+         'summary_data_path': f"outputs_and_reports/{topology}_summary_tree_data.csv"}}
         heading_hashes = '##'
 
     tree_report_components_path = f"{path_to_report_templates()}/tree_report_components"
     start_nb = nbf.read(f"{tree_report_components_path}/Trees_Report_Start.ipynb", as_version=as_version)
     tree_report_nb = deepcopy(start_nb)
-    mcc_nb = nbf.read(f"{tree_report_components_path}/MCC_Tree_Report.ipynb", as_version=as_version)
+    summary_nb = nbf.read(f"{tree_report_components_path}/Summary_Tree_Report.ipynb", as_version=as_version)
     initial_tree_nb = nbf.read(f"{tree_report_components_path}/Initial_Trees_Report.ipynb", as_version=as_version)
     downsampled_nb = nbf.read(f"{tree_report_components_path}/Downsampled_Initial_Trees_Report.ipynb", as_version=as_version)
 
     tree_report_nb['cells'].append(
         nbf.v4.new_code_cell(
             "# Set plot size for tree plots, see https://search.r-project.org/CRAN/refmans/repr/html/repr-options.html.\n" +
-            f"options(repr.plot.width = {str(plot_width)}, repr.plot.height = {str(plot_height)}, repr.plot.res={str(plot_res)})" ))
+            f"options(repr.plot.width = {str(plot_width)}, repr.plot.height = {str(plot_height)}, repr.plot.res={str(plot_res)})\n" +
+            f"collection_date_field <- '{collection_date_field}' # Set collection date field used in matadata."))
     for xml_set_label, xml_set_sub_dict in xml_set_dict.items():
         beast_xml = BEAST2XML(f"{xml_set_sub_dict['directory']}/beast.xml")
         youngest_tip_year_decimal = beast_xml.extract_youngest_year_decimal()
         tree_report_nb['cells'] += [
-            nbf.v4.new_markdown_cell(f"{xml_set_label}{heading_hashes} MCC Summary Tree Plot of BEAST Runs"),
+            nbf.v4.new_markdown_cell(f"{xml_set_label}{heading_hashes} {topology} Summary Tree Plot of BEAST Runs"),
             nbf.v4.new_code_cell(
-                f"mcc_tree_path <- 'outputs_and_reports/{xml_set_sub_dict['mcc_file']}'\n" +
+                f"summary_tree_path <- 'outputs_and_reports/{xml_set_sub_dict['summary_file']}'\n" +
                 f"beast_youngest_tip_decimal <- {str(youngest_tip_year_decimal)}" +
                     " # Extracted using python via BEAST2XML.extract_youngest_year_decimal from the package beast2xml.\n" +
-                f"mcc_tree_data_path <- '{xml_set_sub_dict['mcc_data_path']}'"          
-            )] + mcc_nb['cells']
+                f"summary_tree_data_path <- '{xml_set_sub_dict['summary_data_path']}'"          
+            )] + summary_nb['cells']
 
         if os.path.exists(f"{xml_set_sub_dict['directory']}/downsampled_initial_tree"):
             tree_report_nb['cells'] += [

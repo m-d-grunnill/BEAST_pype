@@ -229,3 +229,12 @@ sbatch_options_needing_a_value:
 # -----------------------------
 xml_set_label: 'COVID Strain' # str, defaults to 'COVID Strain'
 #     Term to use when pertaining xml sets on axis in figures or columns in tables (E.G. "Strain", "Country" and "Province/State"). If none value given "xml_set" is used.
+
+# topology: str, defaults to "CCD0"
+#     Topology to use for merged BEAST tree summarization and plotting, e.g. "MCC" or "CCD0".
+#     See BEAST2's TreeAnnotator documentation or
+#     https://www.beast2.org/2024/06/24/what-is-new-in-v2.7.7.html for more details on tree summarization methods.
+
+# summary_tree_low_memory: bool, defaults to False
+#     Whether to use low memory option when using BEAST 2's TreeAnnotator to summarize
+#     merged BEAST trees. Doing so will take more time. See BEAST2's TreeAnnotator documentation.

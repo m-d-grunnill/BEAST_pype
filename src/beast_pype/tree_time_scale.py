@@ -19,6 +19,7 @@ def timescale(ftree, falignment, fdates, reroot='least-squares', clock_rate=None
               sample_id_field = None,
               collection_date_field = 'date',
               rng_seed=None,
+              negative_tolerance=0.001,
                **kwargs):
     """
     Timescale a phylogenetic tree using tree time.
@@ -73,6 +74,9 @@ def timescale(ftree, falignment, fdates, reroot='least-squares', clock_rate=None
         a column that contains the substring 'date'.
     rng_seed: int, optional
         Seed for random number generator.
+    negative_tolerance: float, default 0.001
+        Tolerance for negative branch lengths. Branch lengths that are negative but have an absolute value less than this
+        value will be set to 0.0.
 
     kwargs: dict, default None
         Key word arguments to pass to TreeTime.run.
@@ -131,6 +135,10 @@ def timescale(ftree, falignment, fdates, reroot='least-squares', clock_rate=None
 
     time_tree.convert_dates()
     time_tree.branch_length_to_years()
+    for node in time_tree.tree.find_clades():
+        if hasattr(node, "branch_length") and node.branch_length is not None:
+            if node.branch_length < 0 and abs(node.branch_length) < negative_tolerance:
+                node.branch_length = 0.0
 
     return time_tree, bad_tips
 

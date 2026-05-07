@@ -122,11 +122,21 @@ def run_workflow(workflow,
               help='Name of Jupyter python kernel_name to use when running diagnostic & report template notebooks.\n' +
                    'If not given "beast_pype" is used.'
               )
+@click.option('--topology', '-t', default='CCD0', type=str,
+              help='Topology to use for merged BEAST tree summarization and plotting, e.g. "MCC" or "CCD0".\n' +
+                   'See BEAST2\'s TreeAnnotator documentation or https://www.beast2.org/2024/06/24/what-is-new-in-v2.7.7.html for more details on tree summarization methods.\n' +
+                   'If not given "CCD0" is used.'
+              )
+@click.option('--beast-xml-path', '-r', default=None, type=click.Path(exists=True, dir_okay=False, file_okay=True, readable=True),
+              help='Path to BEAST XML file to use for diagnostics.'
+              )
 def diagnose_results(report_template,
                      beast_outputs,
                      parameters,
                      parameters_file,
-                     kernel_name):
+                     kernel_name,
+                     topology,
+                     beast_xml_path):
     """
     REPORT_TEMPLATE: Report template to use after diagnosing BEAST 2 outputs.\n
     BEAST_OUTPUTS: Path to directory containing BEAST 2 outputs to diagnose.
@@ -138,10 +148,6 @@ def diagnose_results(report_template,
     for files in parameters_file or []:
         parameters_final.update(read_yaml_file(files) or {})
 
-    if 'beast_xml_path' in parameters_final:
-        beast_xml_path = parameters_final.pop('beast_xml_path')
-    else:
-        beast_xml_path = None
     for param, value in parameters_final.items():
         if param not in diag_valid_params:
             raise ValueError(f"Parameter {param} is not a valid parameter for use in the diagnostic workflow.")
@@ -155,4 +161,5 @@ def diagnose_results(report_template,
         parameters_report_template=report_template,
         beast_xml_path=beast_xml_path,
         kernel_name=kernel_name,
+        topology=topology,
         **parameters_final)
