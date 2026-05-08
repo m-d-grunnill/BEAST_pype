@@ -324,8 +324,10 @@ class WorkflowParams(SimpleNamespace):
             params['initial_tree_path'] = f'{dir_to_check_and_save_to}/downsampled_initial_tree/treetime.nwk'
         elif os.path.exists(f'{dir_to_check_and_save_to}/initial_tree/treetime.nwk'):
             params['initial_tree_path'] = f'{dir_to_check_and_save_to}/initial_tree/treetime.nwk'
-        elif os.path.exists(f'{dir_to_check_and_save_to}/initial_tree/treetime.nwk'):
+        elif os.path.exists(f'{dir_to_check_and_save_to}/initial_tree/iqtree.nwk'):
             params['initial_tree_path'] = f'{dir_to_check_and_save_to}/initial_tree/iqtree.nwk'
+        elif hasattr(self, "initial_tree_path"):
+            params['initial_tree_path'] = self.initial_tree_path
         else:
             params['initial_tree_path'] = None
 
