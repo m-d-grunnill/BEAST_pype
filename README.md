@@ -21,7 +21,7 @@ Features of BEAST_pype include:
 ### For instructions, getting started, and more details, please see [BEAST_pype's wiki](https://github.com/m-d-grunnill/BEAST_pype/wiki).
 
 ## IMPORTANT NOTES
-* For ease of distribution reasons beast_pype uses the version of BEAST-2 that is currently available via conda, specifically [bioconda](https://anaconda.org/bioconda/beast2), 2.6 as 2025-Jun-25. Template BEAST-2 XMLs from other versions of may not work. BEAST 2.7.7 is available on the conda channel [millerjeremya](https://anaconda.org/millerjeremya/beast2). However, this has been tested on a Linux OS (2025-06-04) and the command line arguments did not work.
+* For ease of distribution reasons BEAST_pype uses the version of BEAST-2 that is currently available via conda, specifically [bioconda](https://anaconda.org/bioconda/beast2), 2.7.7 as of 2026-May-13. BEAST_pype was developed on BEAST 2.6. Therefore, template BEAST-2 XMLs from BEAST 2 versions other than 2.6 or 2.7 may not work.
 
 ## Installation instructions:
 
