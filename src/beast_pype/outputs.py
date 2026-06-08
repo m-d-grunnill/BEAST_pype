@@ -16,7 +16,6 @@ pd.options.mode.chained_assignment = None
 
 
 def read_log_file(file_path,
-                  cut_to_first=None,
                   remove_0_first_sampling_prop=True,
                   youngest_tip_date=None,
                   convert_become_uninfectious_rate=False,
@@ -28,8 +27,6 @@ def read_log_file(file_path,
     ----------------
     file_path: str
         Path to the log file.
-    cut_to_first : int, default None
-        Remove Samples/links over this number.
     remove_0_first_sampling_prop : bool, default True
         If all the values in the first column starting with 'samplingProportion' are equal
         to 0, remove that column.
@@ -48,9 +45,14 @@ def read_log_file(file_path,
     -----------
     Pandas.DataFrame
     """
-    trace_df = pd.read_table(file_path, sep='\t', comment='#')
-    if cut_to_first is not None:
-        trace_df = trace_df[trace_df['Sample'] <= cut_to_first]
+    if file_path.endswith('.log'):
+        trace_df = pd.read_table(file_path, sep='\t', comment='#')
+    elif file_path.endswith('.csv'):
+        trace_df = pd.read_csv(file_path)
+    elif file_path.endswith('.tsv'):
+        trace_df = pd.read_csv(file_path, sep='\t')
+    else:
+        raise ValueError('file_path should end with .log, .csv or .tsv')
     if remove_0_first_sampling_prop:
         sampling_prop_columns = [column for column in trace_df.columns if column.startswith('samplingProportion')]
         if len(sampling_prop_columns) > 0 and (trace_df[sampling_prop_columns[0]] == 0).all():
