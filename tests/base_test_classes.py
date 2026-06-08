@@ -53,7 +53,7 @@ class WorkflowVariationTest:
         'Phase-2iv-TreeTime-with-Downsampled-Data.ipynb'
                                ]
     xml_set_labels = None
-    start_timeout = None
+    start_timeout = 600
 
 
     def test_running_of_workflow(self, subtests, tmp_path):

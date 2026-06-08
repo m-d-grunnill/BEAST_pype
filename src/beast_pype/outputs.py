@@ -20,6 +20,7 @@ def read_log_file(file_path,
                   remove_0_first_sampling_prop=True,
                   youngest_tip_date=None,
                   convert_become_uninfectious_rate=False,
+                  convert_growth_rate=True
                   ):
     """Read a log file into a pandas DataFrame.
 
@@ -40,6 +41,8 @@ def read_log_file(file_path,
         If true column 'becomeUninfectiousRate_BDSKY_Serial' will be used to
          calculate columns 'Rate of Becoming Uninfectious (per day)' and
           'Infection period (per day)'.
+    convert_growth_rate: bool, default True
+        If true column 'growthRate' will be used to calculate columns 'Growth Rate per day' and 'Doubling Time in days'.
 
     Returns
     -----------
@@ -84,6 +87,10 @@ def read_log_file(file_path,
             warn(
                 f'No column contains the substring "treeheight" (after conversion to lowercase and removal of non-letters) in trace at {file_path}.' +
                 'Therefore conversion to "TMRCA" column by subtraction from youngest tip date skipped.')
+        if convert_growth_rate and 'growthRate' in trace_df.columns:
+            trace_df['Growth Rate per day'] = trace_df['growthRate'] / 365.25
+            trace_df['Doubling Time in days'] = np.log(2) / trace_df['Growth Rate per day']
+        
         if convert_become_uninfectious_rate:
             trace_df['Rate of Becoming Uninfectious (per day)'] = trace_df['becomeUninfectiousRate_BDSKY_Serial'] / 365
             trace_df['Mean Infection period (days)'] = 1 / trace_df['Rate of Becoming Uninfectious (per day)']
@@ -714,9 +721,9 @@ def plot_hist_kde(trace_df,
         hdi_est = hdi(trace_df[parameter].to_numpy(), hdi_prob=hdi_prob)
         upper_key = f'Upper {str(hdi_prob)} HDI'
         lower_key = f'Lower {str(hdi_prob)} HDI'
-        hdi_est = {lower_key: hdi_est[0],
-                   'Median': trace_df[parameter].median(),
-                   upper_key: hdi_est[1]}
+        hdi_est = {lower_key: float(hdi_est[0]),
+                   'Median': float(trace_df[parameter].median()),
+                   upper_key: float(hdi_est[1])}
         ax.axvline(hdi_est['Median'], color='k', lw=2)
         ax.axvline(hdi_est[lower_key], color='k', ls='--', lw=1)
         ax.axvline(hdi_est[upper_key], color='k', ls='--', lw=1)

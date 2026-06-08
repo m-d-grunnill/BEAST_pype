@@ -58,6 +58,52 @@ def add_unreported_outputs(notebook_template_path,
         merged_log_columns += merged_log_df.columns.to_list()
     columns_to_report = set(merged_log_columns) - set(columns_already_reported)
     columns_to_report = sorted(columns_to_report)
+    if 'growthRate' in columns_to_report:
+        columns_to_report.remove('growthRate')
+        if xml_set_comparisons:
+            report['cells'].append(nbf.v4.new_markdown_cell(f"## Growth Rate\n### Per year"))
+            report['cells'].append(
+                    nbf.v4.new_code_cell(
+                        f"growthRate_ax = plot_comparative_box_violin(df_melted_for_seaborn, 'growthRate', xml_set_label=xml_set_label)\n" +
+                        f"growthRate_hdi_df = hdi_pivot(df, 'growthRate', xml_set_label=xml_set_label)\n" +
+                        f"display(growthRate_hdi_df)")
+                    )
+            report['cells'].append(nbf.v4.new_markdown_cell(f"### Per day\n**Note:** Growth rate per day is calculated by dividing growth rate per year by 365.25."))
+            report['cells'].append(
+                    nbf.v4.new_code_cell(
+                        f"growthRate_per_day_ax = plot_comparative_box_violin(df_melted_for_seaborn, 'Growth Rate per day', xml_set_label=xml_set_label)\n" +
+                        f"growthRate_per_day_hdi_df = hdi_pivot(df, 'Growth Rate per day', xml_set_label=xml_set_label)\n" +
+                        f"display(growthRate_per_day_hdi_df)")
+                    )
+            report['cells'].append(nbf.v4.new_markdown_cell(f"### Doublication Time in days\n**Note:** Doubling time is calculated as ln(2) divided by growth rate per day."))
+            report['cells'].append(
+                    nbf.v4.new_code_cell(
+                        f"doubling_time_per_day_ax = plot_comparative_box_violin(df_melted_for_seaborn, 'Doubling Time in days', xml_set_label=xml_set_label)\n" +
+                        f"doubling_time_per_day_hdi_df = hdi_pivot(df, 'Doubling Time in days', xml_set_label=xml_set_label)\n" +
+                        f"display(doubling_time_per_day_hdi_df)")
+                    )
+        else:
+            report['cells'].append(nbf.v4.new_markdown_cell(f"## Growth Rate\n### Per year"))
+            report['cells'].append(
+                    nbf.v4.new_code_cell(
+                        f"growthRate_fig, growthRate_ax, growthRate_hdi_est = plot_hist_kde(trace_df=trace_df, parameter='growthRate', hdi_prob=0.95)\n" +
+                        f"display(growthRate_hdi_est)"
+                    )
+                )
+            report['cells'].append(nbf.v4.new_markdown_cell(f"### Per day\n**Note:** Growth rate per day is calculated by dividing growth rate per year by 365.25."))
+            report['cells'].append(
+                    nbf.v4.new_code_cell(
+                        f"growthRate_per_day_fig, growthRate_per_day_ax, growthRate_per_day_hdi_est = plot_hist_kde(trace_df=trace_df, parameter='Growth Rate per day', hdi_prob=0.95)\n" +
+                        f"display(growthRate_per_day_hdi_est)"
+                    )
+                )
+            report['cells'].append(nbf.v4.new_markdown_cell(f"### Doublication Time in days\n**Note:** Doubling time is calculated as ln(2) divided by growth rate per day."))
+            report['cells'].append(
+                    nbf.v4.new_code_cell(
+                        f"doubling_time_per_day_fig, doubling_time_per_day_ax, doubling_time_per_day_hdi_est = plot_hist_kde(trace_df=trace_df, parameter='Doubling Time in days', hdi_prob=0.95)\n" +
+                        f"display(doubling_time_per_day_hdi_est)"
+                    ))
+
     for column in columns_to_report:
         report['cells'].append(nbf.v4.new_markdown_cell(f"## {column}"))
         variable_pre_fix = re.sub('[^a-zA-Z0-9]', '_', column)
