@@ -48,7 +48,7 @@ def gen_xml_set_diag_notebook(save_dir,
                 f"\tbeast_outputs_path = '{xml_set}/beast_outputs'\n" +
                 "else:\n" +
                 f"\tbeast_outputs_path = '{xml_set}'\n\n"
-                "sample_diag = BEASTDiag(beast_outputs_path)\n"+
+                f"sample_diag = BEASTDiag(beast_outputs_path, output_prefix=f'{{outputs_and_reports_dir}}/{xml_set}_')\n"+
                 f"beast_outputs_paths['{xml_set}'] = beast_outputs_path"
             ),
             nbf.v4.new_markdown_cell(
@@ -60,29 +60,15 @@ def gen_xml_set_diag_notebook(save_dir,
                 "\t* Ideally the ESSs should be >= 200, see [arviz.ess documentation](https://python.arviz.org/en/stable/api/generated/arviz.ess.html#arviz.ess).\n" +
                 "\t* Ideally the r_hat should be close fo 1 (<1.05), see [arviz.rhat documentation](https://python.arviz.org/en/stable/api/generated/arviz.rhat.html#arviz.rhat).\n" +
                 "\t* Markov Chain Standard Error MCSEs, see [arviz.mcse](https://python.arviz.org/en/stable/api/generated/arviz.mcse.html#arviz.mcse).\n\n"+
-                "After making your selection click on the cell below the widget and then keep pressing shift+enter to carry on with the rest of the cells in this notebook."
+                "Clicking the button at the bottom of the widget below will create merged log (.csv) and trees (.tees) files based on your selection.\n" +
+                "After merging this selection click on the cell below the widget and then keep pressing shift+enter to carry on with the rest of the cells in this notebook."
             ),
             nbf.v4.new_code_cell(
                 "sample_diag_widget = sample_diag.generate_widget(parameters_displayed=4)\n" +
                 "sample_diag_widget"),
-            nbf.v4.new_code_cell(
-                f"pipeline_run_info['Chains Used']['{xml_set}'] = deepcopy(sample_diag.selected_chains)\n" +
-                f"pipeline_run_info['Burn-In']['{xml_set}'] = deepcopy(sample_diag.burinin_percentage)\n" +
-                f"phase_5i_params = sample_diag.merging_outputs_params(output_path=outputs_and_reports_dir, kernel_name=kernel_name, xml_set='{xml_set}')\n" +
-                "phase_5i_log = execute_notebook(input_path=f'{workflow_modules_path}/Phase-5i-Merge-BEAST-outputs.ipynb',\n" +
-                 f"output_path=save_dir + '/{xml_set}/Phase-5i-Merge-BEAST-outputs.ipynb',\n" +
-                "\t\t\t\t\t\t\t\tparameters=phase_5i_params,\n" +
-                "\t\t\t\t\t\t\t\tprogress_bar=True,\n" +
-                "\t\t\t\t\t\t\t\tnest_asyncio=True, start_timeout=600)"
-            )
         ]
 
     diag_notebook['cells'] += [
-        nbf.v4.new_markdown_cell(
-            "## Update the pipeline_run_info yaml."),
-        nbf.v4.new_code_cell(
-            "with open(f'{save_dir}/pipeline_run_info.yml', 'w') as fp:\n\tyaml.dump(pipeline_run_info, fp, sort_keys=True)\nfp.close()"
-        ),
         nbf.v4.new_markdown_cell('## Get BEAST 2 runtimes'),
         nbf.v4.new_code_cell(
             "runtimes_dfs = []\n"+
@@ -132,9 +118,9 @@ def gen_xml_set_diag_notebook(save_dir,
             "This can take sometime. So you can look at the report whilst waiting this is done last."
         ),
         nbf.v4.new_code_cell(
-            "gen_summary_tree_notebook(outputs_and_reports_dir, 'Phase-5ii-Gen-Summary-Trees.ipynb', topology, summary_tree_low_memory, kernel_name=kernel_name)\n" +
-            "mcc_tree_output = execute_notebook(input_path='Phase-5ii-Gen-Summary-Trees.ipynb',\n" +
-            "\t\toutput_path='Phase-5ii-Gen-Summary-Trees.ipynb',\n" +
+            "gen_summary_tree_notebook(outputs_and_reports_dir, 'Phase-5i-Gen-Summary-Trees.ipynb', topology, summary_tree_low_memory, kernel_name=kernel_name)\n" +
+            "mcc_tree_output = execute_notebook(input_path='Phase-5i-Gen-Summary-Trees.ipynb',\n" +
+            "\t\toutput_path='Phase-5i-Gen-Summary-Trees.ipynb',\n" +
             "\t\tprogress_bar=True)\n"
         ),
         nbf.v4.new_markdown_cell(
