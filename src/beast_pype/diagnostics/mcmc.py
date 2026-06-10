@@ -5,12 +5,12 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 import ipywidgets as widgets
-from IPython.display import display
+from IPython.display import display, clear_output
 import glob
 from pathlib import Path
 import re
 from typing import List
-from tqdm import tqdm
+from tqdm.auto import tqdm
 import yaml
 
 
@@ -237,7 +237,8 @@ def subset_and_merge_trees(
     in_number: int,
     front_number: int,
     output_file: str,
-    relabel_start: int = 0):
+    relabel_start: int = 0,
+    pbar=None):
     """
     Subset and merge tree states from BEAST 2 .trees files (NEXUS format).
 
@@ -265,11 +266,21 @@ def subset_and_merge_trees(
     selected_tree_lines = []
     state_step_size = None
 
-    for i, fpath in tqdm(enumerate(file_list), desc='Selecting trees from .trees files'):
+    owns_pbar = False
+    if pbar is None:
+        pbar = tqdm(
+            total=len(file_list),
+            desc='Selecting trees from .trees files',
+            unit='file',
+            leave=False
+        )
+        owns_pbar = True
+
+    for fpath in file_list:
         fpath = Path(fpath)
         if not fpath.is_file():
             raise FileNotFoundError(f"File not found: {fpath}")
-        if not fpath.suffix.lower() in ['.trees', '.tree']:
+        if fpath.suffix.lower() not in ['.trees', '.tree']:
             raise ValueError(f"File does not have .trees or .tree extension: {fpath}")
 
         with fpath.open("r", encoding="utf-8") as f:
@@ -296,7 +307,7 @@ def subset_and_merge_trees(
                         raise ValueError(
                             f"State step size mismatch in file {fpath} at line {idx+1}.\n" +
                             f"Expected step size: {state_step_size}, found: {current_state_step_size}." +
-                            f"Check that all files have consistent STATE numbering."
+                            "Check that all files have consistent STATE numbering."
                         )
                 last_tree_idx = idx
 
@@ -322,6 +333,10 @@ def subset_and_merge_trees(
                 )
 
         selected_tree_lines.extend(file_selected)
+        pbar.update(1)
+
+    if owns_pbar:
+        pbar.close()
 
     relabeled_lines = []
     new_state = relabel_start
@@ -339,7 +354,7 @@ def subset_and_merge_trees(
         out.writelines(relabeled_lines)
         out.writelines(footer_lines)
     
-    out_path.close()
+    out.close()
 
  
 
@@ -493,7 +508,7 @@ class BEASTDiag:
         self.diagnosis_of_selection = az.summary(self.selected_posterior,
                                                                   kind='diagnostics')
 
-    def merge_logs_to_csv(self, output_file='merged_log.csv', like_logcombiner=True):
+    def merge_logs_to_csv(self, output_file='merged_logs.csv', like_logcombiner=True):
         """
         Merge selected log files into one csv file.
 
@@ -513,7 +528,7 @@ class BEASTDiag:
                 relabel_dict = {df.columns[1]: 'Sample'}
                 df.rename(columns=relabel_dict, inplace=True)
             df = df.drop(columns=['chain'])
-        df.to_csv(f'{self.directory}/{output_file}', index=False)
+        df.to_csv(f'{output_file}', index=False)
 
 
     def _widget_interaction(self, percentages, parameters, **kwargs):
@@ -576,21 +591,38 @@ class BEASTDiag:
         for chain in self.chain_checks:
             chain.value = True
     
-    def _merge_selection(self):
+    def _merge_selection(self, progress_callback=None, trees_pbar=None):
         merged_log_path = f'{self.output_prefix}merged_logs.csv'
         merged_trees_path = f'{self.output_prefix}merged_trees.trees'
         selection_yaml_path = f'{self.output_prefix}merge_selection.yaml'
 
+        if progress_callback is not None:
+            progress_callback(0, 3, 'Merging selected log files...')
         self.merge_logs_to_csv(output_file=merged_log_path, like_logcombiner=True)
-        selected_nexus_files = [
-            f"{self.directory}/{chain}.trees"
-            for chain in self.selected_chains
-        ]
+
+        selected_nexus_files = sorted(            
+            os.path.join(self.directory, fname)
+            for fname in os.listdir(self.directory)
+            if fname.endswith(".trees")
+            and any(fname.startswith(chain) for chain in self.selected_chains)
+        )
+        if progress_callback is not None:
+            progress_callback(1, 3, 'Subsetting and merging .trees files...')
+
+        # Convert percentage-based selection to actual STATE numbers
+        draws = self.original_posterior.posterior['draw'].values
+        n_draws = len(draws)
+        in_idx = round(self.burinin_percentage / 100 * n_draws)
+        front_idx = round(self.keep_front_percentage / 100 * n_draws) - 1
+        in_state_number = int(draws[min(in_idx, n_draws - 1)])
+        front_state_number = int(draws[min(front_idx, n_draws - 1)])
+
         subset_and_merge_trees(
             file_list=selected_nexus_files,
-            in_number=round(self.burinin_percentage / 100 * len(self.original_posterior.posterior['draw'])),
-            front_number=round(self.keep_front_percentage / 100 * len(self.original_posterior.posterior['draw'])),
-            output_file=merged_trees_path
+            in_number=in_state_number,
+            front_number=front_state_number,
+            output_file=merged_trees_path,
+            pbar=trees_pbar
         )
 
         selection_info = {
@@ -598,11 +630,16 @@ class BEASTDiag:
             'burinin_percentage': self.burinin_percentage,
             'keep_front_percentage': self.keep_front_percentage
         }
+        if progress_callback is not None:
+            progress_callback(2, 3, 'Writing selection YAML...')
         with open(selection_yaml_path, 'w', encoding='utf-8') as file:
             yaml.safe_dump(selection_info, file, sort_keys=False)
 
+        if progress_callback is not None:
+            progress_callback(3, 3, 'Merge complete.')
+
         return {
-            'merged_log': merged_log_path,
+            'merged_logs': merged_log_path,
             'merged_trees': merged_trees_path,
             'selection_yaml': selection_yaml_path
         }
@@ -680,27 +717,66 @@ class BEASTDiag:
                                                        **{chain.description: chain for chain in self.chain_checks}
                                                    })
         merge_button = widgets.Button(
-            description='Merge selection',
+            description='Merge Selection',
             tooltip='Merge selection into one log (.csv) and one trees (.trees) file.',
             button_style='primary'
         )
+        merge_progress = widgets.IntProgress(
+            value=0,
+            min=0,
+            max=3,
+            step=1,
+            description='Merge:',
+            bar_style='',
+            orientation='horizontal'
+        )
+        merge_progress_status = widgets.HTML('')
         merge_status = widgets.HTML('')
+        merge_tqdm_output = widgets.Output()
 
         def _on_merge_click(_):
+            merge_progress.value = 0
+            merge_progress.max = 3
+            merge_progress.bar_style = 'info'
+            merge_progress_status.value = "<span style='color: #1565c0;'>Starting merge...</span>"
+            merge_status.value = ''
+
+            with merge_tqdm_output:
+                clear_output(wait=True)
+                trees_pbar = tqdm(
+                    total=len(self.selected_chains),
+                    desc='Subsetting/merging .trees',
+                    unit='file',
+                    leave=False
+                )
+
+            def _update_progress(value, total, message):
+                merge_progress.max = total
+                merge_progress.value = value
+                merge_progress_status.value = f"<span style='color: #1565c0;'>{message}</span>"
+
             try:
-                output_paths = self._merge_selection()
+                output_paths = self._merge_selection(progress_callback=_update_progress,
+                                                     trees_pbar=trees_pbar)
+                merge_progress.bar_style = 'success'
                 merge_status.value = (
                     "<span style='color: #2e7d32; font-weight: 600;'>"
-                    "Merge complete. "
-                    f"Wrote {output_paths['merged_log']} and {output_paths['merged_trees']}."
+                    "Merge complete.<br>"
+                    f"Merged logs can be found at {output_paths['merged_logs']}.<br>"
+                    f"Merged trees can be found at {output_paths['merged_trees']}.<br>"
+                    f"Selection info can be found at {output_paths['selection_yaml']}."
                     "</span>"
                 )
             except Exception as exc:
+                merge_progress.bar_style = 'danger'
+                merge_progress_status.value = "<span style='color: #c62828;'>Merge failed.</span>"
                 merge_status.value = (
                     "<span style='color: #c62828; font-weight: 600;'>"
                     f"Merge failed: {type(exc).__name__}: {exc}"
                     "</span>"
                 )
+            finally:
+                trees_pbar.close()
 
         merge_button.on_click(_on_merge_click)
 
@@ -709,6 +785,9 @@ class BEASTDiag:
             parameter_selector,
             output_widget,
             merge_button,
+            merge_progress,
+            merge_progress_status,
+            merge_tqdm_output,
             merge_status
         ])
 

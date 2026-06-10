@@ -10,7 +10,7 @@ from copy import deepcopy
 
 
 def add_unreported_outputs(notebook_template_path,
-                           merged_logs_path,
+                           directory_of_merged_logs,
                            output_path,
                            xml_set_comparisons=False,
                            as_version=4):
@@ -23,7 +23,7 @@ def add_unreported_outputs(notebook_template_path,
         Path to the notebook template. Metadata of the notebook will be searched for
         the entry "BEAST outputs reported". Any parameter not listed but occurring
         in the file at merged_log_path will then be added to the notebook.
-    merged_logs_path: str
+    directory_of_merged_logs: str
         Path to directory containing merged log files you wish to report on.
     output_path: str
         Path to save new report notebook file
@@ -39,17 +39,17 @@ def add_unreported_outputs(notebook_template_path,
     report = nbf.read(notebook_template_path, as_version=as_version)
     columns_already_reported = ['xml set', 'Sample']
     columns_already_reported += report.metadata["BEAST outputs reported"]['parameters']
-    merged_log_paths = [file for file in os.listdir(merged_logs_path) if file.endswith('merged.log')]
+    merged_log_paths = [file for file in os.listdir(directory_of_merged_logs) if file.endswith(('merged.log', 'merged_logs.csv'))]
     merged_log_columns = []
     for merged_log_path in merged_log_paths:
         if merged_log_path.endswith('.log'):
-            merged_log_df = read_log_file(f'{merged_logs_path}/{merged_log_path}')
+            merged_log_df = read_log_file(f'{directory_of_merged_logs}/{merged_log_path}')
         elif merged_log_path.endswith('.csv'):
-            merged_log_df = pd.read_csv(f'{merged_logs_path}/{merged_log_path}')
+            merged_log_df = pd.read_csv(f'{directory_of_merged_logs}/{merged_log_path}')
         elif merged_log_path.endswith('.tsv'):
-            merged_log_df = pd.read_csv(f'{merged_logs_path}/{merged_log_path}', sep='\t')
+            merged_log_df = pd.read_csv(f'{directory_of_merged_logs}/{merged_log_path}', sep='\t')
         else:
-            raise ValueError(f'Only csv, tsv or log files are supported for merged_log_path ({merged_logs_path}/{merged_log_path}).')
+            raise ValueError(f'Only csv, tsv or log files are supported for merged_log_path ({directory_of_merged_logs}/{merged_log_path}).')
         columns_already_reported += [
             col for col in merged_log_df.columns
             if col.startswith(('Unnamed',
@@ -133,22 +133,25 @@ def _update_notebook_metadata(notebook_path, metadata_update, output_path = None
     with open(output_path , 'w') as f:
         nbf.write(notebook, f)
 
-def gen_summary_tree_notebook(merged_trees_path, output_path, topology, summary_tree_low_memory=False, kernel_name='beast_pype', as_version=4):
+def gen_summary_tree_notebook(directory_of_merged_trees, output_path, topology, summary_tree_low_memory=False, kernel_name='beast_pype', as_version=4):
     workflow_modules_path = path_to_workflow_modules()
-    notebook = nbf.read(f"{workflow_modules_path}/Phase-5ii-Gen-Summary-Trees.ipynb", as_version=as_version)
+    notebook = nbf.read(f"{workflow_modules_path}/Phase-5i-Gen-Summary-Trees.ipynb", as_version=as_version)
     notebook['cells'].append(nbf.v4.new_code_cell(
         f'source activate {kernel_name}'
     ))
-    merged_tree_paths = [file for file in os.listdir(merged_trees_path) if file.endswith('merged.trees')]
+    merged_tree_paths = [file 
+        for file in os.listdir(directory_of_merged_trees) 
+        if file.endswith(('merged.trees', 'merged_trees.trees'))]
     for merged_tree_path in merged_tree_paths:
         prefix = merged_tree_path.replace('merged.trees', '')
+        prefix = prefix.replace('merged_trees.trees', '')
         if prefix != '':
             notebook['cells'].append(nbf.v4.new_markdown_cell(
                 f"## Producing {prefix.replace('_','')} Summary Tree."
             ))
         notebook['cells'].append(nbf.v4.new_code_cell(
             f"treeannotator -burnin 0 -topology {topology} -lowMem {str(summary_tree_low_memory).lower()} " +
-            f"{merged_trees_path}/{prefix}merged.trees {merged_trees_path}/{prefix}{topology}_summary_tree.nexus"
+            f"{directory_of_merged_trees}/{merged_tree_path} {directory_of_merged_trees}/{prefix}{topology}_summary_tree.nexus"
         ))
     with open(output_path , 'w') as f:
         nbf.write(notebook, f)

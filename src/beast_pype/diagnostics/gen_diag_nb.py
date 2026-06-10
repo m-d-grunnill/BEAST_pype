@@ -118,9 +118,9 @@ def gen_xml_set_diag_notebook(save_dir,
             "This can take sometime. So you can look at the report whilst waiting this is done last."
         ),
         nbf.v4.new_code_cell(
-            "gen_summary_tree_notebook(outputs_and_reports_dir, 'Phase-5ii-Gen-Summary-Trees.ipynb', topology, summary_tree_low_memory, kernel_name=kernel_name)\n" +
-            "mcc_tree_output = execute_notebook(input_path='Phase-5ii-Gen-Summary-Trees.ipynb',\n" +
-            "\t\toutput_path='Phase-5ii-Gen-Summary-Trees.ipynb',\n" +
+            "gen_summary_tree_notebook(outputs_and_reports_dir, 'Phase-5i-Gen-Summary-Trees.ipynb', topology, summary_tree_low_memory, kernel_name=kernel_name)\n" +
+            "mcc_tree_output = execute_notebook(input_path='Phase-5i-Gen-Summary-Trees.ipynb',\n" +
+            "\t\toutput_path='Phase-5i-Gen-Summary-Trees.ipynb',\n" +
             "\t\tprogress_bar=True)\n"
         ),
         nbf.v4.new_markdown_cell(
