@@ -2,7 +2,7 @@ import click
 import os
 from beast_pype.nb_utils import execute_notebook
 from beast_pype.path_utils import path_to_workflows, path_to_report_templates
-from beast_pype.diagnostics import gen_beast_diagnostic_nb
+from beast_pype.diagnostics import gen_beast_diagnostic_nb, gen_static_diagnostic_nb
 from datetime import datetime
 from papermill.iorw import read_yaml_file
 
@@ -109,6 +109,43 @@ def run_workflow(workflow,
         progress_bar=True,
         nest_asyncio=True, start_timeout=start_timeout
     )
+
+@beast_pype.command(context_settings=dict(help_option_names=['-h', '--help']))
+@click.argument('beast_outputs',
+                 required=1,
+                 type=click.Path(exists=True, dir_okay=True, file_okay=False, readable=True, writable=True))
+@click.option('--burnin', '-b', default=10, type=float,
+              help='Burn-in percentage (0-100) to remove from the start of each chain.\n' +
+                   'If not given 10%% is used.'
+              )
+@click.option('--output_prefix', '-o', default=None, type=str,
+              help='Prefix (including path) for output files.\n' +
+                   'If not given, defaults to <beast_outputs>/static_diag_.'
+              )
+@click.option('--parameters_per_section', '-n', default=1, type=int,
+              help='Number of parameters to display per notebook section.\n' +
+                   'If not given 1 is used.'
+              )
+def static_diagnose_and_merge(beast_outputs,
+                              burnin,
+                              output_prefix,
+                              parameters_per_section):
+    """
+    BEAST_OUTPUTS: Path to directory containing BEAST 2 outputs to statically diagnose and merge.
+    """
+    results = gen_static_diagnostic_nb(
+        directory=beast_outputs,
+        burnin=burnin,
+        output_prefix=output_prefix,
+        parameters_per_section=parameters_per_section,
+    )
+    click.echo(f"Notebook: {results['notebook']}")
+    click.echo(f"Merged log: {results['merged_log']}")
+    if results['merged_trees']:
+        click.echo(f"Merged trees: {results['merged_trees']}")
+    else:
+        click.echo("No .trees files found; merged trees not generated.")
+
 
 @beast_pype.command(context_settings=dict(help_option_names=['-h', '--help']))
 @click.argument('report_template', required=1,

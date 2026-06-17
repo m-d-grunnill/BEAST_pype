@@ -356,7 +356,27 @@ def subset_and_merge_trees(
     
     out.close()
 
- 
+def merge_logs_to_csv(posterior, output_file='merged_logs.csv', like_logcombiner=True):
+    """
+    Merge selected log files into one csv file.
+
+    Parameters
+    ----------
+    output_file : str, default='merged.log'
+        Name of output file. Saved in self.directory.
+    like_logcombiner : bool, default=True
+        Merged output looks similar to merged output from logcombiner.
+
+    """
+    df = posterior.to_dataframe()
+    if like_logcombiner:
+        step = df.iloc[1, 1] - df.iloc[0, 1]
+        df[df.columns[1]] = range(0, len(df) * step, step)
+        if df.columns[1] != 'Sample':
+            relabel_dict = {df.columns[1]: 'Sample'}
+            df.rename(columns=relabel_dict, inplace=True)
+        df = df.drop(columns=['chain'])
+    df.to_csv(output_file, index=False) 
 
 class BEASTDiag:
     """
@@ -520,15 +540,7 @@ class BEASTDiag:
             Merged output looks similar to merged output from logcombiner.
 
         """
-        df = self.selected_posterior.to_dataframe()
-        if like_logcombiner:
-            step = df.iloc[1, 1] - df.iloc[0, 1]
-            df[df.columns[1]] = range(0, len(df) * step, step)
-            if df.columns[1] != 'Sample':
-                relabel_dict = {df.columns[1]: 'Sample'}
-                df.rename(columns=relabel_dict, inplace=True)
-            df = df.drop(columns=['chain'])
-        df.to_csv(f'{output_file}', index=False)
+        merge_logs_to_csv(posterior=self.selected_posterior, output_file=output_file, like_logcombiner=like_logcombiner)
 
 
     def _widget_interaction(self, percentages, parameters, **kwargs):
