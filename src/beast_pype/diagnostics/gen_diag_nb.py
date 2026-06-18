@@ -95,9 +95,9 @@ def gen_xml_set_diag_notebook(save_dir,
             'Now you can now move on to visualising outputs from BEAST using a report template.'
         ),
         nbf.v4.new_code_cell(
-            "report_params = {'save_dir': outputs_and_reports_dir, 'beast_xml_path':beast_xml_path, 'xml_set_label': xml_set_label}\n" +
+            "report_params = {'save_dir': outputs_and_reports_dir, 'beast_xml_paths':beast_xml_path, 'xml_set_label': xml_set_label}\n" +
             "output_report_path = f'{outputs_and_reports_dir}/BEAST_pype-Report.ipynb'\n" +
-            "add_unreported_outputs(parameters_report_template, outputs_and_reports_dir, output_report_path, xml_set_comparisons=True)\n" +
+            "add_unreported_outputs(parameters_report_template, directory_of_merged_logs=outputs_and_reports_dir, output_path=output_report_path, xml_set_comparisons=True)\n" +
             "output = execute_notebook(\n" +
             "\t\tinput_path=output_report_path,\n" +
             "\t\toutput_path=output_report_path,\n" +

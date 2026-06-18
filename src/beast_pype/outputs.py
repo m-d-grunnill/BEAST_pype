@@ -632,6 +632,7 @@ def plot_skyline(traces_df,
     ax.xaxis.set_ticks(tick_year_decimals)
     ax.set_xticklabels(tick_labels)
     ax.tick_params(axis='x', labelrotation=45)
+    plt.setp(ax.get_xticklabels(), ha='right')
     ax.set_xlabel('Date')
     ax.set_ylabel(y_label)
     if len(xml_sets) > 1:
@@ -779,6 +780,7 @@ def plot_origin_or_tmrca(trace_df, parameter, x_tick_freq='automatic', hdi_prob=
     ax.xaxis.set_ticks(tick_year_decimals)
     ax.set_xticklabels(tick_labels)
     ax.tick_params(axis='x', labelrotation=45)
+    plt.setp(ax.get_xticklabels(), ha='right')
     plt.tight_layout()
     if hdi_prob is None:
         return fig, ax
@@ -846,5 +848,6 @@ def plot_comparative_origin_or_tmrca(df_melted, parameter, xml_set_label='xml_se
     ax.xaxis.set_ticks(tick_year_decimals)
     ax.set_xticklabels(tick_labels)
     ax.tick_params(axis='x', labelrotation=45)
+    plt.setp(ax.get_xticklabels(), ha='right')
     plt.tight_layout()
     return fig

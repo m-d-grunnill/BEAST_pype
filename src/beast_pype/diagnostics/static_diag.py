@@ -4,6 +4,8 @@ import os
 import glob
 import nbformat as nbf
 import arviz as az
+from nbconvert.preprocessors import ExecutePreprocessor
+from nbconvert import HTMLExporter
 
 from beast_pype.diagnostics.mcmc import (
     read_log_files_as_posterior,
@@ -19,7 +21,7 @@ def gen_static_diagnostic_nb(
     burnin=10,
     output_prefix=None,
     parameters_per_section=1,
-):
+    kernel_name='beast_pype'):
     """Generate a static diagnostic notebook and merged outputs from a BEAST 2 run directory.
 
     Given a directory containing BEAST 2 `.log` and `.trees` files, this function:
@@ -40,9 +42,11 @@ def gen_static_diagnostic_nb(
         Prefix (including path) for output files. Defaults to `directory/static_diag_`.
     parameters_per_section : int, default 1
         Number of parameters to display per notebook section.
+    kernel_name : str, default 'beast_pype'
+        Name of the Jupyter kernel to use when executing the notebook.
 
     Returns
-    -------
+    -------'notebook', 'notebook_html', 'merged_log', 'merged_trees'.
     dict
         Paths to output files: 'notebook', 'merged_log', 'merged_trees'.
     """
@@ -133,6 +137,21 @@ def gen_static_diagnostic_nb(
     with open(notebook_path, "w", encoding="utf-8") as f:
         nbf.write(nb, f)
 
+    # --- 5b. Execute notebook ---
+    ep = ExecutePreprocessor(timeout=600, kernel_name=kernel_name)
+    ep.preprocess(nb, {"metadata": {"path": os.path.dirname(notebook_path) or "."}})
+
+    # Save executed notebook (with outputs)
+    with open(notebook_path, "w", encoding="utf-8") as f:
+        nbf.write(nb, f)
+
+    # --- 5c. Export to HTML ---
+    html_exporter = HTMLExporter()
+    html_body, _ = html_exporter.from_notebook_node(nb)
+    html_path = f"{output_prefix}diagnostic.html"
+    with open(html_path, "w", encoding="utf-8") as f:
+        f.write(html_body)
+
     # --- 6. Merge logs to CSV ---
     merged_log_path = f"{output_prefix}merged_logs.csv"
     merge_logs_to_csv(burned_posterior, output_file=merged_log_path)
@@ -158,6 +177,7 @@ def gen_static_diagnostic_nb(
 
     return {
         "notebook": notebook_path,
+        "notebook_html": html_path,
         "merged_log": merged_log_path,
         "merged_trees": merged_trees_path,
     }
