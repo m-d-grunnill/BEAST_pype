@@ -9,8 +9,8 @@ import re
 import os
 from beast_pype.path_utils import path_to_workflow_modules, path_to_report_templates
 from copy import deepcopy
-from nbconvert.preprocessors import ExecutePreprocessor
 from nbconvert import HTMLExporter
+from tqdm.auto import tqdm
 
 
 def add_unreported_outputs(notebook_template_path,
@@ -49,7 +49,9 @@ def add_unreported_outputs(notebook_template_path,
     if directory_of_merged_logs is not None:
         if merged_log_paths is not None:
             raise ValueError("Only one of merged_log_paths or directory_of_merged_logs should be provided, not both.")
-        merged_log_paths = [file for file in os.listdir(directory_of_merged_logs) if file.endswith(('merged.log', 'merged_logs.csv'))]
+        merged_log_paths = [f'{directory_of_merged_logs}/{file}'
+                        for file in os.listdir(directory_of_merged_logs)
+                        if file.endswith(('merged.log', 'merged_logs.csv'))]
     if merged_log_paths is None and directory_of_merged_logs is None:
         raise ValueError("At least one of merged_log_paths or directory_of_merged_logs must be provided.")
     if isinstance(merged_log_paths, str):
@@ -57,13 +59,13 @@ def add_unreported_outputs(notebook_template_path,
     merged_log_columns = []
     for merged_log_path in merged_log_paths:
         if merged_log_path.endswith('.log'):
-            merged_log_df = read_log_file(f'{directory_of_merged_logs}/{merged_log_path}')
+            merged_log_df = read_log_file(merged_log_path)
         elif merged_log_path.endswith('.csv'):
-            merged_log_df = pd.read_csv(f'{directory_of_merged_logs}/{merged_log_path}')
+            merged_log_df = pd.read_csv(merged_log_path)
         elif merged_log_path.endswith('.tsv'):
-            merged_log_df = pd.read_csv(f'{directory_of_merged_logs}/{merged_log_path}', sep='\t')
+            merged_log_df = pd.read_csv(merged_log_path, sep='\t')
         else:
-            raise ValueError(f'Only csv, tsv or log files are supported for merged_log_path ({directory_of_merged_logs}/{merged_log_path}).')
+            raise ValueError(f'Only csv, tsv or log files are supported for merged_log_path ({merged_log_path}).')
         columns_already_reported += [
             col for col in merged_log_df.columns
             if col.startswith(('Unnamed',
@@ -332,6 +334,10 @@ def gen_summary_tree_report(
     if isinstance(beast_xml_paths, str):
         beast_xml_paths = [beast_xml_paths]
 
+    # Convert to absolute paths so the notebook works regardless of execution directory
+    summary_trees = [os.path.abspath(p) for p in summary_trees]
+    beast_xml_paths = [os.path.abspath(p) for p in beast_xml_paths]
+
     if len(summary_trees) != len(beast_xml_paths):
         raise ValueError(
             "summary_trees and beast_xml_paths must have the same length."
@@ -373,23 +379,36 @@ def gen_summary_tree_report(
         )
         tree_report_nb['cells'] += deepcopy(summary_nb['cells'])
 
+    # --- Progress bar for save/execute/export steps ---
+    steps = ['Saving notebook', 'Executing notebook', 'Exporting to HTML']
+    pbar = tqdm(total=len(steps), desc='Summary tree report', unit='step', leave=False)
+
     # Save notebook
+    pbar.set_postfix_str(steps[0])
     with open(output_report_path, 'w') as f:
         nbf.write(tree_report_nb, f)
+    pbar.update(1)
 
     # Execute notebook
-    ep = ExecutePreprocessor(timeout=600, kernel_name=kernel_name)
-    ep.preprocess(tree_report_nb, {"metadata": {"path": os.path.dirname(output_report_path) or "."}})
+    pbar.set_postfix_str(steps[1])
+    execute_notebook(
+        input_path=output_report_path,
+        output_path=output_report_path,
+        kernel_name=kernel_name,
+        progress_bar=True,
+    )
+    pbar.update(1)
 
-    with open(output_report_path, 'w') as f:
-        nbf.write(tree_report_nb, f)
-
-    # Export to HTML
-    html_exporter = HTMLExporter()
+    # Export to HTML (excluding code cells)
+    pbar.set_postfix_str(steps[2])
+    tree_report_nb = nbf.read(output_report_path, as_version=4)
+    html_exporter = HTMLExporter(exclude_input=True)
     html_body, _ = html_exporter.from_notebook_node(tree_report_nb)
     html_path = output_report_path.replace(".ipynb", ".html")
     with open(html_path, 'w', encoding='utf-8') as f:
         f.write(html_body)
+    pbar.update(1)
+    pbar.close()
 
     return {
         "notebook": output_report_path,
@@ -458,11 +477,23 @@ def gen_parameters_report(
 
     template_path = f"{reports_path}/{report_template}.ipynb"
 
+    # --- Progress bar for steps ---
+    steps = [
+        'Copying template',
+        'Adding unreported outputs',
+        'Parameterising and executing notebook',
+        'Exporting to HTML',
+    ]
+    pbar = tqdm(total=len(steps), desc='Parameters report', unit='step', leave=False)
+
     # --- 1. Copy template to output_path ---
+    pbar.set_postfix_str(steps[0])
     os.makedirs(os.path.dirname(output_path) or '.', exist_ok=True)
     shutil.copy2(template_path, output_path)
+    pbar.update(1)
 
     # --- 2. Add unreported outputs ---
+    pbar.set_postfix_str(steps[1])
     xml_set_comparisons = len(merged_log_paths) > 1
     add_unreported_outputs(
         notebook_template_path=output_path,
@@ -470,11 +501,13 @@ def gen_parameters_report(
         merged_log_paths=merged_log_paths,
         xml_set_comparisons=xml_set_comparisons,
     )
+    pbar.update(1)
 
     # --- 3. Parameterise and execute ---
+    pbar.set_postfix_str(steps[2])
     parameters = {
         'merged_log_paths': merged_log_paths if len(merged_log_paths) > 1 else merged_log_paths[0],
-        'beast_xml_path': beast_xml_paths if len(beast_xml_paths) > 1 else beast_xml_paths[0],
+        'beast_xml_paths': beast_xml_paths if len(beast_xml_paths) > 1 else beast_xml_paths[0],
     }
     if xml_set_label is not None:
         parameters['xml_set_label'] = xml_set_label
@@ -486,14 +519,18 @@ def gen_parameters_report(
         kernel_name=kernel_name,
         progress_bar=True,
     )
+    pbar.update(1)
 
-    # --- 4. Convert to HTML ---
+    # --- 4. Convert to HTML (excluding code cells) ---
+    pbar.set_postfix_str(steps[3])
     executed_nb = nbf.read(output_path, as_version=4)
-    html_exporter = HTMLExporter()
+    html_exporter = HTMLExporter(exclude_input=True)
     html_body, _ = html_exporter.from_notebook_node(executed_nb)
     html_path = output_path.replace('.ipynb', '.html')
     with open(html_path, 'w', encoding='utf-8') as f:
         f.write(html_body)
+    pbar.update(1)
+    pbar.close()
 
     return {
         'notebook': output_path,

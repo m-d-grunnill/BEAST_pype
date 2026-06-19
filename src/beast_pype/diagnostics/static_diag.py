@@ -1,11 +1,13 @@
 """Generate a static diagnostic notebook and merged outputs from BEAST 2 runs."""
 
 import os
+import re
 import glob
 import nbformat as nbf
 import arviz as az
-from nbconvert.preprocessors import ExecutePreprocessor
 from nbconvert import HTMLExporter
+from tqdm.auto import tqdm
+from beast_pype.nb_utils import execute_notebook
 
 from beast_pype.diagnostics.mcmc import (
     read_log_files_as_posterior,
@@ -46,9 +48,9 @@ def gen_static_diagnostic_nb(
         Name of the Jupyter kernel to use when executing the notebook.
 
     Returns
-    -------'notebook', 'notebook_html', 'merged_log', 'merged_trees'.
+    -------
     dict
-        Paths to output files: 'notebook', 'merged_log', 'merged_trees'.
+        Paths to output files: 'notebook', 'notebook_html', 'merged_log', 'merged_trees'.
     """
     if not os.path.isdir(directory):
         raise FileNotFoundError(f"Directory not found: {directory}")
@@ -58,15 +60,36 @@ def gen_static_diagnostic_nb(
     if output_prefix is None:
         output_prefix = os.path.join(directory, "static_diag_")
 
+    steps = [
+        'Loading log files',
+        'Applying burn-in',
+        'Generating notebook',
+        'Saving notebook',
+        'Executing notebook',
+        'Exporting to HTML',
+        'Merging logs to CSV',
+        'Merging .trees files',
+    ]
+    pbar = tqdm(total=len(steps), desc='Static diagnostic', unit='step')
+
     # --- 1. Load log files as posterior ---
+    pbar.set_postfix_str(steps[0])
     log_files = sorted(glob.glob(os.path.join(directory, "*.log")))
     if not log_files:
+        pbar.close()
         raise FileNotFoundError(f"No .log files found in: {directory}")
 
-    posterior = read_log_files_as_posterior(log_files)
+    log_paths = {
+        re.sub(r'(-BEAST)?\.log$', '', os.path.basename(f)): os.path.abspath(f)
+        for f in log_files
+    }
+    posterior = read_log_files_as_posterior(log_paths)
+    pbar.update(1)
 
     # --- 2. Apply burn-in ---
+    pbar.set_postfix_str(steps[1])
     burned_posterior = burn_posterior(posterior, in_percentage=burnin)
+    pbar.update(1)
 
     # --- 3. Get parameters and draws ---
     parameters = [
@@ -76,6 +99,7 @@ def gen_static_diagnostic_nb(
     n_draws = len(draws)
 
     # --- 4. Generate static diagnostic notebook ---
+    pbar.set_postfix_str(steps[2])
     nb = nbf.v4.new_notebook()
     nb["cells"] = []
 
@@ -91,6 +115,8 @@ def gen_static_diagnostic_nb(
 
     nb["cells"].append(
         nbf.v4.new_code_cell(
+            "import os\n"
+            "import re\n"
             "import arviz as az\n"
             "from beast_pype.diagnostics.mcmc import (\n"
             "    read_log_files_as_posterior,\n"
@@ -104,8 +130,8 @@ def gen_static_diagnostic_nb(
 
     nb["cells"].append(
         nbf.v4.new_code_cell(
-            f"log_files = {log_files!r}\n\n"
-            f"posterior = read_log_files_as_posterior(log_files)\n"
+            f"log_paths = {log_paths!r}\n\n"
+            f"posterior = read_log_files_as_posterior(log_paths)\n"
             f"burned_posterior = burn_posterior(posterior, in_percentage={burnin})\n"
         )
     )
@@ -121,8 +147,7 @@ def gen_static_diagnostic_nb(
 
         nb["cells"].append(
             nbf.v4.new_code_cell(
-                f"fig, axes = plot_traces(burned_posterior, {section_params!r})\n"
-                "fig"
+                f"fig, axes = plot_traces(burned_posterior, {section_params!r}, labels={list(log_paths.keys())!r})"
             )
         )
 
@@ -131,33 +156,46 @@ def gen_static_diagnostic_nb(
                 f"az.summary(burned_posterior, var_names={section_params!r}, kind='diagnostics')"
             )
         )
+    pbar.update(1)
 
     # --- 5. Save notebook ---
+    pbar.set_postfix_str(steps[3])
     notebook_path = f"{output_prefix}diagnostic.ipynb"
     with open(notebook_path, "w", encoding="utf-8") as f:
         nbf.write(nb, f)
+    pbar.update(1)
 
     # --- 5b. Execute notebook ---
-    ep = ExecutePreprocessor(timeout=600, kernel_name=kernel_name)
-    ep.preprocess(nb, {"metadata": {"path": os.path.dirname(notebook_path) or "."}})
+    pbar.set_postfix_str(steps[4])
+    execute_notebook(
+        input_path=notebook_path,
+        output_path=notebook_path,
+        kernel_name=kernel_name,
+        progress_bar=True,
+    )
+    pbar.update(1)
 
-    # Save executed notebook (with outputs)
-    with open(notebook_path, "w", encoding="utf-8") as f:
-        nbf.write(nb, f)
-
-    # --- 5c. Export to HTML ---
-    html_exporter = HTMLExporter()
+    # --- 5c. Export to HTML (exclude code cells) ---
+    pbar.set_postfix_str(steps[5])
+    nb = nbf.read(notebook_path, as_version=4)
+    html_exporter = HTMLExporter(exclude_input=True)
     html_body, _ = html_exporter.from_notebook_node(nb)
     html_path = f"{output_prefix}diagnostic.html"
     with open(html_path, "w", encoding="utf-8") as f:
         f.write(html_body)
+    pbar.update(1)
 
     # --- 6. Merge logs to CSV ---
+    pbar.set_postfix_str(steps[6])
     merged_log_path = f"{output_prefix}merged_logs.csv"
     merge_logs_to_csv(burned_posterior, output_file=merged_log_path)
+    pbar.update(1)
 
     # --- 7. Merge .trees files at burn-in ---
-    tree_files = sorted(glob.glob(os.path.join(directory, "*.trees")))
+    pbar.set_postfix_str(steps[7])
+    tree_files = sorted(
+        os.path.abspath(f) for f in glob.glob(os.path.join(directory, "*.trees"))
+    )
     merged_trees_path = f"{output_prefix}merged_trees.trees"
 
     if tree_files:
@@ -174,6 +212,8 @@ def gen_static_diagnostic_nb(
         )
     else:
         merged_trees_path = None
+    pbar.update(1)
+    pbar.close()
 
     return {
         "notebook": notebook_path,
