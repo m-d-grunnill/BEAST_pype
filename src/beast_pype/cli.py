@@ -3,6 +3,7 @@ import os
 from beast_pype.nb_utils import execute_notebook
 from beast_pype.path_utils import path_to_workflows, path_to_report_templates
 from beast_pype.diagnostics import gen_beast_diagnostic_nb, gen_static_diagnostic_nb
+from beast_pype.report_gen import gen_summary_tree_report, gen_parameters_report
 from datetime import datetime
 from papermill.iorw import read_yaml_file
 
@@ -126,10 +127,15 @@ def run_workflow(workflow,
               help='Number of parameters to display per notebook section.\n' +
                    'If not given 1 is used.'
               )
+@click.option('--kernel_name', '-k', default='beast_pype', type=str,
+              help='Name of the Jupyter kernel to use when executing the diagnostic notebook.\n' +
+                   'If not given "beast_pype" is used.'
+              )
 def static_diagnose_and_merge(beast_outputs,
                               burnin,
                               output_prefix,
-                              parameters_per_section):
+                              parameters_per_section,
+                              kernel_name):
     """
     BEAST_OUTPUTS: Path to directory containing BEAST 2 outputs to statically diagnose and merge.
     """
@@ -138,13 +144,108 @@ def static_diagnose_and_merge(beast_outputs,
         burnin=burnin,
         output_prefix=output_prefix,
         parameters_per_section=parameters_per_section,
+        kernel_name=kernel_name,
     )
     click.echo(f"Notebook: {results['notebook']}")
+    click.echo(f"Notebook HTML: {results['notebook_html']}")
     click.echo(f"Merged log: {results['merged_log']}")
     if results['merged_trees']:
         click.echo(f"Merged trees: {results['merged_trees']}")
     else:
         click.echo("No .trees files found; merged trees not generated.")
+
+
+@beast_pype.command(context_settings=dict(help_option_names=['-h', '--help']))
+@click.option('--summary_tree', '-s', multiple=True, required=True,
+              type=click.Path(exists=True, dir_okay=False, file_okay=True, readable=True),
+              help='Path to a summary tree file (nexus format). Can be specified multiple times.')
+@click.option('--beast_xml', '-x', multiple=True, required=True,
+              type=click.Path(exists=True, dir_okay=False, file_okay=True, readable=True),
+              help='Path to a BEAST 2 XML file corresponding to a summary tree. '
+                   'Must be specified the same number of times as --summary_tree, in the same order.')
+@click.option('--output', '-o', required=True, type=str,
+              help='Path to save the output report notebook (.ipynb).')
+@click.option('--collection_date_field', '-c', default='collection_date', type=str,
+              help='Name of field in metadata containing collection dates (YYYY-MM-DD). '
+                   'Default: "collection_date".')
+@click.option('--plot_width', default=12, type=float,
+              help='Width of tree plots in inches. Default: 12.')
+@click.option('--plot_height', default=6, type=float,
+              help='Height of tree plots in inches. Default: 6.')
+@click.option('--plot_res', default=120, type=int,
+              help='PPI for rasterization. Default: 120.')
+@click.option('--kernel_name', '-k', default='beast_pype_R', type=str,
+              help='Name of the Jupyter kernel to use when executing the notebook. '
+                   'Default: "beast_pype_R".')
+def summary_tree_report(summary_tree,
+                        beast_xml,
+                        output,
+                        collection_date_field,
+                        plot_width,
+                        plot_height,
+                        plot_res,
+                        kernel_name):
+    """Generate a report notebook summarizing BEAST 2 summary trees."""
+    summary_trees = list(summary_tree) if len(summary_tree) > 1 else summary_tree[0]
+    beast_xml_paths = list(beast_xml) if len(beast_xml) > 1 else beast_xml[0]
+    results = gen_summary_tree_report(
+        output_report_path=output,
+        summary_trees=summary_trees,
+        beast_xml_paths=beast_xml_paths,
+        collection_date_field=collection_date_field,
+        plot_width=plot_width,
+        plot_height=plot_height,
+        plot_res=plot_res,
+        kernel_name=kernel_name,
+    )
+    click.echo(f"Notebook: {results['notebook']}")
+    click.echo(f"Notebook HTML: {results['notebook_html']}")
+
+
+
+@beast_pype.command(context_settings=dict(help_option_names=['-h', '--help']))
+@click.argument('report_template', required=1,
+                type=click.Choice(default_report_names))
+@click.option('--output', '-o', required=True, type=str,
+              help='Path to save the output report notebook (.ipynb).')
+@click.option('--merged_log', '-l', multiple=True, required=True,
+              type=click.Path(exists=True, dir_okay=False, file_okay=True, readable=True),
+              help='Path to a merged log file (.csv, .tsv or .log). Can be specified multiple times. '
+                   'When more than one is provided, comparative (xml-set) visualisations are used.')
+@click.option('--beast_xml', '-x', multiple=True, required=True,
+              type=click.Path(exists=True, dir_okay=False, file_okay=True, readable=True),
+              help='Path to a BEAST 2 XML file. Can be specified multiple times.')
+@click.option('--kernel_name', '-k', default='beast_pype', type=str,
+              help='Name of the Jupyter kernel to use when executing the notebook.\n' +
+                   'If not given "beast_pype" is used.')
+@click.option('--xml_set_label', default=None, type=str,
+              help='Label for xml set grouping variable. Passed as a parameter '
+                   'to the executed notebook.')
+def parameters_report(report_template,
+                      output,
+                      merged_log,
+                      beast_xml,
+                      kernel_name,
+                      xml_set_label):
+    """
+    REPORT_TEMPLATE: Report template to use for generating the parameters report.
+
+    Generates a parameters report notebook from a report template,
+    executes it, and exports it to HTML.
+    """
+    merged_log_paths = list(merged_log) if len(merged_log) > 1 else merged_log[0]
+    beast_xml_paths = list(beast_xml) if len(beast_xml) > 1 else beast_xml[0]
+    results = gen_parameters_report(
+        report_template=report_template,
+        output_path=output,
+        merged_log_paths=merged_log_paths,
+        beast_xml_paths=beast_xml_paths,
+        kernel_name=kernel_name,
+        xml_set_label=xml_set_label,
+    )
+    click.echo(f"Notebook: {results['notebook']}")
+    click.echo(f"Notebook HTML: {results['notebook_html']}")
+
 
 
 @beast_pype.command(context_settings=dict(help_option_names=['-h', '--help']))

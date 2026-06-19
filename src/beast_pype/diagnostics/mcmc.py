@@ -429,7 +429,7 @@ class BEASTDiag:
         else:
             self.output_prefix = output_prefix
         log_paths = {
-                path.removeprefix(directory + '/').removesuffix('.log'): path
+                re.sub(r'(-BEAST)?\.log$', '', os.path.basename(path)): path
                 for path in glob.glob(directory + '/*.log')
             }
         chains = list(log_paths.keys())
