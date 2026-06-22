@@ -7,7 +7,7 @@ import nbformat as nbf
 import arviz as az
 from nbconvert import HTMLExporter
 from tqdm.auto import tqdm
-from beast_pype.nb_utils import execute_notebook
+from beast_pype.nb_utils import execute_notebook, make_kernelspec
 
 from beast_pype.diagnostics.mcmc import (
     read_log_files_as_posterior,
@@ -101,6 +101,7 @@ def gen_static_diagnostic_nb(
     # --- 4. Generate static diagnostic notebook ---
     pbar.set_postfix_str(steps[2])
     nb = nbf.v4.new_notebook()
+    nb["metadata"]["kernelspec"] = make_kernelspec(kernel_name)
     nb["cells"] = []
 
     nb["cells"].append(

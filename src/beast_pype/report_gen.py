@@ -2,7 +2,7 @@ from PIL.Image import init
 import pandas as pd
 import shutil
 from beast_pype.outputs import read_log_file
-from beast_pype.nb_utils import execute_notebook
+from beast_pype.nb_utils import execute_notebook, make_kernelspec
 from beast2xml import BEAST2XML
 import nbformat as nbf
 import re
@@ -352,6 +352,7 @@ def gen_summary_tree_report(
     )
 
     tree_report_nb = deepcopy(start_nb)
+    tree_report_nb['metadata']['kernelspec'] = make_kernelspec(kernel_name)
 
     tree_report_nb['cells'].append(
         nbf.v4.new_code_cell(
