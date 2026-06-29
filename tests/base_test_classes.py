@@ -37,7 +37,7 @@ class WorkflowVariationTest:
     tree_building_notebooks = None
     downsampled_tree_building_notebooks = None
     beast_running_notebook = 'Phase-4-GNU-Parallel-Running-BEAST.ipynb'
-    kernel_name = 'dev_beast_pype'
+    kernel_name = 'beast_pype'
     initial_tree_building = False
     downsampling = False
     xml_generation = False
