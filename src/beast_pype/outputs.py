@@ -2,17 +2,13 @@ from warnings import warn
 from matplotlib import pyplot as plt
 import numpy as np
 import pandas as pd
-from arviz import hdi
 from beast_pype.date_utilities import decimal_to_date, date_to_decimal
 from beast_pype.fig_utils import year_decimal_to_date_tick_labels
 from scipy.interpolate import interp1d
 from copy import deepcopy
 import seaborn as sns
 import re
-
-# stop annoying panadas warnings
-pd.options.mode.chained_assignment = None
-
+from arviz import hdi
 
 
 def read_log_file(file_path,
@@ -172,7 +168,7 @@ def percentile_pivot(df, column, xml_set_label='xml_set'):
     return df_to_return
 
 
-def hdi_columns_starting_with(df, starting_with, hdi_prob=0.95):
+def hdi_columns_starting_with(df, starting_with, prob=0.95):
     """
     Calculate HDI for columns starting with a given string.
 
@@ -193,12 +189,12 @@ def hdi_columns_starting_with(df, starting_with, hdi_prob=0.95):
     cols_starting_with = [col for col in df.columns if col.startswith(starting_with)]
     for column in cols_starting_with:
         selected_value = df[column].to_numpy()
-        lower_interval, upper_interval = hdi(selected_value, hdi_prob=hdi_prob)
+        lower_interval, upper_interval = hdi(selected_value, prob=prob)
         median_val = np.median(selected_value)
         records.append({'Parameter': column,
-                        f'Lower {str(hdi_prob)} HDI': lower_interval,
+                        f'Lower {str(prob)} HDI': lower_interval,
                         'Median': median_val,
-                        f'Upper {str(hdi_prob)} HDI': upper_interval})
+                        f'Upper {str(prob)} HDI': upper_interval})
     return pd.DataFrame.from_records(records)
 
 def hdi_pivot(df, column, xml_set_label='xml_set', hdi_prob=0.95):
@@ -223,7 +219,7 @@ def hdi_pivot(df, column, xml_set_label='xml_set', hdi_prob=0.95):
     records = []
     for selection in df[xml_set_label].unique():
         selected_value = df[column][df[xml_set_label]==selection].to_numpy()
-        lower_interval, upper_interval = hdi(selected_value, hdi_prob=hdi_prob)
+        lower_interval, upper_interval = hdi(selected_value, prob=hdi_prob)
         median_val = np.median(selected_value)
         records.append(
             {xml_set_label: selection,
@@ -390,7 +386,7 @@ def _set_dates_skyline_plotting_df(log_df, parameter_start, style, partition_yea
     """
     parameter_df = log_df.loc[:, log_df.columns.str.startswith(parameter_start)]
     parameter_df.dropna(axis=1, how='all', inplace=True)
-    parameter_hdi = pd.DataFrame({label: hdi(series.to_numpy(), hdi_prob=hdi_prob) for label, series in parameter_df.items()})
+    parameter_hdi = pd.DataFrame({label: hdi(series.to_numpy(), prob=hdi_prob) for label, series in parameter_df.items()})
     parameter_median = parameter_df.median()
     parameter_values = pd.concat([parameter_hdi.iloc[0, :], parameter_median, parameter_hdi.iloc[-1, :]], axis=1)
     parameter_values.columns = ['lower', 'median', 'upper']
@@ -483,7 +479,7 @@ def _gridded_skyline(trace_df,
 
     skyline_gridded = pd.DataFrame(skyline_gridded, columns=grid_times)
     skyline_gridded_hpd = skyline_gridded.apply(lambda x: hdi(x.to_numpy(),
-                                                              hdi_prob=0.95), axis=0, result_type='expand')
+                                                              prob=0.95), axis=0, result_type='expand')
     skyline_gridded_hpd = skyline_gridded_hpd.transpose()
     skyline_gridded_hpd.columns = ['lower', 'upper']
     skyline_gridded_hpd.insert(1, 'median', skyline_gridded.median())
@@ -721,7 +717,7 @@ def plot_hist_kde(trace_df,
     fig, ax = plt.subplots()  # initializes figure and plots
     sns.histplot(trace_df[parameter], ax=ax, kde=True, color=color)
     if hdi_prob is not None:
-        hdi_est = hdi(trace_df[parameter].to_numpy(), hdi_prob=hdi_prob)
+        hdi_est = hdi(trace_df[parameter].to_numpy(), prob=hdi_prob)
         upper_key = f'Upper {str(hdi_prob)} HDI'
         lower_key = f'Lower {str(hdi_prob)} HDI'
         hdi_est = {lower_key: float(hdi_est[0]),

@@ -4,7 +4,6 @@ import os
 import re
 import glob
 import nbformat as nbf
-import arviz as az
 from nbconvert import HTMLExporter
 from tqdm.auto import tqdm
 from beast_pype.nb_utils import execute_notebook, make_kernelspec
