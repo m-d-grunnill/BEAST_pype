@@ -1,17 +1,17 @@
 import os
 import xarray as xr
-import arviz as az
 import pandas as pd
-import seaborn as sns
-import matplotlib.pyplot as plt
-import ipywidgets as widgets
-from IPython.display import display, clear_output
 import glob
 from pathlib import Path
 import re
 from typing import List
 from tqdm.auto import tqdm
 import yaml
+import arviz as az
+import seaborn as sns
+import matplotlib.pyplot as plt
+import ipywidgets as widgets
+from IPython.display import display, clear_output
 
 
 def read_log_file_as_dataframe(file_path,
@@ -93,13 +93,13 @@ def read_log_files_as_posterior(log_files,
 
     Returns
     -------
-    arviz.InferenceData
+    xarray.DataTree
         An arviz BEASTDiag Inference  DataArray
     """
     xdata = read_log_files_as_xarraydata(log_files,
                                          start=start,
                                          cut_to_first=cut_to_first)
-    return az.InferenceData(posterior=xdata)
+    return xr.DataTree.from_dict({"posterior": xdata})
 
 
 def burn_posterior(posterior, in_proportion=None, in_percentage=None, in_number=None,
@@ -110,7 +110,7 @@ def burn_posterior(posterior, in_proportion=None, in_percentage=None, in_number=
 
     Parameters
     ----------
-    posterior: arviz.data.inference_data.InferenceData
+    posterior: xarray.DataTree
         DataArray with posterior. Must have 'chain' and 'draw' dimension names for in
          posterior.
     in_proportion: float, default=None
@@ -130,7 +130,7 @@ def burn_posterior(posterior, in_proportion=None, in_percentage=None, in_number=
 
     Returns
     -------
-    arviz.data.inference_data.InferenceData
+    xarray.DataTree
     """
     if in_proportion is not None:
         if not isinstance(in_proportion, float):
@@ -166,7 +166,7 @@ def burn_posterior(posterior, in_proportion=None, in_percentage=None, in_number=
     
     
     selection = {sample_name: slice(in_number, front_number)}
-    return posterior.isel(**selection, groups="posterior")
+    return posterior.isel(**selection)
 
 
 def select_chains_from_posterior(posterior, selection):
@@ -174,60 +174,91 @@ def select_chains_from_posterior(posterior, selection):
     Select chains from a posterior.
     Parameters
     ----------
-    posterior: arviz.data.inference_data.InferenceData
-        DataArray with posterior. Must have 'chain' and 'draw' dimension names for in
+    posterior: xarray.DataTree
+        DataTree with posterior. Must have 'chain' and 'draw' dimension names for in
          posterior.
     selection: list of strings or ints
         List of chains to select from posterior.
 
     Returns
     -------
-    arviz.data.inference_data.InferenceData
+    xarray.DataTree
     """
     selection = {'chain': selection}
-    return posterior.sel(**selection, groups="posterior")
+    return posterior.sel(**selection)
 
 
 def plot_traces(posterior, parameters, labels=None, legend=True):
     """
-    Plot traces (a wrapper for arviz.plot_trace with a better positioned legend).
-    
+    Plot trace and KDE plots for MCMC parameters.
+
+    For each parameter, produces two subplots side by side:
+    - Left: KDE (kernel density estimate) per chain
+    - Right: Trace plot (parameter value vs draw) per chain
+
+    The parameter name appears centred between the two subplots and the legend
+    appears once on the right side of the first row's trace plot.
+
     Parameters
     ----------
-    posterior: arviz.data.inference_data.InferenceData
-        DataArray with posterior. Must have 'chain' and 'draw' dimension names for in
-         posterior.
+    posterior: xarray.DataTree
+        DataTree with posterior group. Must have 'chain' and 'draw' dimension names.
     parameters: list of str
-        List of parameters names.
+        List of parameter names to plot.
     labels: list, default=None
-        List of labels to use for legend.
+        List of labels to use for chains in the legend.
     legend: bool, default=True
         Add legend.
 
     Returns
     -------
-    Numpy array of matplotlib axes.
+    tuple of (matplotlib.figure.Figure, numpy.ndarray of Axes)
     """
-    num_params = len(parameters)
-    fig, axs = plt.subplots(nrows=num_params, ncols=2, figsize=(13, 2*num_params))
-    if num_params == 1:
-        axs = axs.reshape((1, 2))
+    ds = posterior.posterior.to_dataset()
+    n_chains = ds.sizes["chain"]
+    n_params = len(parameters)
+
+    if labels is None:
+        labels = [f"Chain {i}" for i in range(n_chains)]
+
+    fig, axes = plt.subplots(n_params, 2, figsize=(13, 2 * n_params), squeeze=False)
     plt.subplots_adjust(hspace=0.4)
-    traces = az.plot_trace(posterior,
-                           axes=axs,
-                           var_names=parameters,
-                           chain_prop="color",
-                           compact=True,
-                           legend=legend)
+
+    colors = sns.color_palette("husl", n_chains)
+
+    for row, param in enumerate(parameters):
+        ax_kde = axes[row, 0]
+        ax_trace = axes[row, 1]
+
+        for chain_idx in range(n_chains):
+            values = ds[param].isel(chain=chain_idx).values
+            draws = ds["draw"].values if "draw" in ds.coords else range(len(values))
+
+            # KDE plot
+            sns.kdeplot(values, ax=ax_kde, color=colors[chain_idx],
+                        label=labels[chain_idx])
+
+            # Trace plot
+            ax_trace.plot(draws, values, color=colors[chain_idx],
+                          alpha=0.7, linewidth=0.5, label=labels[chain_idx])
+
+        # Parameter name centred between the two subplots
+        ax_kde.set_title(param, x=1.1)
+        ax_kde.set_xlabel("")
+        ax_kde.set_ylabel("")
+
+        ax_trace.set_title('')
+        ax_trace.set_xlabel("")
+        ax_trace.set_ylabel("")
+        ax_trace.ticklabel_format(style='sci', axis='x', scilimits=(0, 0))
+
+    # Single legend on the right side of the first trace plot
     if legend:
-        if labels is not None:
-             axs[0][1].legend(labels=labels)
-        sns.move_legend(axs[0][1], loc="upper left", bbox_to_anchor=(1, 1), ncol=1)
-    for i, parameter in enumerate(parameters):
-        axs[i][0].set_title(parameter, x=1.1)
-        axs[i][1].set_title('')
-        axs[i][1].ticklabel_format(style='sci', axis='x', scilimits=(0, 0))
-    return fig, axs
+        handles, _ = axes[0, 1].get_legend_handles_labels()
+        axes[0, 1].legend(handles, labels, loc="upper left",
+                          bbox_to_anchor=(1, 1), ncol=1)
+
+    return fig, axes
 
 STATE_RE = re.compile(r'^\s*tree\s+STATE_(\d+)\s*=\s*(.*)$', re.IGNORECASE)
 STATE_LABEL_RE = re.compile(r'(\btree\s+)STATE_\d+(\s*=)', re.IGNORECASE)
@@ -368,7 +399,7 @@ def merge_logs_to_csv(posterior, output_file='merged_logs.csv', like_logcombiner
         Merged output looks similar to merged output from logcombiner.
 
     """
-    df = posterior.to_dataframe()
+    df = posterior.posterior.to_dataset().to_dataframe().reset_index()
     if like_logcombiner:
         step = df.iloc[1, 1] - df.iloc[0, 1]
         df[df.columns[1]] = range(0, len(df) * step, step)
@@ -386,7 +417,7 @@ class BEASTDiag:
     ---------------
     directory:  str
         Directory where log and trees files are located.
-    original_posterior: arviz.data.inference_data.InferenceData
+    original_posterior: xarray.DataTree
         Posterior with no chains removed and no burn-in.
     parameters: list of str
         List of parameters names.
@@ -394,7 +425,7 @@ class BEASTDiag:
         Dictionary of parameters categories.
     original_chains: list of strs
          Chains in original posterior.
-    selected_posterior: arviz.data.inference_data.InferenceData
+    selected_posterior: xarray.DataTree
         Posterior with chains removed and burn-in applied.
     burinin_percentage: int
         Percentage burn-in applied to self.selected_posterior.
@@ -526,7 +557,7 @@ class BEASTDiag:
 
         """
         self.diagnosis_of_selection = az.summary(self.selected_posterior,
-                                                                  kind='diagnostics')
+                                                 kind='diagnostics')
 
     def merge_logs_to_csv(self, output_file='merged_logs.csv', like_logcombiner=True):
         """
