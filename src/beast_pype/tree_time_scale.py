@@ -15,13 +15,13 @@ from beast_pype.fig_utils import year_decimal_to_date_tick_labels
 
 
 def timescale(ftree, falignment, fdates, reroot='least-squares', clock_rate=None, clock_std=None,
-              clock_filter=None, remove_root=True, coalescent_tc="opt",
+              clock_filter=3.0, clock_filter_method='local', remove_root=True, coalescent_tc="opt",
               sample_id_field = None,
               collection_date_field = 'date',
               rng_seed=None,
               negative_tolerance=0.001,
                **kwargs):
-    """
+    r"""
     Timescale a phylogenetic tree using tree time.
 
     Parameters
@@ -51,13 +51,22 @@ def timescale(ftree, falignment, fdates, reroot='least-squares', clock_rate=None
         Mutation rate (substitutions per position per year).
     clock_std: float
         Standard deviation of the mutation (rates substitutions per position per year).
-    clock_filter: float or None
-        If given clock filter applies (treetime.TreeTime.clock_filter).
-        This value is then used in
-         n_iqd:  float
-            The number of iqd intervals. The outlier nodes are those which do not fall
-             into :math:`IQD\cdot n_iqd` interval (:math:`IQD` is the interval between
-            75\ :sup:`th` and 25\ :sup:`th` percentiles)
+    clock_filter: float or None, default 3.0
+        Threshold for clock filtering. The interpretation depends on `clock_filter_method`:
+        - If `clock_filter_method='local'`: this is the z-score threshold. Sequences
+          whose temporal signal deviates by more than this many z-scores are marked
+          as outliers and pruned.
+        - If `clock_filter_method='residual'`: this is n_iqd, the number of
+          interquartile distance intervals for outlier detection.
+        - If `clock_filter` is None, clock filtering is disabled.
+        Set to None to disable clock filtering.
+    clock_filter_method: str, default 'local'
+        Method to use for clock filtering. Options are:
+        - 'local': uses local z-score based outlier detection
+          (see treetime.clock_filter_methods.local_filter).
+        - 'residual': uses residual-based IQD filtering
+          (see treetime.clock_filter_methods.residual_filter).
+        - None: disables clock filtering.
     remove_root: bool, default True
         If True, remove the root after rerooting. This is useful if the root is not a real sample and is only used for rooting purposes.
     coalescent_tc: : float, str
@@ -87,51 +96,46 @@ def timescale(ftree, falignment, fdates, reroot='least-squares', clock_rate=None
     time_tree: treetime.TreeTime
     bad_tips : list of str
     """
-    bad_tips = list()
     dates = parse_dates(fdates, name_col=sample_id_field, date_col=collection_date_field)
 
     time_tree = TreeTime(gtr='JC69', tree=ftree, aln=falignment, dates=dates,
                          verbose=1, use_fft=True, precision='auto', rng_seed=rng_seed)
 
+    # Let run() handle clock filtering internally via n_iqd and clock_filter_method.
+    # After run(), outlier tips are marked bad_branch=True and time_tree.outliers is set.
+    run_kwargs = dict(
+        infer_gtr=True,
+        root=reroot,
+        Tc=coalescent_tc,
+        time_marginal='always',
+        branch_length_mode='joint',
+        resolve_polytomies=True,
+        max_iter=2,
+        fixed_pi=None,
+        fixed_clock_rate=clock_rate,
+        stochastic_resolve=True,
+        vary_rate=clock_std,
+        use_covariation=False,
+        raise_uncaught_exceptions=True,
+    )
     if clock_filter is not None:
-        time_tree.clock_filter(reroot=reroot, n_iqd=clock_filter, plot=False)
-        tips = [x for x in time_tree.tree.get_terminals()]
-        for n in tips:
-            if n.bad_branch:
-                time_tree.tree.prune(n)
-                bad_tips.append(n.name)
-        time_tree.prepare_tree()
-        # remove bad tips
-        if len(bad_tips):
-            print("Pruning leaves :\n", "\n".join(bad_tips))
-            with open('results/treetime_ignored_tips.txt', 'w') as f:
-                for tip in bad_tips:
-                    count = f.write("%s\n" % tip)
+        run_kwargs['n_iqd'] = clock_filter
+        run_kwargs['clock_filter_method'] = clock_filter_method
+    run_kwargs.update(kwargs)
 
-        time_tree.stl = {n.name: n for n in time_tree.tree.get_terminals()}
-        time_tree.stl.update({n.name.upper(): n for n in time_tree.tree.get_terminals()})
-        time_tree.stl.update({n.name.lower(): n for n in time_tree.tree.get_terminals()})
-        time_tree.tree.root.up = None
-        for node in time_tree.tree.get_nonterminals():
-            for n in node.clades:
-                n.up = node
-    marginal = 'always'  # 'assign' # estimate confidence intervals via marginal ML and assign
-    branch_length_inference = 'joint'  # auto
-    resolve_polytomies = True
-    max_iter = 2
-    covariance = False
+    time_tree.run(**run_kwargs)
 
-    time_tree.run(infer_gtr=True, root=reroot, Tc=coalescent_tc, time_marginal=marginal,
-                  branch_length_mode=branch_length_inference, resolve_polytomies=resolve_polytomies,
-                  max_iter=max_iter, fixed_pi=None, fixed_clock_rate=clock_rate,
-                  stochastic_resolve=resolve_polytomies, vary_rate=clock_std, use_covariation=covariance,
-                  raise_uncaught_exceptions=True, **kwargs)
+    # Prune outlier tips marked by clock_filter
+    bad_tips = [n.name for n in time_tree.tree.get_terminals() if n.bad_branch]
+    if bad_tips:
+        for tip_name in bad_tips:
+            time_tree.tree.prune(tip_name)
 
-    if remove_root and (reroot != 'least-squares' or reroot != 'best'):
-        for root in reroot:
-            if root not in bad_tips:
-                root = root.strip()
-                time_tree.tree.prune(root)
+    # Prune root strains if requested
+    if remove_root and (reroot != 'least-squares' and reroot != 'best'):
+        for root_name in reroot:
+            if root_name not in bad_tips:
+                time_tree.tree.prune(root_name.strip())
 
     time_tree.convert_dates()
     time_tree.branch_length_to_years()
@@ -172,11 +176,11 @@ def tree_nodes_ci(time_tree, fraction=0.95):
 
 def plot_root_to_tip(time_tree, label=True, x_tick_freq='automatic'):
     """
-    Plot root-to-tip regression.
+    Plot root-to-tip regression, with outliers shown as orange dots.
 
     Parameters
     ----------
-    time_tree: time_tree: treetime.TreeTime
+    time_tree: treetime.TreeTime
     label: bool, default True
         If true, label the plot.
     x_tick_freq: str, default='automatic'
@@ -189,13 +193,37 @@ def plot_root_to_tip(time_tree, label=True, x_tick_freq='automatic'):
     """
     fig, ax = plt.subplots(1, 1)
     time_tree.plot_root_to_tip(ax=ax, label=label)
+
+    # Plot outliers as orange dots if available
+    if hasattr(time_tree, 'outliers') and time_tree.outliers is not None:
+        outlier_df = time_tree.outliers
+        if 'given_date' in outlier_df.columns and 'apparent_date' in outlier_df.columns:
+            # Use given_date (x) vs dist2root proxy (apparent_date mapped to branch length)
+            # The root-to-tip plot uses date vs dist2root, so we need the original residual info
+            # outlier_df has 'given_date' and 'apparent_date' columns
+            clock_rate = time_tree.clock_model['slope']
+            intercept = time_tree.clock_model['intercept']
+            outlier_dates = outlier_df['given_date'].values
+            outlier_dist2root = clock_rate * outlier_df['apparent_date'].values + intercept
+            ax.scatter(outlier_dates, outlier_dist2root, color='orange', zorder=5,
+                       label='Clock Filter\nRemoved Outliers', edgecolors='black', linewidths=0.5, s=50)
+            ax.legend()
+
     x_year_decimal = np.array([tip.raw_date_constraint
                                for tip in time_tree.tree.get_terminals()])
-    tick_year_decimals, tick_labels = year_decimal_to_date_tick_labels(x_year_decimal,
-                                                                       tick_freq=x_tick_freq)
+    # Include outlier dates in tick range calculation
+    if hasattr(time_tree, 'outliers') and time_tree.outliers is not None:
+        if 'given_date' in time_tree.outliers.columns:
+            x_year_decimal = np.concatenate([
+                x_year_decimal,
+                time_tree.outliers['given_date'].values
+            ])
+
+    tick_year_decimals, tick_labels = year_decimal_to_date_tick_labels(x_year_decimal, tick_freq=x_tick_freq)
     ax.xaxis.set_ticks(tick_year_decimals)
     ax.set_xticklabels(tick_labels)
     ax.tick_params(axis='x', labelrotation=45)
+    plt.setp(ax.get_xticklabels(), ha='right')
     return fig, ax
 
 

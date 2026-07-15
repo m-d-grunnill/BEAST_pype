@@ -337,8 +337,11 @@ class WorkflowParams(SimpleNamespace):
             params['metadata_path'] = f'{dir_to_check_and_save_to}/metadata.csv'
         else:
             params['metadata_path'] = self.metadata_path
+
         if os.path.exists(f'{dir_to_check_and_save_to}/downsampled_sequences.fasta'):
             params['fasta_path'] = f'{dir_to_check_and_save_to}/downsampled_sequences.fasta'
+        elif os.path.exists(f'{dir_to_check_and_save_to}/filtered_sequences.fasta'):
+            params['fasta_path'] = f'{dir_to_check_and_save_to}/filtered_sequences.fasta'
         elif os.path.exists(f'{dir_to_check_and_save_to}/sequences.fasta'):
             params['fasta_path'] = f'{dir_to_check_and_save_to}/sequences.fasta'
         else:
@@ -517,7 +520,9 @@ class SimpleWorkflowParams(WorkflowParams):
                                            'collection_date_field',
                                            'downsample_to',
                                            'root_strain_names',
-                                           'remove_root'])
+                                           'remove_root',
+                                           'clock_filter',
+                                           'clock_filter_method'])
             params['tree_dir_name'] = 'initial_tree'
             if self.treetime_seed is not None:
                 params['seed'] = self.treetime_seed
@@ -574,6 +579,8 @@ class SimpleWorkflowParams(WorkflowParams):
             params = self.retrieve_params(['save_dir',
                                            'sample_id_field',
                                            'collection_date_field'])
+            params['clock_filter'] = None
+            params['clock_filter_method'] = None
             params['fasta_path'] = f'{self.save_dir}/downsampled_sequences.fasta'
             params['metadata_path'] = f'{self.save_dir}/downsampled_metadata.csv'
             params['tree_dir_name'] = 'downsampled_initial_tree'
@@ -993,7 +1000,9 @@ class ComparativeWorkflowParams(WorkflowParams):
                 'collection_date_field',
                 'downsample_to',
                 'root_strain_names',
-                'remove_root'])
+                'remove_root',
+                'clock_filter',
+                'clock_filter_method'])
             parameters['save_dir'] = xml_set_directory
             parameters['tree_dir_name'] = 'initial_tree'
             if self.treetime_seed is not None:
@@ -1056,6 +1065,8 @@ class ComparativeWorkflowParams(WorkflowParams):
             params = self.retrieve_params([
                                            'sample_id_field',
                                            'collection_date_field'])
+            params['clock_filter'] = None
+            params['clock_filter_method'] = None
             params['save_dir'] = xml_set_directory
             params['fasta_path'] = f'{xml_set_directory}/downsampled_sequences.fasta'
             params['metadata_path'] = f'{xml_set_directory}/downsampled_metadata.csv'

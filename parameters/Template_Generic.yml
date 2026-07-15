@@ -127,6 +127,14 @@ initial_tree_type: # str (either 'Distance' or 'Temporal') or None, (default, ca
 
 # remove_root: # bool, default False
 #     If True, remove the root after rerooting. This is useful if the root is not a real sample and is only used for rooting purposes.
+# clock_filter_method: # str, default 'local'
+#     Method used for clock filtering. Options are 'local' (z-score based) or 'residual' (IQD based).
+#     Only used when clock_filter is not null.
+
+
+# clock_filter_method: # str, default 'local'
+#     Method used for clock filtering. Options are 'local' (z-score based) or 'residual' (IQD based).
+#     Only used when clock_filter is not null.
 
 # downsample_to: # int, (optional, can be missing from yml)
 #     Available if not using a `ready_to_go_xml` and generating an initial tree file.

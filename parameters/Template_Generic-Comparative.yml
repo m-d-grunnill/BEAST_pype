@@ -113,6 +113,14 @@ initial_tree_type: # str (either 'Distance' or 'Temporal') or null (None in pyth
 
 # remove_root: # bool, default False
 #     If True, remove the root after rerooting. This is useful if the root is not a real sample and is only used for rooting purposes.
+# clock_filter: # float, default 3.0
+#     Z-score or IQD threshold for clock filtering outlier tips during TreeTime tree building (Phase 2ii).
+#     Set to null to disable clock filtering.
+
+# clock_filter_method: # str, default 'local'
+#     Method used for clock filtering. Options are 'local' (z-score based) or 'residual' (IQD based).
+#     Only used when clock_filter is not null.
+
 
 downsample_to: # int
 #    If the number sequences in a fasta file is above this the number of sequences is cut to this number via downsampling.
