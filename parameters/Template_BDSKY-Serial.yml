@@ -100,6 +100,14 @@ use_initial_tree:  # bool, default True
 
 # remove_root: # bool, default False
 #         If True, remove the root after rerooting. This is useful if the root is not a real sample and is only used for rooting purposes.
+# clock_filter: # float, default 3.0
+#     Z-score or IQD threshold for clock filtering outlier tips during TreeTime tree building (Phase 2ii).
+#     Set to null to disable clock filtering.
+
+# clock_filter_method: # str, default 'local'
+#     Method used for clock filtering. Options are 'local' (z-score based) or 'residual' (IQD based).
+#     Only used when clock_filter is not null.
+
 
 downsample_to: # int, optional
     # If provided the fasta file and initial tree file used to generate the BEAST 2 xml is downsampled to this amount.
