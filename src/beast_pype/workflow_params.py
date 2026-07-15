@@ -333,6 +333,8 @@ class WorkflowParams(SimpleNamespace):
 
         if os.path.exists(f'{dir_to_check_and_save_to}/downsampled_metadata.csv'):
             params['metadata_path'] = f'{dir_to_check_and_save_to}/downsampled_metadata.csv'
+        elif os.path.exists(f'{dir_to_check_and_save_to}/filtered_metadata.csv'):
+            params['metadata_path'] = f'{dir_to_check_and_save_to}/filtered_metadata.csv'
         elif os.path.exists(f'{dir_to_check_and_save_to}/metadata.csv'):
             params['metadata_path'] = f'{dir_to_check_and_save_to}/metadata.csv'
         else:
