@@ -98,7 +98,7 @@ def timescale(ftree, falignment, fdates, reroot='least-squares', clock_rate=None
     """
     dates = parse_dates(fdates, name_col=sample_id_field, date_col=collection_date_field)
 
-    time_tree = TreeTime(gtr='JC69', tree=ftree, aln=falignment, dates=dates,
+    time_tree = TreeTime(tree=ftree, aln=falignment, dates=dates,
                          verbose=1, use_fft=True, precision='auto', rng_seed=rng_seed)
 
     # Let run() handle clock filtering internally via n_iqd and clock_filter_method.
