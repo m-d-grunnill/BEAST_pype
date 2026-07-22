@@ -56,7 +56,11 @@ class WorkflowVariationTest:
     start_timeout = 600
 
 
-    def test_running_of_workflow(self, subtests, tmp_path):
+    def test_running_of_workflow(self, subtests, tmp_path, request):
+        # Override kernel_name from command line if provided
+        cli_kernel = request.config.getoption("--kernel-name", default=None)
+        if cli_kernel:
+            self.kernel_name = cli_kernel
         self.start_working_dir = os.getcwd()
         parameters = read_yaml_file(self.parameters_path)
         parameters['overall_save_dir'] = self.name
