@@ -1,4 +1,4 @@
-"""
+r"""
 This code has for functions timescale and write_nodes_CI been adapted from
  https://gitlab.in2p3.fr/ete/CoV-flow/-/blob/master/scripts/tree_time_scale.py?ref_type=heads.
 On 2024-01-13
@@ -10,17 +10,20 @@ import numpy as np
 from treetime.utils import parse_dates
 import pandas as pd
 import matplotlib.pyplot as plt
+from Bio import Phylo, SeqIO
 from beast_pype.fig_utils import year_decimal_to_date_tick_labels
+import io
+import os
 
 
 
 def timescale(ftree, falignment, fdates, reroot='least-squares', clock_rate=None, clock_std=None,
               clock_filter=3.0, clock_filter_method='local', remove_root=True, coalescent_tc="opt",
-              sample_id_field = None,
-              collection_date_field = 'date',
+              sample_id_field=None,
+              collection_date_field='date',
               rng_seed=None,
               negative_tolerance=0.001,
-               **kwargs):
+              **kwargs):
     r"""
     Timescale a phylogenetic tree using tree time.
 
@@ -96,6 +99,10 @@ def timescale(ftree, falignment, fdates, reroot='least-squares', clock_rate=None
     time_tree: treetime.TreeTime
     bad_tips : list of str
     """
+    # Handle None defaults (when passed from workflow notebooks via papermill)
+    if clock_filter_method is None:
+        clock_filter_method = 'local'
+
     dates = parse_dates(fdates, name_col=sample_id_field, date_col=collection_date_field)
 
     time_tree = TreeTime(tree=ftree, aln=falignment, dates=dates,
@@ -147,6 +154,194 @@ def timescale(ftree, falignment, fdates, reroot='least-squares', clock_rate=None
     return time_tree, bad_tips
 
 
+def iterative_timescale(ftree, falignment, fdates,
+                        reroot='least-squares',
+                        clock_rate=None, clock_std=None,
+                        clock_filter=3.0, clock_filter_method='local',
+                        remove_root=True, coalescent_tc="opt",
+                        sample_id_field=None,
+                        collection_date_field='date',
+                        rng_seed=None,
+                        negative_tolerance=0.001,
+                        max_iterations=50,
+                        **kwargs):
+    r"""
+    Iteratively run TreeTime clock filtering until no outliers remain.
+
+    Mirrors the ITERATIVE_CLOCK_FILTER pattern: runs TreeTime, identifies
+    outliers, prunes them from the tree/alignment/metadata, and repeats
+    until convergence (no outliers in an iteration) or max_iterations reached.
+
+    Parameters
+    ----------
+    ftree : str
+        Path to newick tree file.
+    falignment : str
+        Path to fasta alignment file.
+    fdates : str
+        Path to dates file (CSV or TSV with sample_id_field and collection_date_field).
+    reroot : str or list of str, default 'least-squares'
+        Method or node(s) to reroot the tree.
+    clock_rate : float, optional
+        Fixed clock rate (substitutions/site/year).
+    clock_std : float, optional
+        Standard deviation of the clock rate.
+    clock_filter : float or None, default 3.0
+        Threshold for clock filtering (z-score for 'local', n_iqd for 'residual').
+        Set to None to disable clock filtering (runs once with no filtering).
+    clock_filter_method : str, default 'local'
+        Method for clock filtering: 'local' (z-score) or 'residual' (IQD).
+    remove_root : bool, default True
+        If True and reroot is a list of tip names, prune those tips after the
+        final iteration.
+    coalescent_tc : float or str, default 'opt'
+        Coalescent time constant for branch length correction.
+    sample_id_field : str, optional
+        Column name for taxon IDs in fdates.
+    collection_date_field : str, default 'date'
+        Column name for collection dates in fdates.
+    rng_seed : int, optional
+        Random seed for TreeTime.
+    negative_tolerance : float, default 0.001
+        Branch lengths negative but with abs < this value are set to 0.
+    max_iterations : int, default 50
+        Maximum number of clock filter iterations.
+    **kwargs
+        Additional keyword arguments passed to TreeTime.run().
+
+    Returns
+    -------
+    time_tree : treetime.TreeTime
+        The final time-scaled tree (after all outlier removal).
+    all_outliers_df : pd.DataFrame
+        DataFrame of all outliers removed across iterations, with columns:
+        'iteration', 'name', and any additional info from time_tree.outliers.
+    fasta_path : str
+        Path to the final (filtered) alignment FASTA.
+    metadata_path : str
+        Path to the final (filtered) metadata file.
+    """
+    # Handle None defaults (when passed from workflow notebooks via papermill)
+    if max_iterations is None:
+        max_iterations = 50
+    if clock_filter_method is None:
+        clock_filter_method = 'local'
+
+    # Work with copies so we don't modify original files
+    current_tree = ftree
+    current_fasta = falignment
+    current_metadata = fdates
+
+    all_outliers = []
+    iteration = 0
+
+    while iteration < max_iterations:
+        iteration += 1
+        print(f"=== Clock filter iteration {iteration} ===")
+
+        # Run timescale (without remove_root — we handle that at the end)
+        time_tree, bad_tips = timescale(
+            ftree=current_tree,
+            falignment=current_fasta,
+            fdates=current_metadata,
+            reroot=reroot,
+            clock_rate=clock_rate,
+            clock_std=clock_std,
+            clock_filter=clock_filter,
+            clock_filter_method=clock_filter_method,
+            remove_root=False,  # Don't remove root until final iteration
+            coalescent_tc=coalescent_tc,
+            sample_id_field=sample_id_field,
+            collection_date_field=collection_date_field,
+            rng_seed=rng_seed,
+            negative_tolerance=negative_tolerance,
+            **kwargs
+        )
+
+        # If clock_filter is None or no outliers, we're done
+        if clock_filter is None or not bad_tips:
+            print(f"Converged after {iteration} iteration(s). No outliers.")
+            break
+
+        # Exclude root strains from outlier list (they're kept for rooting)
+        if isinstance(reroot, list):
+            bad_tips = [t for t in bad_tips if t not in reroot]
+
+        if not bad_tips:
+            print(f"Converged after {iteration} iteration(s). "
+                  "Only root strains flagged.")
+            break
+
+        print(f"  Outliers found: {len(bad_tips)}")
+
+        # Collect outlier info for this iteration
+        outlier_info = getattr(time_tree, 'outliers', None)
+        if outlier_info is not None and isinstance(outlier_info, pd.DataFrame):
+            iter_df = outlier_info.copy()
+            if iter_df.index.name != 'name' and 'name' not in iter_df.columns:
+                iter_df.index.name = 'name'
+                iter_df = iter_df.reset_index()
+            iter_df['iteration'] = iteration
+        else:
+            iter_df = pd.DataFrame({'name': bad_tips, 'iteration': iteration})
+        all_outliers.append(iter_df)
+
+        # Filter FASTA — remove outliers
+        filtered_seqs = [rec for rec in SeqIO.parse(current_fasta, 'fasta')
+                         if rec.id not in bad_tips]
+        filtered_fasta = current_fasta.replace('.fasta', f'_iter{iteration}.fasta')
+        if filtered_fasta == current_fasta:
+            filtered_fasta = current_fasta + f'.iter{iteration}'
+        with open(filtered_fasta, 'w') as handle:
+            SeqIO.write(filtered_seqs, handle, 'fasta')
+        current_fasta = filtered_fasta
+
+        # Filter metadata — remove outliers
+        if current_metadata.endswith('.tsv'):
+            meta_df = pd.read_csv(current_metadata, sep='\t')
+        else:
+            meta_df = pd.read_csv(current_metadata)
+
+        id_col = sample_id_field if sample_id_field and sample_id_field in meta_df.columns else meta_df.columns[0]
+        meta_df = meta_df[~meta_df[id_col].isin(bad_tips)]
+        filtered_meta = current_metadata.replace('.csv', f'_iter{iteration}.csv').replace('.tsv', f'_iter{iteration}.tsv')
+        if filtered_meta == current_metadata:
+            filtered_meta = current_metadata + f'.iter{iteration}'
+        meta_df.to_csv(filtered_meta, index=False)
+        current_metadata = filtered_meta
+
+        # Use the pruned timetree as input for next iteration
+        pruned_tree_path = current_tree.replace('.nwk', f'_iter{iteration}.nwk')
+        if pruned_tree_path == current_tree:
+            pruned_tree_path = current_tree + f'.iter{iteration}'
+        Phylo.write(time_tree.tree, pruned_tree_path, format='newick',
+                    format_branch_length='%1.8f')
+        current_tree = pruned_tree_path
+
+    else:
+        print(f"WARNING: Reached max_iterations ({max_iterations}) without convergence.")
+
+    # Now prune root strains if requested (only on the final tree)
+    if remove_root and isinstance(reroot, list):
+        for root_name in reroot:
+            targets = [t for t in time_tree.tree.get_terminals()
+                       if t.name == root_name.strip()]
+            for t in targets:
+                time_tree.tree.prune(t)
+
+    # Combine all outlier DataFrames
+    if all_outliers:
+        all_outliers_df = pd.concat(all_outliers, ignore_index=True)
+        # Reorder columns so 'iteration' and 'name' are first
+        cols = ['iteration', 'name'] + [c for c in all_outliers_df.columns
+                                         if c not in ('iteration', 'name')]
+        all_outliers_df = all_outliers_df[cols]
+    else:
+        all_outliers_df = pd.DataFrame(columns=['iteration', 'name'])
+
+    return time_tree, all_outliers_df, current_fasta, current_metadata
+
+
 def tree_nodes_ci(time_tree, fraction=0.95):
     """
     Get node confidence intervals from tree time tree.
@@ -174,56 +369,123 @@ def tree_nodes_ci(time_tree, fraction=0.95):
         records.append(record)
     return pd.DataFrame.from_records(records)
 
-def plot_root_to_tip(time_tree, label=True, x_tick_freq='automatic'):
+def plot_root_to_tip(time_tree, outliers_df=None, x_tick_freq='automatic'):
     """
-    Plot root-to-tip regression, with outliers shown as orange dots.
+    Plot root-to-tip regression with clock model line and outliers as orange dots.
 
     Parameters
     ----------
-    time_tree: treetime.TreeTime
-    label: bool, default True
-        If true, label the plot.
-    x_tick_freq: str, default='automatic'
+    time_tree : treetime.TreeTime
+        A fitted TreeTime object with clock_model attribute.
+    outliers_df : pd.DataFrame, optional
+        DataFrame of outliers with 'numdate' and 'dist2root' columns.
+        If None, checks time_tree.outliers for single-iteration outlier data.
+    x_tick_freq : str, default='automatic'
         Suggested tick frequency. Options are 'automatic', 'yearly', 'quarterly',
         'monthly', 'half month' or 'weekly'.
 
     Returns
     -------
-    fig, ax: matplotlib.figure.Figure
+    fig, ax : matplotlib.figure.Figure, matplotlib.axes.Axes
     """
-    fig, ax = plt.subplots(1, 1)
-    time_tree.plot_root_to_tip(ax=ax, label=label)
+    # Extract tip data from time_tree
+    tips = time_tree.tree.get_terminals()
+    xi = np.array([tip.raw_date_constraint for tip in tips])
+    yi = np.array([tip.dist2root for tip in tips])
 
-    # Plot outliers as orange dots if available
-    if hasattr(time_tree, 'outliers') and time_tree.outliers is not None:
-        outlier_df = time_tree.outliers
-        if 'given_date' in outlier_df.columns and 'apparent_date' in outlier_df.columns:
-            # Use given_date (x) vs dist2root proxy (apparent_date mapped to branch length)
-            # The root-to-tip plot uses date vs dist2root, so we need the original residual info
-            # outlier_df has 'given_date' and 'apparent_date' columns
-            clock_rate = time_tree.clock_model['slope']
-            intercept = time_tree.clock_model['intercept']
-            outlier_dates = outlier_df['given_date'].values
-            outlier_dist2root = clock_rate * outlier_df['apparent_date'].values + intercept
-            ax.scatter(outlier_dates, outlier_dist2root, color='orange', zorder=5,
-                       label='Clock Filter\nRemoved Outliers', edgecolors='black', linewidths=0.5, s=50)
-            ax.legend()
+    # Clock model parameters
+    rate = time_tree.clock_model.get('slope', None)
+    intercept = time_tree.clock_model.get('intercept', None)
+    r_val = time_tree.clock_model.get('r_val', None)
+    r_sq = r_val**2 if r_val is not None else None
+    t_mrca = -intercept / rate if (rate and intercept is not None) else None
 
-    x_year_decimal = np.array([tip.raw_date_constraint
-                               for tip in time_tree.tree.get_terminals()])
-    # Include outlier dates in tick range calculation
-    if hasattr(time_tree, 'outliers') and time_tree.outliers is not None:
-        if 'given_date' in time_tree.outliers.columns:
-            x_year_decimal = np.concatenate([
-                x_year_decimal,
-                time_tree.outliers['given_date'].values
-            ])
+    # Fall back to time_tree.outliers if no outliers_df provided
+    if outliers_df is None and hasattr(time_tree, 'outliers') and time_tree.outliers is not None:
+        outliers_df = time_tree.outliers.copy()
+        # Standardise column names if needed
+        if 'given_date' in outliers_df.columns and 'numdate' not in outliers_df.columns:
+            outliers_df['numdate'] = outliers_df['given_date']
+        if 'dist2root' not in outliers_df.columns and 'apparent_date' in outliers_df.columns:
+            # Estimate dist2root from apparent_date using clock model
+            outliers_df['dist2root'] = rate * outliers_df['apparent_date'] + intercept
 
-    tick_year_decimals, tick_labels = year_decimal_to_date_tick_labels(x_year_decimal, tick_freq=x_tick_freq)
-    ax.xaxis.set_ticks(tick_year_decimals)
-    ax.set_xticklabels(tick_labels)
-    ax.tick_params(axis='x', labelrotation=45)
-    plt.setp(ax.get_xticklabels(), ha='right')
+    fig, ax = plt.subplots(1, 1, figsize=(10, 6))
+
+    if len(xi) > 0:
+        # Retained tips (blue)
+        ax.scatter(xi, yi, s=20, alpha=0.7, zorder=2, label='tips')
+
+        # Outliers as orange dots
+        n_outliers_total = 0
+        if outliers_df is not None and 'numdate' in outliers_df.columns and 'dist2root' in outliers_df.columns:
+            out_x = pd.to_numeric(outliers_df['numdate'], errors='coerce')
+            out_y = pd.to_numeric(outliers_df['dist2root'], errors='coerce')
+            mask = out_x.notna() & out_y.notna()
+            n_outliers_total = int(mask.sum())
+            if mask.any():
+                ax.scatter(out_x[mask], out_y[mask], s=30, c='orange',
+                           edgecolors='black', linewidths=0.5,
+                           zorder=3, label='outliers removed')
+
+        # Regression line from TMRCA to youngest tip
+        if rate and intercept is not None:
+            youngest = xi.max()
+            if outliers_df is not None and 'numdate' in outliers_df.columns:
+                out_dates = pd.to_numeric(outliers_df['numdate'], errors='coerce').dropna()
+                if len(out_dates) > 0:
+                    youngest = max(youngest, out_dates.max())
+            time_span = youngest - t_mrca
+            x_lo = t_mrca - 0.02 * time_span
+            x_hi = youngest + 0.02 * time_span
+            x_line = np.array([x_lo, x_hi])
+            y_line = rate * x_line + intercept
+
+            label_str = f'rate={rate:.2e} subs/site/yr\nroot date: {t_mrca:.1f}'
+            if r_sq:
+                label_str += f'\nR\u00b2={r_sq:.4f}'
+            ax.plot(x_line, y_line, c='k', lw=2, label=label_str)
+            ax.set_xlim([x_lo, x_hi])
+
+        ax.set_ylabel('root-to-tip distance', fontsize=14)
+        ax.set_xlabel('date', fontsize=14)
+        ax.ticklabel_format(useOffset=False)
+        ax.tick_params(labelsize=11)
+        ax.set_ylim([0, 1.1 * np.max(yi)])
+
+        # Count outliers outside the plot window and update legend
+        n_outliers_outside = 0
+        if n_outliers_total > 0:
+            y_upper = ax.get_ylim()[1]
+            x_lims = ax.get_xlim()
+            out_x_vals = pd.to_numeric(outliers_df['numdate'], errors='coerce')
+            out_y_vals = pd.to_numeric(outliers_df['dist2root'], errors='coerce')
+            valid = out_x_vals.notna() & out_y_vals.notna()
+            outside = valid & ((out_y_vals > y_upper) | (out_x_vals < x_lims[0]) | (out_x_vals > x_lims[1]))
+            n_outliers_outside = int(outside.sum())
+        handles, labels = ax.get_legend_handles_labels()
+        if n_outliers_outside > 0:
+            for i, lbl in enumerate(labels):
+                if 'outliers removed' in lbl:
+                    labels[i] = f'outliers removed ({n_outliers_outside}/{n_outliers_total} outside window)'
+        ax.legend(handles, labels, fontsize=11)
+
+        # Apply date tick labels
+        all_dates = xi.copy()
+        if outliers_df is not None and 'numdate' in outliers_df.columns:
+            out_dates = pd.to_numeric(outliers_df['numdate'], errors='coerce').dropna().values
+            if len(out_dates) > 0:
+                all_dates = np.concatenate([all_dates, out_dates])
+        tick_year_decimals, tick_labels = year_decimal_to_date_tick_labels(all_dates, tick_freq=x_tick_freq)
+        ax.xaxis.set_ticks(tick_year_decimals)
+        ax.set_xticklabels(tick_labels)
+        ax.tick_params(axis='x', labelrotation=45)
+        plt.setp(ax.get_xticklabels(), ha='right')
+    else:
+        ax.text(0.5, 0.5, 'No tip data available for root-to-tip plot',
+                ha='center', va='center', transform=ax.transAxes)
+
+    plt.tight_layout()
     return fig, ax
 
 

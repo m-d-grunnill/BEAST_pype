@@ -524,7 +524,8 @@ class SimpleWorkflowParams(WorkflowParams):
                                            'root_strain_names',
                                            'remove_root',
                                            'clock_filter',
-                                           'clock_filter_method'])
+                                           'clock_filter_method',
+                                           'max_iterations'])
             params['tree_dir_name'] = 'initial_tree'
             if self.treetime_seed is not None:
                 params['seed'] = self.treetime_seed
@@ -581,7 +582,7 @@ class SimpleWorkflowParams(WorkflowParams):
             params = self.retrieve_params(['save_dir',
                                            'sample_id_field',
                                            'collection_date_field'])
-            params['clock_filter'] = None
+            params['clock_filter'] = 0
             params['clock_filter_method'] = None
             params['fasta_path'] = f'{self.save_dir}/downsampled_sequences.fasta'
             params['metadata_path'] = f'{self.save_dir}/downsampled_metadata.csv'
@@ -1004,7 +1005,8 @@ class ComparativeWorkflowParams(WorkflowParams):
                 'root_strain_names',
                 'remove_root',
                 'clock_filter',
-                'clock_filter_method'])
+                'clock_filter_method',
+                                           'max_iterations'])
             parameters['save_dir'] = xml_set_directory
             parameters['tree_dir_name'] = 'initial_tree'
             if self.treetime_seed is not None:
@@ -1067,7 +1069,7 @@ class ComparativeWorkflowParams(WorkflowParams):
             params = self.retrieve_params([
                                            'sample_id_field',
                                            'collection_date_field'])
-            params['clock_filter'] = None
+            params['clock_filter'] = 0
             params['clock_filter_method'] = None
             params['save_dir'] = xml_set_directory
             params['fasta_path'] = f'{xml_set_directory}/downsampled_sequences.fasta'

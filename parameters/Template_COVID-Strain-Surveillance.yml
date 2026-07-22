@@ -97,6 +97,10 @@ initial_tree_type: #str (either 'Distance' or 'Temporal') or null (None in pytho
 #     Set to null to disable clock filtering.
 
 # clock_filter_method: # str, default 'local'
+
+# max_iterations: # int, default 50
+#     Maximum number of clock filter iterations. TreeTime is run iteratively,
+#     removing outliers each time, until convergence or this limit is reached.
 #     Method used for clock filtering. Options are 'local' (z-score based) or 'residual' (IQD based).
 #     Only used when clock_filter is not null.
 

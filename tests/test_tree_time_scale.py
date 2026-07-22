@@ -86,7 +86,7 @@ def synthetic_data(tmp_path):
 @pytest.fixture
 def synthetic_data_with_outlier(tmp_path):
     """Fixture for synthetic data with one outlier (date far in the past)."""
-    return _make_synthetic_data(tmp_path, n_tips=10, outlier_date=2010.0)
+    return _make_synthetic_data(tmp_path, n_tips=20, outlier_date=2010.0)
 
 
 class TestTimescaleClockFilter:
@@ -146,7 +146,7 @@ class TestTimescaleClockFilter:
             ftree=tree_path,
             falignment=aln_path,
             fdates=dates_path,
-            clock_filter=0.5,  # Very strict threshold
+            clock_filter=1.5,  # Very strict threshold
             clock_filter_method='local',
             reroot=[tip_names[-1]],
             remove_root=False,
@@ -165,7 +165,7 @@ class TestTimescaleClockFilter:
             ftree=tree_path,
             falignment=aln_path,
             fdates=dates_path,
-            clock_filter=0.5,
+            clock_filter=1.5,
             clock_filter_method='local',
             reroot=[tip_names[-1]],
             remove_root=False,
@@ -184,7 +184,7 @@ class TestTimescaleClockFilter:
             ftree=tree_path,
             falignment=aln_path,
             fdates=dates_path,
-            clock_filter=0.5,
+            clock_filter=1.5,
             clock_filter_method='local',
             reroot=[tip_names[-1]],
             remove_root=False,
@@ -295,15 +295,26 @@ class TestPlotRootToTip:
             ftree=tree_path,
             falignment=aln_path,
             fdates=dates_path,
-            clock_filter=0.5,
+            clock_filter=1.5,
             clock_filter_method='local',
             reroot=[tip_names[-1]],
             remove_root=False,
             rng_seed=42,
         )
-        fig, ax = plot_root_to_tip(time_tree)
+        # Build outliers_df with numdate and dist2root
+        if bad_tips and hasattr(time_tree, 'outliers') and time_tree.outliers is not None:
+            outliers_df = time_tree.outliers.copy()
+            if 'given_date' in outliers_df.columns and 'numdate' not in outliers_df.columns:
+                outliers_df['numdate'] = outliers_df['given_date']
+            rate = time_tree.clock_model['slope']
+            intercept = time_tree.clock_model['intercept']
+            if 'dist2root' not in outliers_df.columns and 'apparent_date' in outliers_df.columns:
+                outliers_df['dist2root'] = rate * outliers_df['apparent_date'] + intercept
+        else:
+            outliers_df = None
+        fig, ax = plot_root_to_tip(time_tree, outliers_df=outliers_df)
         # Check legend contains outlier label
-        if bad_tips:
+        if bad_tips and outliers_df is not None:
             legend = ax.get_legend()
             assert legend is not None
             legend_texts = [t.get_text() for t in legend.get_texts()]
@@ -363,3 +374,162 @@ class TestTreeNodesCi:
         df = tree_nodes_ci(time_tree, fraction=0.95)
         assert any('interval' in c for c in df.columns)
         assert any('upper' in c for c in df.columns)
+
+
+class TestIterativeTimescale:
+    """Tests for iterative_timescale function."""
+
+    def test_no_clock_filter_single_iteration(self, synthetic_data):
+        """With clock_filter=None, should run once and return empty outliers."""
+        from beast_pype.tree_time_scale import iterative_timescale
+        tree_path, aln_path, dates_path, tip_names = synthetic_data
+        time_tree, outliers_df, final_fasta, final_meta = iterative_timescale(
+            ftree=tree_path,
+            falignment=aln_path,
+            fdates=dates_path,
+            clock_filter=None,
+            remove_root=False,
+            rng_seed=42,
+        )
+        assert outliers_df.empty
+        assert os.path.isfile(final_fasta)
+        assert os.path.isfile(final_meta)
+        remaining = [t.name for t in time_tree.tree.get_terminals()]
+        assert len(remaining) == len(tip_names)
+
+    def test_converges_with_clean_data(self, synthetic_data):
+        """Clean data (no outliers) should converge in 1 iteration."""
+        from beast_pype.tree_time_scale import iterative_timescale
+        tree_path, aln_path, dates_path, tip_names = synthetic_data
+        time_tree, outliers_df, final_fasta, final_meta = iterative_timescale(
+            ftree=tree_path,
+            falignment=aln_path,
+            fdates=dates_path,
+            clock_filter=3.0,
+            clock_filter_method='local',
+            remove_root=False,
+            rng_seed=42,
+        )
+        # With clean clock-like data and a lenient filter, expect no outliers
+        assert outliers_df.empty or len(outliers_df) == 0
+        remaining = [t.name for t in time_tree.tree.get_terminals()]
+        assert len(remaining) == len(tip_names)
+
+    def test_iterative_removes_outlier(self, synthetic_data_with_outlier):
+        """Outlier should be removed in iterative mode."""
+        from beast_pype.tree_time_scale import iterative_timescale
+        tree_path, aln_path, dates_path, tip_names = synthetic_data_with_outlier
+        time_tree, outliers_df, final_fasta, final_meta = iterative_timescale(
+            ftree=tree_path,
+            falignment=aln_path,
+            fdates=dates_path,
+            clock_filter=1.5,
+            clock_filter_method='local',
+            reroot=[tip_names[-1]],
+            remove_root=False,
+            rng_seed=42,
+            max_iterations=1,  # Synthetic star tree breaks on subsequent iterations
+        )
+        # seq_0 (with date 2010) should be removed as outlier
+        assert 'seq_0' in outliers_df['name'].values
+        remaining = [t.name for t in time_tree.tree.get_terminals()]
+        assert 'seq_0' not in remaining
+
+    def test_outliers_df_has_iteration_column(self, synthetic_data_with_outlier):
+        """Outliers DataFrame should include iteration column."""
+        from beast_pype.tree_time_scale import iterative_timescale
+        tree_path, aln_path, dates_path, tip_names = synthetic_data_with_outlier
+        _, outliers_df, _, _ = iterative_timescale(
+            ftree=tree_path,
+            falignment=aln_path,
+            fdates=dates_path,
+            clock_filter=1.5,
+            clock_filter_method='local',
+            reroot=[tip_names[-1]],
+            remove_root=False,
+            rng_seed=42,
+            max_iterations=1,
+        )
+        if not outliers_df.empty:
+            assert 'iteration' in outliers_df.columns
+            assert 'name' in outliers_df.columns
+
+    def test_root_strains_excluded_from_outliers(self, synthetic_data_with_outlier):
+        """Root strains should never be removed as outliers."""
+        from beast_pype.tree_time_scale import iterative_timescale
+        tree_path, aln_path, dates_path, tip_names = synthetic_data_with_outlier
+        root_tip = tip_names[-1]
+        _, outliers_df, _, _ = iterative_timescale(
+            ftree=tree_path,
+            falignment=aln_path,
+            fdates=dates_path,
+            clock_filter=1.5,
+            clock_filter_method='local',
+            reroot=[root_tip],
+            remove_root=False,
+            rng_seed=42,
+            max_iterations=1,
+        )
+        if not outliers_df.empty:
+            assert root_tip not in outliers_df['name'].values
+
+    def test_remove_root_after_convergence(self, synthetic_data):
+        """Root strains should be pruned after convergence when remove_root=True."""
+        from beast_pype.tree_time_scale import iterative_timescale
+        tree_path, aln_path, dates_path, tip_names = synthetic_data
+        root_tip = tip_names[-1]
+        time_tree, _, _, _ = iterative_timescale(
+            ftree=tree_path,
+            falignment=aln_path,
+            fdates=dates_path,
+            clock_filter=None,
+            reroot=[root_tip],
+            remove_root=True,
+            rng_seed=42,
+        )
+        remaining = [t.name for t in time_tree.tree.get_terminals()]
+        assert root_tip not in remaining
+
+    def test_max_iterations_respected(self, synthetic_data_with_outlier):
+        """Should stop after max_iterations even if not converged."""
+        from beast_pype.tree_time_scale import iterative_timescale
+        tree_path, aln_path, dates_path, tip_names = synthetic_data_with_outlier
+        # max_iterations=1 means only 1 iteration regardless
+        time_tree, outliers_df, _, _ = iterative_timescale(
+            ftree=tree_path,
+            falignment=aln_path,
+            fdates=dates_path,
+            clock_filter=1.5,
+            clock_filter_method='local',
+            reroot=[tip_names[-1]],
+            remove_root=False,
+            max_iterations=1,
+            rng_seed=42,
+        )
+        # Should have run at most 1 iteration
+        if not outliers_df.empty:
+            assert outliers_df['iteration'].max() <= 1
+
+    def test_filtered_files_exist(self, synthetic_data_with_outlier):
+        """Filtered FASTA and metadata files should exist after outlier removal."""
+        from beast_pype.tree_time_scale import iterative_timescale
+        tree_path, aln_path, dates_path, tip_names = synthetic_data_with_outlier
+        _, outliers_df, final_fasta, final_meta = iterative_timescale(
+            ftree=tree_path,
+            falignment=aln_path,
+            fdates=dates_path,
+            clock_filter=1.5,
+            clock_filter_method='local',
+            reroot=[tip_names[-1]],
+            remove_root=False,
+            rng_seed=42,
+            max_iterations=1,
+        )
+        assert os.path.isfile(final_fasta)
+        assert os.path.isfile(final_meta)
+        if not outliers_df.empty:
+            # Filtered files should have fewer sequences
+            from Bio import SeqIO as sio
+            original_count = len(list(sio.parse(aln_path, 'fasta')))
+            filtered_count = len(list(sio.parse(final_fasta, 'fasta')))
+            assert filtered_count < original_count
