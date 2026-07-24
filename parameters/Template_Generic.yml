@@ -143,23 +143,6 @@ initial_tree_type: # str (either 'Distance' or 'Temporal') or None, (default, ca
 #     Method used for clock filtering. Options are 'local' (z-score based) or 'residual' (IQD based).
 #     Only used when clock_filter is not null.
 
-
-# clock_filter_method: # str, default 'local'
-
-# remove_future_tips: # bool, default True
-#     If True, tips that TreeTime places in the future (numdate > youngest
-#     real sample date) are removed at each iteration.
-
-# clock_std: # float, optional
-#     Standard deviation of the clock rate. When provided, TreeTime uses a
-#     relaxed clock model (vary_rate parameter).
-
-# max_iterations: # int, default 50
-#     Maximum number of clock filter iterations. TreeTime is run iteratively,
-#     removing outliers each time, until convergence or this limit is reached.
-#     Method used for clock filtering. Options are 'local' (z-score based) or 'residual' (IQD based).
-#     Only used when clock_filter is not null.
-
 # downsample_to: # int, (optional, can be missing from yml)
 #     Available if not using a `ready_to_go_xml` and generating an initial tree file.
 #     If not given downsampling will not occur. When given down sampling only occurs if there are more sequences than the value given.
