@@ -12,6 +12,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from Bio import Phylo, SeqIO
 from beast_pype.fig_utils import year_decimal_to_date_tick_labels
+from matplotlib.patches import Rectangle
 import io
 import os
 
@@ -420,75 +421,126 @@ def tree_nodes_ci(time_tree, fraction=0.95):
         records.append(record)
     return pd.DataFrame.from_records(records)
 
-def plot_root_to_tip(time_tree, outliers_df=None, x_tick_freq='automatic'):
+def plot_root_to_tip(time_tree, outliers_df=None, remove_future_tips=True):
     """
-    Plot root-to-tip regression with clock model line and outliers as orange dots.
+    Plot root-to-tip regression with clock model line, outliers (orange), and
+    future-placed tips (red).
 
     Parameters
     ----------
     time_tree : treetime.TreeTime
         A fitted TreeTime object with clock_model attribute.
     outliers_df : pd.DataFrame, optional
-        DataFrame of outliers with 'numdate' and 'dist2root' columns.
-        If None, checks time_tree.outliers for single-iteration outlier data.
-    x_tick_freq : str, default='automatic'
-        Suggested tick frequency. Options are 'automatic', 'yearly', 'quarterly',
-        'monthly', 'half month' or 'weekly'.
+        DataFrame of outliers with columns for date (numdate/given_date) and
+        optionally dist2root. Must have a 'diagnosis' column to distinguish
+        clock outliers from future-placed tips.
+    remove_future_tips : bool, default True
+        If True, future-placed tips are shown as red dots in the plot.
 
     Returns
     -------
     fig, ax : matplotlib.figure.Figure, matplotlib.axes.Axes
     """
-    # Extract tip data from time_tree
     tips = time_tree.tree.get_terminals()
-    xi = np.array([tip.raw_date_constraint for tip in tips])
-    yi = np.array([tip.dist2root for tip in tips])
+    xi = np.array([tip.raw_date_constraint for tip in tips
+                   if hasattr(tip, 'raw_date_constraint') and tip.raw_date_constraint is not None])
+    yi = np.array([tip.dist2root for tip in tips
+                   if hasattr(tip, 'raw_date_constraint') and tip.raw_date_constraint is not None])
 
-    # Clock model parameters
     rate = time_tree.clock_model.get('slope', None)
     intercept = time_tree.clock_model.get('intercept', None)
     r_val = time_tree.clock_model.get('r_val', None)
-    r_sq = r_val**2 if r_val is not None else None
-    t_mrca = -intercept / rate if (rate and intercept is not None) else None
+    r_sq = r_val ** 2 if r_val is not None else None
+    t_mrca = -intercept / rate if (rate and intercept is not None and rate != 0) else None
 
-    # Fall back to time_tree.outliers if no outliers_df provided
-    if outliers_df is None and hasattr(time_tree, 'outliers') and time_tree.outliers is not None:
-        outliers_df = time_tree.outliers.copy()
-        # Standardise column names if needed
-        if 'given_date' in outliers_df.columns and 'numdate' not in outliers_df.columns:
-            outliers_df['numdate'] = outliers_df['given_date']
-        if 'dist2root' not in outliers_df.columns and 'apparent_date' in outliers_df.columns:
-            # Estimate dist2root from apparent_date using clock model
-            outliers_df['dist2root'] = rate * outliers_df['apparent_date'] + intercept
+    # Separate clock outliers from future tips
+    clock_outliers_df = None
+    future_tips_df = None
+    if outliers_df is not None and 'diagnosis' in outliers_df.columns:
+        future_mask = outliers_df['diagnosis'] == 'placed_in_future'
+        future_tips_df = outliers_df[future_mask] if future_mask.any() else None
+        clock_outliers_df = outliers_df[~future_mask] if (~future_mask).any() else None
+    elif outliers_df is not None:
+        clock_outliers_df = outliers_df
+
+    # Resolve numdate column — could be 'numdate' or 'given_date'
+    def get_numdate_col(df):
+        if df is None:
+            return None
+        if 'numdate' in df.columns:
+            return 'numdate'
+        if 'given_date' in df.columns:
+            return 'given_date'
+        if 'raw_date_constraint' in df.columns:
+            return 'raw_date_constraint'
+        return None
+
+    def get_dist2root_col(df):
+        if df is None:
+            return None
+        if 'dist2root' in df.columns:
+            return 'dist2root'
+        return None
 
     fig, ax = plt.subplots(1, 1, figsize=(10, 6))
 
     if len(xi) > 0:
-        # Retained tips (blue)
         ax.scatter(xi, yi, s=20, alpha=0.7, zorder=2, label='tips')
 
-        # Outliers as orange dots
-        n_outliers_total = 0
-        if outliers_df is not None and 'numdate' in outliers_df.columns and 'dist2root' in outliers_df.columns:
-            out_x = pd.to_numeric(outliers_df['numdate'], errors='coerce')
-            out_y = pd.to_numeric(outliers_df['dist2root'], errors='coerce')
-            mask = out_x.notna() & out_y.notna()
-            n_outliers_total = int(mask.sum())
-            if mask.any():
-                ax.scatter(out_x[mask], out_y[mask], s=30, c='orange',
-                           edgecolors='black', linewidths=0.5,
-                           zorder=3, label='outliers removed')
+        # Clock outliers (orange)
+        n_clock_total = 0
+        if clock_outliers_df is not None:
+            numdate_col = get_numdate_col(clock_outliers_df)
+            dist_col = get_dist2root_col(clock_outliers_df)
+            if numdate_col:
+                out_x = pd.to_numeric(clock_outliers_df[numdate_col], errors='coerce')
+                if dist_col:
+                    out_y = pd.to_numeric(clock_outliers_df[dist_col], errors='coerce')
+                elif rate and intercept is not None:
+                    out_y = rate * out_x + intercept
+                else:
+                    out_y = pd.Series([np.nan] * len(out_x))
+                mask = out_x.notna() & out_y.notna()
+                n_clock_total = int(mask.sum())
+                if mask.any():
+                    ax.scatter(out_x[mask], out_y[mask], s=30, c='orange',
+                               edgecolors='black', linewidths=0.5,
+                               zorder=3, label='clock outliers removed')
 
-        # Regression line from TMRCA to youngest tip
-        if rate and intercept is not None:
+        # Future tips (red)
+        n_future_total = 0
+        if future_tips_df is not None and remove_future_tips:
+            numdate_col = get_numdate_col(future_tips_df)
+            dist_col = get_dist2root_col(future_tips_df)
+            if numdate_col:
+                fut_x = pd.to_numeric(future_tips_df[numdate_col], errors='coerce')
+                if dist_col:
+                    fut_y = pd.to_numeric(future_tips_df[dist_col], errors='coerce')
+                elif rate and intercept is not None:
+                    fut_y = rate * fut_x + intercept
+                else:
+                    fut_y = pd.Series([np.nan] * len(fut_x))
+                mask_f = fut_x.notna() & fut_y.notna()
+                n_future_total = int(mask_f.sum())
+                if mask_f.any():
+                    ax.scatter(fut_x[mask_f], fut_y[mask_f], s=30, c='red',
+                               edgecolors='black', linewidths=0.5,
+                               zorder=3, label='future tips removed')
+
+        # Regression line
+        if rate and intercept is not None and t_mrca is not None:
             youngest = xi.max()
-            if outliers_df is not None and 'numdate' in outliers_df.columns:
-                out_dates = pd.to_numeric(outliers_df['numdate'], errors='coerce').dropna()
+            if n_clock_total > 0:
+                out_dates = pd.to_numeric(clock_outliers_df[get_numdate_col(clock_outliers_df)], errors='coerce').dropna()
                 if len(out_dates) > 0:
                     youngest = max(youngest, out_dates.max())
+            if n_future_total > 0:
+                fut_dates = pd.to_numeric(future_tips_df[get_numdate_col(future_tips_df)], errors='coerce').dropna()
+                if len(fut_dates) > 0:
+                    youngest = max(youngest, fut_dates.max())
             time_span = youngest - t_mrca
-            x_lo = t_mrca - 0.02 * time_span
-            x_hi = youngest + 0.02 * time_span
+            x_lo = t_mrca - 0.2 * time_span
+            x_hi = youngest + 0.2 * time_span
             x_line = np.array([x_lo, x_hi])
             y_line = rate * x_line + intercept
 
@@ -504,41 +556,153 @@ def plot_root_to_tip(time_tree, outliers_df=None, x_tick_freq='automatic'):
         ax.tick_params(labelsize=11)
         ax.set_ylim([0, 1.1 * np.max(yi)])
 
-        # Count outliers outside the plot window and update legend
-        n_outliers_outside = 0
-        if n_outliers_total > 0:
-            y_upper = ax.get_ylim()[1]
-            x_lims = ax.get_xlim()
-            out_x_vals = pd.to_numeric(outliers_df['numdate'], errors='coerce')
-            out_y_vals = pd.to_numeric(outliers_df['dist2root'], errors='coerce')
+        # Update legend with outside-window counts
+        handles, labels = ax.get_legend_handles_labels()
+        y_upper = ax.get_ylim()[1]
+        x_lims = ax.get_xlim()
+
+        if n_clock_total > 0:
+            numdate_col = get_numdate_col(clock_outliers_df)
+            dist_col = get_dist2root_col(clock_outliers_df)
+            out_x_vals = pd.to_numeric(clock_outliers_df[numdate_col], errors='coerce')
+            if dist_col:
+                out_y_vals = pd.to_numeric(clock_outliers_df[dist_col], errors='coerce')
+            elif rate and intercept is not None:
+                out_y_vals = rate * out_x_vals + intercept
+            else:
+                out_y_vals = pd.Series([np.nan] * len(out_x_vals))
             valid = out_x_vals.notna() & out_y_vals.notna()
             outside = valid & ((out_y_vals > y_upper) | (out_x_vals < x_lims[0]) | (out_x_vals > x_lims[1]))
-            n_outliers_outside = int(outside.sum())
-        handles, labels = ax.get_legend_handles_labels()
-        if n_outliers_outside > 0:
-            for i, lbl in enumerate(labels):
-                if 'outliers removed' in lbl:
-                    labels[i] = f'outliers removed ({n_outliers_outside}/{n_outliers_total} outside window)'
+            n_outside = int(outside.sum())
+            if n_outside > 0:
+                for i, lbl in enumerate(labels):
+                    if 'clock outliers removed' in lbl:
+                        labels[i] = f'clock outliers removed ({n_outside}/{n_clock_total} outside window)'
+
+        if n_future_total > 0:
+            numdate_col = get_numdate_col(future_tips_df)
+            dist_col = get_dist2root_col(future_tips_df)
+            fut_x_vals = pd.to_numeric(future_tips_df[numdate_col], errors='coerce')
+            if dist_col:
+                fut_y_vals = pd.to_numeric(future_tips_df[dist_col], errors='coerce')
+            elif rate and intercept is not None:
+                fut_y_vals = rate * fut_x_vals + intercept
+            else:
+                fut_y_vals = pd.Series([np.nan] * len(fut_x_vals))
+            valid_f = fut_x_vals.notna() & fut_y_vals.notna()
+            outside_f = valid_f & ((fut_y_vals > y_upper) | (fut_x_vals < x_lims[0]) | (fut_x_vals > x_lims[1]))
+            n_f_outside = int(outside_f.sum())
+            if n_f_outside > 0:
+                for i, lbl in enumerate(labels):
+                    if 'future tips removed' in lbl:
+                        labels[i] = f'future tips removed ({n_f_outside}/{n_future_total} outside window)'
+
         ax.legend(handles, labels, fontsize=11)
 
-        # Apply date tick labels
-        all_dates = xi.copy()
-        if outliers_df is not None and 'numdate' in outliers_df.columns:
-            out_dates = pd.to_numeric(outliers_df['numdate'], errors='coerce').dropna().values
-            if len(out_dates) > 0:
-                all_dates = np.concatenate([all_dates, out_dates])
-        tick_year_decimals, tick_labels = year_decimal_to_date_tick_labels(all_dates, tick_freq=x_tick_freq)
+        # Date tick labels — prefer axis range, fall back to data points if overflow
+        x_lims = ax.get_xlim()
+        try:
+            tick_year_decimals, tick_labels = year_decimal_to_date_tick_labels(
+                np.array([x_lims[0], x_lims[1]])
+            )
+        except (OverflowError, ValueError):
+            # Axis limits produce invalid dates — use actual data range instead
+            all_dates = xi.copy()
+            if clock_outliers_df is not None:
+                numdate_col = get_numdate_col(clock_outliers_df)
+                if numdate_col:
+                    out_dates = pd.to_numeric(clock_outliers_df[numdate_col], errors='coerce').dropna().values
+                    if len(out_dates) > 0:
+                        all_dates = np.concatenate([all_dates, out_dates])
+            if future_tips_df is not None:
+                numdate_col = get_numdate_col(future_tips_df)
+                if numdate_col:
+                    fut_dates = pd.to_numeric(future_tips_df[numdate_col], errors='coerce').dropna().values
+                    if len(fut_dates) > 0:
+                        all_dates = np.concatenate([all_dates, fut_dates])
+            tick_year_decimals, tick_labels = year_decimal_to_date_tick_labels(all_dates)
+
         ax.xaxis.set_ticks(tick_year_decimals)
         ax.set_xticklabels(tick_labels)
         ax.tick_params(axis='x', labelrotation=45)
         plt.setp(ax.get_xticklabels(), ha='right')
-    else:
-        ax.text(0.5, 0.5, 'No tip data available for root-to-tip plot',
-                ha='center', va='center', transform=ax.transAxes)
 
     plt.tight_layout()
     return fig, ax
 
+
+def plot_temporal_tree(time_tree):
+    """
+    Plot temporal tree (branch lengths already in years from branch_length_to_years).
+
+    Parameters
+    ----------
+    time_tree : treetime.TreeTime
+        A fitted TreeTime object after branch_length_to_years() has been called.
+
+    Returns
+    -------
+    fig, ax : matplotlib.figure.Figure, matplotlib.axes.Axes
+    """
+    tips = time_tree.tree.get_terminals()
+    nleafs = len(tips)
+
+    # Root date
+    root = time_tree.tree.root
+    root_date = root.numdate if hasattr(root, 'numdate') and root.numdate is not None else None
+
+    # Set root branch length to 0 for plotting
+    root.branch_length = 0.0
+
+    fig_height = max(8, nleafs * 0.2)
+    fig, ax = plt.subplots(1, 1, figsize=(12, fig_height))
+
+    label_func = lambda x: x.name if (x.is_terminal() and nleafs < 30) else ''
+    Phylo.draw(time_tree.tree, axes=ax, do_show=False, label_func=label_func)
+
+    if root_date is not None:
+        # x-axis: Phylo.draw places root at x=0, tips at x=sum(branch_lengths)
+        # After branch_length_to_years, x positions are years from root
+        # So date = root_date + x_position
+        xlim = ax.get_xlim()
+        # Generate ticks covering the full x-axis range (converted to dates)
+        date_lo = root_date + xlim[0]
+        date_hi = root_date + xlim[1]
+        tick_year_decimals, tick_labels = year_decimal_to_date_tick_labels(
+            np.array([date_lo, date_hi])
+        )
+        # Convert date ticks to x-position (x = date - root_date)
+        xticks = tick_year_decimals - root_date
+        ax.set_xticks(xticks)
+        ax.set_xticklabels(tick_labels, rotation=45, ha='right')
+        ax.set_xlim([0, xlim[1]])
+
+        # Add alternating shaded bands
+        tip_dates = [t.numdate for t in tips if hasattr(t, 'numdate') and t.numdate is not None]
+        ylim = ax.get_ylim()
+        xlim_new = ax.get_xlim()
+        if tip_dates:
+            date_range = max(tip_dates) - root_date
+            if date_range > 5:
+                step = 1.0
+            elif date_range > 2:
+                step = 0.25
+            elif date_range > 1:
+                step = 1.0 / 12
+            else:
+                step = 1.0 / 52
+
+            for idx, year_offset in enumerate(np.arange(0, xlim_new[1] + step, step)):
+                shade = 0.92 if idx % 2 == 0 else 0.96
+                r = Rectangle((year_offset, ylim[0]), step, ylim[1] - ylim[0],
+                               facecolor=[shade] * 3, edgecolor='none', zorder=0)
+                ax.add_patch(r)
+
+    ax.set_xlabel('date', fontsize=12)
+    ax.set_ylabel('')
+    ax.set_title('Time-scaled phylogeny', fontsize=14)
+    plt.tight_layout()
+    return fig, ax
 
 
 def temporal_pruning_sampler(time_tree: TreeTime, sample_size: int, draws=1, seed=None):
