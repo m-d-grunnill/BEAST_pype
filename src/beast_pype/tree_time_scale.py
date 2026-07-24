@@ -158,6 +158,7 @@ def iterative_timescale(ftree, falignment, fdates,
                         reroot='least-squares',
                         clock_rate=None, clock_std=None,
                         clock_filter=3.0, clock_filter_method='local',
+                        remove_future_tips=True,
                         remove_root=True, coalescent_tc="opt",
                         sample_id_field=None,
                         collection_date_field='date',
@@ -185,12 +186,17 @@ def iterative_timescale(ftree, falignment, fdates,
     clock_rate : float, optional
         Fixed clock rate (substitutions/site/year).
     clock_std : float, optional
-        Standard deviation of the clock rate.
+        Standard deviation of the clock rate. When provided, TreeTime uses a
+        relaxed clock model (vary_rate parameter).
     clock_filter : float or None, default 3.0
         Threshold for clock filtering (z-score for 'local', n_iqd for 'residual').
         Set to None to disable clock filtering (runs once with no filtering).
     clock_filter_method : str, default 'local'
         Method for clock filtering: 'local' (z-score) or 'residual' (IQD).
+    remove_future_tips : bool, default True
+        If True, tips that TreeTime places in the future (numdate > youngest
+        real sample date) are removed at each iteration. If False, only clock
+        filter outliers are removed.
     remove_root : bool, default True
         If True and reroot is a list of tip names, prune those tips after the
         final iteration.
@@ -226,6 +232,8 @@ def iterative_timescale(ftree, falignment, fdates,
         max_iterations = 50
     if clock_filter_method is None:
         clock_filter_method = 'local'
+    if remove_future_tips is None:
+        remove_future_tips = True
 
     # Work with copies so we don't modify original files
     current_tree = ftree
@@ -258,21 +266,47 @@ def iterative_timescale(ftree, falignment, fdates,
             **kwargs
         )
 
-        # If clock_filter is None or no outliers, we're done
-        if clock_filter is None or not bad_tips:
-            print(f"Converged after {iteration} iteration(s). No outliers.")
-            break
+        # Detect tips placed in the future (only if remove_future_tips is enabled)
+        # Only consider tips that are actual sequences (exist in the alignment),
+        # not internal nodes that became terminals through pruning.
+        future_tips = []
+        if remove_future_tips:
+            seq_ids = {rec.id for rec in SeqIO.parse(current_fasta, 'fasta')}
+            tips = time_tree.tree.get_terminals()
+            root_names = reroot if isinstance(reroot, list) else []
+            dated_tips = [t for t in tips if hasattr(t, 'numdate') and t.numdate is not None
+                          and t.name not in root_names
+                          and t.name in seq_ids]
+            if dated_tips:
+                raw_dates = [t.raw_date_constraint for t in dated_tips
+                             if hasattr(t, 'raw_date_constraint')
+                             and t.raw_date_constraint is not None]
+                if raw_dates:
+                    youngest_date = max(raw_dates)
+                    future_tips = [t.name for t in dated_tips
+                                   if t.numdate > youngest_date
+                                   and t.name not in bad_tips]
 
-        # Exclude root strains from outlier list (they're kept for rooting)
+        # Exclude root strains from outlier lists (they're kept for rooting)
         if isinstance(reroot, list):
             bad_tips = [t for t in bad_tips if t not in reroot]
+            future_tips = [t for t in future_tips if t not in reroot]
 
-        if not bad_tips:
-            print(f"Converged after {iteration} iteration(s). "
-                  "Only root strains flagged.")
+        # Combine clock filter outliers and future-placed tips
+        all_bad_this_iter = list(set(bad_tips + future_tips))
+
+        # Check convergence: no clock filter outliers AND no future-placed tips
+        if clock_filter is None and not future_tips:
+            print(f"Converged after {iteration} iteration(s). No outliers or future-placed tips.")
             break
 
-        print(f"  Outliers found: {len(bad_tips)}")
+        if not all_bad_this_iter:
+            print(f"Converged after {iteration} iteration(s). No outliers or future-placed tips.")
+            break
+
+        print(f"  Clock filter outliers: {len(bad_tips)}")
+        if remove_future_tips:
+            print(f"  Tips placed in future: {len(future_tips)}")
 
         # Collect outlier info for this iteration
         outlier_info = getattr(time_tree, 'outliers', None)
@@ -281,10 +315,27 @@ def iterative_timescale(ftree, falignment, fdates,
             if iter_df.index.name != 'name' and 'name' not in iter_df.columns:
                 iter_df.index.name = 'name'
                 iter_df = iter_df.reset_index()
-            iter_df['iteration'] = iteration
+            # Only keep rows for tips actually in bad_tips
+            if 'name' in iter_df.columns:
+                iter_df = iter_df[iter_df['name'].isin(bad_tips)]
         else:
-            iter_df = pd.DataFrame({'name': bad_tips, 'iteration': iteration})
+            iter_df = pd.DataFrame({'name': bad_tips, 'iteration': iteration,
+                                    'diagnosis': 'clock_filter'})
+
+        # Add future-placed tips to the outlier DataFrame
+        if future_tips:
+            future_df = pd.DataFrame({
+                'name': future_tips,
+                'iteration': iteration,
+                'diagnosis': 'placed_in_future'
+            })
+            iter_df = pd.concat([iter_df, future_df], ignore_index=True)
+
+        iter_df['iteration'] = iteration
         all_outliers.append(iter_df)
+
+        # Use all_bad_this_iter for filtering (both clock outliers and future-placed)
+        bad_tips = all_bad_this_iter
 
         # Filter FASTA — remove outliers
         filtered_seqs = [rec for rec in SeqIO.parse(current_fasta, 'fasta')
