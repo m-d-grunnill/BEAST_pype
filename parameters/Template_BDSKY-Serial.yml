@@ -106,6 +106,14 @@ use_initial_tree:  # bool, default True
 
 # clock_filter_method: # str, default 'local'
 
+# remove_future_tips: # bool, default True
+#     If True, tips that TreeTime places in the future (numdate > youngest
+#     real sample date) are removed at each iteration.
+
+# clock_std: # float, optional
+#     Standard deviation of the clock rate. When provided, TreeTime uses a
+#     relaxed clock model (vary_rate parameter).
+
 # max_iterations: # int, default 50
 #     Maximum number of clock filter iterations. TreeTime is run iteratively,
 #     removing outliers each time, until convergence or this limit is reached.

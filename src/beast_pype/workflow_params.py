@@ -525,7 +525,9 @@ class SimpleWorkflowParams(WorkflowParams):
                                            'remove_root',
                                            'clock_filter',
                                            'clock_filter_method',
-                                           'max_iterations'])
+                                           'max_iterations',
+                                           'remove_future_tips',
+                                           'clock_std'])
             params['tree_dir_name'] = 'initial_tree'
             if self.treetime_seed is not None:
                 params['seed'] = self.treetime_seed
@@ -1006,7 +1008,9 @@ class ComparativeWorkflowParams(WorkflowParams):
                 'remove_root',
                 'clock_filter',
                 'clock_filter_method',
-                                           'max_iterations'])
+                'max_iterations',
+                'remove_future_tips',
+                'clock_std'])
             parameters['save_dir'] = xml_set_directory
             parameters['tree_dir_name'] = 'initial_tree'
             if self.treetime_seed is not None:
