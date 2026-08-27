@@ -114,6 +114,43 @@ def gen_xml_set_diag_notebook(save_dir,
             "jupyter nbconvert --to html --no-input $@"
         ),
         nbf.v4.new_markdown_cell(
+            "## Sample Collection Date Report\n\n" +
+            "Summarises the sample collection date metadata for all sequences and "
+            "compares each xml set."
+        ),
+        nbf.v4.new_code_cell(
+            "collection_date_metadata_paths = {}\n" +
+            "for xml_set, path in beast_outputs_paths.items():\n" +
+            "\txml_set_dir = os.path.dirname(path) if os.path.basename(path) == 'beast_outputs' else path\n" +
+            "\tfor candidate in ('downsampled_metadata.csv', 'filtered_metadata.csv', 'filtered_metadata.tsv', 'metadata.csv'):\n" +
+            "\t\tif os.path.isfile(f'{xml_set_dir}/{candidate}'):\n" +
+            "\t\t\tcollection_date_metadata_paths[xml_set] = f'{xml_set_dir}/{candidate}'\n" +
+            "\t\t\tbreak\n" +
+            "if collection_date_metadata_paths:\n" +
+            "\tcollection_date_report_path = f'{outputs_and_reports_dir}/Collection_Date_Report.ipynb'\n" +
+            "\tgen_metadata_report(collection_date_report_path,\n" +
+            "\t\tmetadata_paths=collection_date_metadata_paths,\n" +
+            "\t\tcollection_date_field=collection_date_field,\n" +
+            "\t\txml_set_comparisons=True,\n" +
+            "\t\txml_set_label=xml_set_label,\n" +
+            "\t\tkernel_name=kernel_name)\n" +
+            "\tcollection_date_report_output = execute_notebook(input_path=collection_date_report_path,\n" +
+            "\t\toutput_path=collection_date_report_path,\n" +
+            "\t\tprogress_bar=True,\n" +
+            "\t\tkernel_name=kernel_name)\n" +
+            "else:\n" +
+            "\tprint('No metadata files found; skipping collection date report.')"
+        ),
+        nbf.v4.new_markdown_cell(
+            "### Convert Collection Date Report from Jupyter Notebook to HTML\n" +
+            "This also removes code cells."
+        ),
+        nbf.v4.new_code_cell(
+            "%%bash -l -s {collection_date_report_path}\n" +
+            "source activate beast_pype\n" +
+            "jupyter nbconvert --to html --no-input $@"
+        ),
+        nbf.v4.new_markdown_cell(
             "## Produce Summary Trees\n\n"+
             "This can take sometime. So you can look at the report whilst waiting this is done last."
         ),

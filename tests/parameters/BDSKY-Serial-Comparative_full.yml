@@ -20,9 +20,11 @@ xml_set_definitions: # The definitions for the xml_sets you wish to use.
 # Initial Tree Building & Downsampling
 use_initial_tree: true
 downsample_to: 35 #    If provided the fasta file and initial tree file used to generate the BEAST 2 xml is downsampled to this amount.
+clock_filter: 5
+remove_future_tips: null 
 
 # BDSky Options
-rt_dims: 3 #    Number of Rt dimensions (time periods over which Rt is estimated).
+rt_dims: 1 #    Number of Rt dimensions (time periods over which Rt is estimated).
 zero_sampling_before_first_sample: True # Fix the sampling proportion to 0 for the period before the first xml_set.
 origin_start_addition: 0.049315068493150684 #    Suggested infection period of pathogen. **Should be in years.** This + initial MLE tree height is used as starting value of origin.
 origin_upper_addition: 5 #    This + initial MLE tree height is used as upper value of origin prior.

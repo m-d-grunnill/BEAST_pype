@@ -17,6 +17,85 @@ import io
 import os
 
 
+def _parse_dates_robust(fdates, name_col=None, date_col='date'):
+    """Parse dates from CSV/TSV, bypassing TreeTime's parse_dates quirks.
+
+    Reads the metadata file with the correct separator based on extension,
+    resolves column names flexibly, and converts date strings to numeric
+    dates (year decimals) as TreeTime expects.
+
+    Parameters
+    ----------
+    fdates : str
+        Path to dates file (CSV or TSV).
+    name_col : str, optional
+        Column name for taxon IDs. If None, auto-detected.
+    date_col : str, default 'date'
+        Column name for collection dates.
+
+    Returns
+    -------
+    dict
+        Mapping of taxon name to numeric date (year decimal).
+    """
+    from beast_pype.date_utilities import date_to_decimal
+
+    # Read with correct separator
+    if fdates.endswith('.tsv'):
+        df = pd.read_csv(fdates, sep='	')
+    else:
+        df = pd.read_csv(fdates)
+
+    # Strip whitespace from column names
+    df.columns = df.columns.str.strip()
+
+    # Resolve name column
+    if name_col is None:
+        for col in df.columns:
+            if any(x in col.lower() for x in ['name', 'strain', 'accession']):
+                name_col = col
+                break
+        if name_col is None:
+            name_col = df.columns[0]
+    elif name_col not in df.columns:
+        for col in df.columns:
+            if col.lower() == name_col.lower():
+                name_col = col
+                break
+
+    # Resolve date column (case-insensitive + partial match)
+    if date_col not in df.columns:
+        for col in df.columns:
+            if col.lower() == date_col.lower():
+                date_col = col
+                break
+        if date_col not in df.columns:
+            for col in df.columns:
+                if date_col.lower() in col.lower():
+                    date_col = col
+                    break
+
+    if date_col not in df.columns:
+        raise ValueError(
+            f"Date column '{date_col}' not found. "
+            f"Available columns: {', '.join(df.columns)}"
+        )
+
+    # Convert dates to year decimals
+    dates = {}
+    for _, row in df.iterrows():
+        name = str(row[name_col]).strip()
+        date_val = row[date_col]
+        if pd.isna(date_val):
+            continue
+        try:
+            dt = pd.to_datetime(date_val)
+            dates[name] = date_to_decimal(dt)
+        except Exception:
+            continue
+
+    return dates
+
 
 def timescale(ftree, falignment, fdates, reroot='least-squares', clock_rate=None, clock_std=None,
               clock_filter=3.0, clock_filter_method='local', remove_root=True, coalescent_tc="opt",
@@ -25,7 +104,7 @@ def timescale(ftree, falignment, fdates, reroot='least-squares', clock_rate=None
               rng_seed=None,
               negative_tolerance=0.001,
               **kwargs):
-    r"""
+    """
     Timescale a phylogenetic tree using tree time.
 
     Parameters
@@ -111,21 +190,21 @@ def timescale(ftree, falignment, fdates, reroot='least-squares', clock_rate=None
 
     # Let run() handle clock filtering internally via n_iqd and clock_filter_method.
     # After run(), outlier tips are marked bad_branch=True and time_tree.outliers is set.
-    run_kwargs = dict(
-        infer_gtr=True,
-        root=reroot,
-        Tc=coalescent_tc,
-        time_marginal='always',
-        branch_length_mode='joint',
-        resolve_polytomies=True,
-        max_iter=2,
-        fixed_pi=None,
-        fixed_clock_rate=clock_rate,
-        stochastic_resolve=True,
-        vary_rate=clock_std,
-        use_covariation=False,
-        raise_uncaught_exceptions=True,
-    )
+    run_kwargs = {
+        'infer_gtr': True,
+        'root': reroot,
+        'Tc': coalescent_tc,
+        'time_marginal': 'always',
+        'branch_length_mode': 'joint',
+        'resolve_polytomies': True,
+        'max_iter': 2,
+        'fixed_pi': None,
+        'fixed_clock_rate': clock_rate,
+        'stochastic_resolve': True,
+        'vary_rate': clock_std,
+        'use_covariation': False,
+        'raise_uncaught_exceptions': True,
+    }
     if clock_filter is not None:
         run_kwargs['n_iqd'] = clock_filter
         run_kwargs['clock_filter_method'] = clock_filter_method
@@ -159,13 +238,14 @@ def iterative_timescale(ftree, falignment, fdates,
                         reroot='least-squares',
                         clock_rate=None, clock_std=None,
                         clock_filter=3.0, clock_filter_method='local',
-                        remove_future_tips=True,
+                        remove_future_tips=None,
                         remove_root=True, coalescent_tc="opt",
                         sample_id_field=None,
                         collection_date_field='date',
                         rng_seed=None,
                         negative_tolerance=0.001,
                         max_iterations=50,
+                        cache_dir=None,
                         **kwargs):
     r"""
     Iteratively run TreeTime clock filtering until no outliers remain.
@@ -194,10 +274,12 @@ def iterative_timescale(ftree, falignment, fdates,
         Set to None to disable clock filtering (runs once with no filtering).
     clock_filter_method : str, default 'local'
         Method for clock filtering: 'local' (z-score) or 'residual' (IQD).
-    remove_future_tips : bool, default True
-        If True, tips that TreeTime places in the future (numdate > youngest
-        real sample date) are removed at each iteration. If False, only clock
-        filter outliers are removed.
+    remove_future_tips : float, int, or None, default None
+        Buffer in days beyond the youngest sample date for detecting tips
+        placed in the future. Tips whose projected date exceeds
+        (youngest_date + buffer_in_year_decimal) are removed. Set to 0 for
+        no buffer (remove any tip projected beyond the youngest date).
+        Set to None to disable future-tip removal entirely.
     remove_root : bool, default True
         If True and reroot is a list of tip names, prune those tips after the
         final iteration.
@@ -213,6 +295,11 @@ def iterative_timescale(ftree, falignment, fdates,
         Branch lengths negative but with abs < this value are set to 0.
     max_iterations : int, default 50
         Maximum number of clock filter iterations.
+    cache_dir : str, optional
+        Path to a directory for storing temporary intermediate files (pruned
+        trees, filtered FASTAs and metadata) created during iterations. If
+        None, intermediate files are written alongside the original input
+        files. The directory is created if it does not exist.
     **kwargs
         Additional keyword arguments passed to TreeTime.run().
 
@@ -233,60 +320,147 @@ def iterative_timescale(ftree, falignment, fdates,
         max_iterations = 50
     if clock_filter_method is None:
         clock_filter_method = 'local'
-    if remove_future_tips is None:
-        remove_future_tips = True
+    # remove_future_tips: None disables, numeric value is buffer in days
+    # (converted to year decimal buffer below)
+
+    # Set up cache directory for intermediate files
+    if cache_dir is not None:
+        cache_dir = os.path.abspath(cache_dir)
+        os.makedirs(cache_dir, exist_ok=True)
+
+    # Convert to absolute paths to avoid issues when papermill
+    # changes the working directory during notebook execution
+    ftree = os.path.abspath(ftree)
+    falignment = os.path.abspath(falignment)
+    fdates = os.path.abspath(fdates)
 
     # Work with copies so we don't modify original files
-    current_tree = ftree
     current_fasta = falignment
     current_metadata = fdates
 
+    # Store base names for clean iteration suffixes (avoid stacking like _iter1_iter2_iter3)
+    # When cache_dir is set, write intermediate files there instead of alongside originals
+    if cache_dir is not None:
+        fasta_base = os.path.join(cache_dir, os.path.splitext(os.path.basename(falignment))[0])
+        fasta_ext = os.path.splitext(falignment)[1]
+        meta_base = os.path.join(cache_dir, os.path.splitext(os.path.basename(fdates))[0])
+        meta_ext = os.path.splitext(fdates)[1]
+        tree_base = os.path.join(cache_dir, os.path.splitext(os.path.basename(ftree))[0])
+        tree_ext = os.path.splitext(ftree)[1]
+    else:
+        fasta_base, fasta_ext = os.path.splitext(falignment)
+        meta_base, meta_ext = os.path.splitext(fdates)
+        tree_base, tree_ext = os.path.splitext(ftree)
+
     all_outliers = []
+    intermediate_files = []  # Track intermediate files for cleanup
     iteration = 0
+
+    # Read original tree ONCE before the loop
+    original_tree = Phylo.read(ftree, 'newick')
 
     while iteration < max_iterations:
         iteration += 1
         print(f"=== Clock filter iteration {iteration} ===")
 
-        # Run timescale (without remove_root — we handle that at the end)
-        time_tree, bad_tips = timescale(
-            ftree=current_tree,
-            falignment=current_fasta,
-            fdates=current_metadata,
-            reroot=reroot,
-            clock_rate=clock_rate,
-            clock_std=clock_std,
-            clock_filter=clock_filter,
-            clock_filter_method=clock_filter_method,
-            remove_root=False,  # Don't remove root until final iteration
-            coalescent_tc=coalescent_tc,
-            sample_id_field=sample_id_field,
-            collection_date_field=collection_date_field,
-            rng_seed=rng_seed,
-            negative_tolerance=negative_tolerance,
-            **kwargs
-        )
+        # Prune a copy of the original tree to match the current alignment.
+        # This avoids MissingDataError when tips in the tree have no
+        # corresponding sequence in the filtered FASTA.
+        seq_ids_for_tree = {rec.id for rec in SeqIO.parse(current_fasta, 'fasta')}
+        tree_copy = copy.deepcopy(original_tree)
+        tips_to_remove = [t.name for t in tree_copy.get_terminals()
+                          if t.name not in seq_ids_for_tree]
+        for tip_name in tips_to_remove:
+            tree_copy.prune(tip_name)
+        pruned_tree_path = f"{tree_base}_pruned{tree_ext}"
+        Phylo.write(tree_copy, pruned_tree_path, format='newick',
+                    format_branch_length='%1.8f')
 
-        # Detect tips placed in the future (only if remove_future_tips is enabled)
-        # Only consider tips that are actual sequences (exist in the alignment),
-        # not internal nodes that became terminals through pruning.
+        # Run timescale (without remove_root — we handle that at the end)
+        # If clock filter rerooting fails (e.g. least-squares cannot find a
+        # positive-rate root), fall back to running without clock filtering.
+        try:
+            time_tree, bad_tips = timescale(
+                ftree=pruned_tree_path,
+                falignment=current_fasta,
+                fdates=current_metadata,
+                reroot=reroot,
+                clock_rate=clock_rate,
+                clock_std=clock_std,
+                clock_filter=clock_filter,
+                clock_filter_method=clock_filter_method,
+                remove_root=False,
+                coalescent_tc=coalescent_tc,
+                sample_id_field=sample_id_field,
+                collection_date_field=collection_date_field,
+                rng_seed=rng_seed,
+                negative_tolerance=negative_tolerance,
+                **kwargs
+            )
+        except Exception as e:
+            err_str = str(e).lower()
+            recoverable = clock_filter is not None and (
+                "rerooting failed" in err_str
+                or "infinity" in err_str
+                or "overflow" in err_str
+            )
+            if recoverable:
+                print(f"  TreeTime failed with clock filter: {e}")
+                print("  Falling back to running without clock filter.")
+                time_tree, bad_tips = timescale(
+                    ftree=pruned_tree_path,
+                    falignment=current_fasta,
+                    fdates=current_metadata,
+                    reroot=reroot,
+                    clock_rate=clock_rate,
+                    clock_std=clock_std,
+                    clock_filter=None,
+                    remove_root=False,
+                    coalescent_tc=coalescent_tc,
+                    sample_id_field=sample_id_field,
+                    collection_date_field=collection_date_field,
+                    rng_seed=rng_seed,
+                    negative_tolerance=negative_tolerance,
+                    **kwargs
+                )
+            else:
+                raise
+
+        # Detect tips placed in the future using clock model projection.
+        # Uses (dist2root - intercept) / rate to compute projected date,
+        # which is more reliable than TreeTime's inferred numdate.
+        # Only considers actual sequences (in alignment), not internal nodes
+        # that became terminals through pruning (NODE_ prefix).
         future_tips = []
-        if remove_future_tips:
-            seq_ids = {rec.id for rec in SeqIO.parse(current_fasta, 'fasta')}
-            tips = time_tree.tree.get_terminals()
-            root_names = reroot if isinstance(reroot, list) else []
-            dated_tips = [t for t in tips if hasattr(t, 'numdate') and t.numdate is not None
-                          and t.name not in root_names
-                          and t.name in seq_ids]
-            if dated_tips:
-                raw_dates = [t.raw_date_constraint for t in dated_tips
-                             if hasattr(t, 'raw_date_constraint')
-                             and t.raw_date_constraint is not None]
-                if raw_dates:
-                    youngest_date = max(raw_dates)
-                    future_tips = [t.name for t in dated_tips
-                                   if t.numdate > youngest_date
-                                   and t.name not in bad_tips]
+        future_tip_data = {}
+        if remove_future_tips is not None:
+            # Convert buffer from days to year decimal
+            future_buffer = float(remove_future_tips) / 365.25
+            rate = time_tree.clock_model.get('slope', None)
+            intercept_val = time_tree.clock_model.get('intercept', None)
+            if rate and intercept_val is not None and rate > 0:
+                # Reuse seq_ids_for_tree from tree pruning step (already parsed current_fasta)
+                tips = time_tree.tree.get_terminals()
+                root_names = reroot if isinstance(reroot, list) else []
+                dated_tips = [t for t in tips
+                              if hasattr(t, 'raw_date_constraint') and t.raw_date_constraint is not None
+                              and t.name not in root_names
+                              and t.name in seq_ids_for_tree
+                              and not str(t.name).startswith('NODE_')]
+                if dated_tips:
+                    youngest_date = max(t.raw_date_constraint for t in dated_tips)
+                    threshold_date = youngest_date + future_buffer
+                    for t in dated_tips:
+                        dist = getattr(t, 'dist2root', None)
+                        if dist is not None:
+                            projected_date = (dist - intercept_val) / rate
+                            if projected_date > threshold_date and t.name not in bad_tips:
+                                future_tips.append(t.name)
+                                future_tip_data[t.name] = {
+                                    'numdate': t.raw_date_constraint,
+                                    'dist2root': dist,
+                                    'projected_date': projected_date,
+                                }
 
         # Exclude root strains from outlier lists (they're kept for rooting)
         if isinstance(reroot, list):
@@ -297,16 +471,12 @@ def iterative_timescale(ftree, falignment, fdates,
         all_bad_this_iter = list(set(bad_tips + future_tips))
 
         # Check convergence: no clock filter outliers AND no future-placed tips
-        if clock_filter is None and not future_tips:
-            print(f"Converged after {iteration} iteration(s). No outliers or future-placed tips.")
-            break
-
         if not all_bad_this_iter:
             print(f"Converged after {iteration} iteration(s). No outliers or future-placed tips.")
             break
 
         print(f"  Clock filter outliers: {len(bad_tips)}")
-        if remove_future_tips:
+        if remove_future_tips is not None:
             print(f"  Tips placed in future: {len(future_tips)}")
 
         # Collect outlier info for this iteration
@@ -325,11 +495,13 @@ def iterative_timescale(ftree, falignment, fdates,
 
         # Add future-placed tips to the outlier DataFrame
         if future_tips:
-            future_df = pd.DataFrame({
-                'name': future_tips,
-                'iteration': iteration,
-                'diagnosis': 'placed_in_future'
-            })
+            future_records = []
+            for tip_name in future_tips:
+                record = {'name': tip_name, 'iteration': iteration, 'diagnosis': 'placed_in_future'}
+                if tip_name in future_tip_data:
+                    record.update(future_tip_data[tip_name])
+                future_records.append(record)
+            future_df = pd.DataFrame(future_records)
             iter_df = pd.concat([iter_df, future_df], ignore_index=True)
 
         iter_df['iteration'] = iteration
@@ -341,11 +513,10 @@ def iterative_timescale(ftree, falignment, fdates,
         # Filter FASTA — remove outliers
         filtered_seqs = [rec for rec in SeqIO.parse(current_fasta, 'fasta')
                          if rec.id not in bad_tips]
-        filtered_fasta = current_fasta.replace('.fasta', f'_iter{iteration}.fasta')
-        if filtered_fasta == current_fasta:
-            filtered_fasta = current_fasta + f'.iter{iteration}'
+        filtered_fasta = f"{fasta_base}_iter{iteration}{fasta_ext}"
         with open(filtered_fasta, 'w') as handle:
             SeqIO.write(filtered_seqs, handle, 'fasta')
+        intermediate_files.append(filtered_fasta)
         current_fasta = filtered_fasta
 
         # Filter metadata — remove outliers
@@ -356,22 +527,22 @@ def iterative_timescale(ftree, falignment, fdates,
 
         id_col = sample_id_field if sample_id_field and sample_id_field in meta_df.columns else meta_df.columns[0]
         meta_df = meta_df[~meta_df[id_col].isin(bad_tips)]
-        filtered_meta = current_metadata.replace('.csv', f'_iter{iteration}.csv').replace('.tsv', f'_iter{iteration}.tsv')
-        if filtered_meta == current_metadata:
-            filtered_meta = current_metadata + f'.iter{iteration}'
-        meta_df.to_csv(filtered_meta, index=False)
+        filtered_meta = f"{meta_base}_iter{iteration}{meta_ext}"
+        # Preserve original separator: TSV files must be written with tab separator
+        meta_sep = '\t' if filtered_meta.endswith('.tsv') else ','
+        meta_df.to_csv(filtered_meta, index=False, sep=meta_sep)
+        intermediate_files.append(filtered_meta)
         current_metadata = filtered_meta
 
-        # Use the pruned timetree as input for next iteration
-        pruned_tree_path = current_tree.replace('.nwk', f'_iter{iteration}.nwk')
-        if pruned_tree_path == current_tree:
-            pruned_tree_path = current_tree + f'.iter{iteration}'
-        Phylo.write(time_tree.tree, pruned_tree_path, format='newick',
-                    format_branch_length='%1.8f')
-        current_tree = pruned_tree_path
+
 
     else:
         print(f"WARNING: Reached max_iterations ({max_iterations}) without convergence.")
+
+    # Clean up pruned tree file
+    pruned_tree_path = f"{tree_base}_pruned{tree_ext}"
+    if os.path.exists(pruned_tree_path):
+        os.remove(pruned_tree_path)
 
     # Now prune root strains if requested (only on the final tree)
     if remove_root and isinstance(reroot, list):
@@ -390,6 +561,12 @@ def iterative_timescale(ftree, falignment, fdates,
         all_outliers_df = all_outliers_df[cols]
     else:
         all_outliers_df = pd.DataFrame(columns=['iteration', 'name'])
+
+    # Clean up intermediate files (keep only the final versions)
+    for f in intermediate_files:
+        if f != current_fasta and f != current_metadata:
+            if os.path.exists(f):
+                os.remove(f)
 
     return time_tree, all_outliers_df, current_fasta, current_metadata
 
@@ -421,7 +598,7 @@ def tree_nodes_ci(time_tree, fraction=0.95):
         records.append(record)
     return pd.DataFrame.from_records(records)
 
-def plot_root_to_tip(time_tree, outliers_df=None, remove_future_tips=True):
+def plot_root_to_tip(time_tree, outliers_df=None):
     """
     Plot root-to-tip regression with clock model line, outliers (orange), and
     future-placed tips (red).
@@ -434,8 +611,6 @@ def plot_root_to_tip(time_tree, outliers_df=None, remove_future_tips=True):
         DataFrame of outliers with columns for date (numdate/given_date) and
         optionally dist2root. Must have a 'diagnosis' column to distinguish
         clock outliers from future-placed tips.
-    remove_future_tips : bool, default True
-        If True, future-placed tips are shown as red dots in the plot.
 
     Returns
     -------
@@ -509,7 +684,7 @@ def plot_root_to_tip(time_tree, outliers_df=None, remove_future_tips=True):
 
         # Future tips (red)
         n_future_total = 0
-        if future_tips_df is not None and remove_future_tips:
+        if future_tips_df is not None:
             numdate_col = get_numdate_col(future_tips_df)
             dist_col = get_dist2root_col(future_tips_df)
             if numdate_col:

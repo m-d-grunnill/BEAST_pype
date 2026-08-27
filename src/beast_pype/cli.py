@@ -1,9 +1,11 @@
 import click
 import os
+import nbformat
+from nbconvert import HTMLExporter
 from beast_pype.nb_utils import execute_notebook
 from beast_pype.path_utils import path_to_workflows, path_to_report_templates
 from beast_pype.diagnostics import gen_beast_diagnostic_nb, gen_static_diagnostic_nb
-from beast_pype.report_gen import gen_summary_tree_report, gen_parameters_report
+from beast_pype.report_gen import gen_summary_tree_report, gen_parameters_report, gen_metadata_report
 from datetime import datetime
 from papermill.iorw import read_yaml_file
 
@@ -200,6 +202,72 @@ def summary_tree_report(summary_tree,
     )
     click.echo(f"Notebook: {results['notebook']}")
     click.echo(f"Notebook HTML: {results['notebook_html']}")
+
+
+
+@beast_pype.command(context_settings=dict(help_option_names=['-h', '--help']))
+@click.option('--metadata', '-m', multiple=True, required=True,
+              type=click.Path(exists=True, dir_okay=False, file_okay=True, readable=True),
+              help='Path to a metadata file (.csv or .tsv). Can be specified multiple times. '
+                   'When more than one is provided, comparative (xml-set) visualisations are used.')
+@click.option('--xml_set_name', '-n', multiple=True, type=str,
+              help='Name for an xml set, paired with each --metadata in order. '
+                   'Only used (and required) when more than one --metadata is provided.')
+@click.option('--output', '-o', required=True, type=str,
+              help='Path to save the output report notebook (.ipynb).')
+@click.option('--collection_date_field', '-c', default='collection_date', type=str,
+              help='Name of field in metadata containing collection dates (YYYY-MM-DD). '
+                   'Default: "collection_date".')
+@click.option('--xml_set_label', default='xml set', type=str,
+              help='Label for the xml set grouping variable in comparative reports. '
+                   'Default: "xml set".')
+@click.option('--kernel_name', '-k', default='beast_pype', type=str,
+              help='Name of the Jupyter kernel to use when executing the notebook. '
+                   'Default: "beast_pype".')
+def metadata_report(metadata,
+                    xml_set_name,
+                    output,
+                    collection_date_field,
+                    xml_set_label,
+                    kernel_name):
+    """Generate a report notebook summarising sample metadata.
+
+    Summarises sample collection date metadata via a describe table and a
+    histogram. When more than one --metadata is given, an additional section
+    compares each xml set.
+    """
+    xml_set_comparisons = len(metadata) > 1
+    if xml_set_comparisons:
+        if len(xml_set_name) != len(metadata):
+            raise click.UsageError(
+                'When more than one --metadata is provided, a matching '
+                '--xml_set_name must be given for each (same number, same order).')
+        metadata_paths = dict(zip(xml_set_name, metadata))
+    else:
+        metadata_paths = metadata[0]
+
+    notebook_path = gen_metadata_report(
+        output_report_path=output,
+        metadata_paths=metadata_paths,
+        collection_date_field=collection_date_field,
+        xml_set_comparisons=xml_set_comparisons,
+        xml_set_label=xml_set_label,
+        kernel_name=kernel_name,
+    )
+    execute_notebook(
+        input_path=notebook_path,
+        output_path=notebook_path,
+        kernel_name=kernel_name,
+        progress_bar=True,
+    )
+    executed_nb = nbformat.read(notebook_path, as_version=4)
+    html_exporter = HTMLExporter(exclude_input=True)
+    html_body, _ = html_exporter.from_notebook_node(executed_nb)
+    html_path = notebook_path.replace('.ipynb', '.html')
+    with open(html_path, 'w', encoding='utf-8') as f:
+        f.write(html_body)
+    click.echo(f"Notebook: {notebook_path}")
+    click.echo(f"Notebook HTML: {html_path}")
 
 
 

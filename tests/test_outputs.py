@@ -23,6 +23,11 @@ from beast_pype.outputs import (
     plot_comparative_box_violin,
     summary_stats_and_plot,
     _gridded_skyline,
+    read_metadata,
+    describe_collection_dates,
+    describe_collection_dates_by_xml_set,
+    plot_collection_date_histogram,
+    plot_stacked_collection_date_histogram,
 )
 
 
@@ -470,4 +475,135 @@ class TestSummaryStatsAndPlot:
         assert fig is not None
         assert isinstance(y_df, pd.DataFrame)
         assert isinstance(stats, pd.DataFrame)
+        plt.close("all")
+
+
+# ============================================================================
+# Fixtures: collection date metadata
+# ============================================================================
+
+
+@pytest.fixture
+def metadata_csv(tmp_dir):
+    """A metadata CSV with a collection date column."""
+    path = os.path.join(tmp_dir, "metadata.csv")
+    df = pd.DataFrame({
+        "strain": [f"s{i}" for i in range(10)],
+        "collection date": [
+            "2023-01-05", "2023-01-20", "2023-02-10", "2023-02-28",
+            "2023-03-15", "2023-03-30", "2023-04-12", "2023-05-01",
+            "2023-05-22", "2023-06-10",
+        ],
+    })
+    df.to_csv(path, index=False)
+    return path
+
+
+@pytest.fixture
+def metadata_tsv(tmp_dir):
+    """A metadata TSV with a collection date column."""
+    path = os.path.join(tmp_dir, "metadata.tsv")
+    df = pd.DataFrame({
+        "strain": [f"t{i}" for i in range(8)],
+        "collection date": [
+            "2023-03-01", "2023-03-18", "2023-04-05", "2023-04-25",
+            "2023-05-14", "2023-06-02", "2023-06-21", "2023-07-09",
+        ],
+    })
+    df.to_csv(path, sep="\t", index=False)
+    return path
+
+
+# ============================================================================
+# Tests: read_metadata
+# ============================================================================
+
+
+class TestReadMetadata:
+    """Tests for read_metadata."""
+
+    def test_reads_csv_and_parses_dates(self, metadata_csv):
+        df = read_metadata(metadata_csv, "collection date")
+        assert isinstance(df, pd.DataFrame)
+        assert pd.api.types.is_datetime64_any_dtype(df["collection date"])
+        assert len(df) == 10
+
+    def test_reads_tsv_and_parses_dates(self, metadata_tsv):
+        df = read_metadata(metadata_tsv, "collection date")
+        assert pd.api.types.is_datetime64_any_dtype(df["collection date"])
+        assert len(df) == 8
+
+    def test_invalid_extension_raises(self, tmp_dir):
+        bad = os.path.join(tmp_dir, "metadata.txt")
+        with open(bad, "w") as f:
+            f.write("strain,collection date\ns0,2023-01-01\n")
+        with pytest.raises(ValueError):
+            read_metadata(bad, "collection date")
+
+    def test_missing_date_field_raises(self, metadata_csv):
+        with pytest.raises(ValueError):
+            read_metadata(metadata_csv, "not_a_column")
+
+
+# ============================================================================
+# Tests: describe_collection_dates
+# ============================================================================
+
+
+class TestDescribeCollectionDates:
+    """Tests for describe_collection_dates and the by-xml-set variant."""
+
+    def test_describe_returns_dataframe(self, metadata_csv):
+        df = read_metadata(metadata_csv, "collection date")
+        result = describe_collection_dates(df, "collection date")
+        assert isinstance(result, pd.DataFrame)
+        assert "count" in result.index
+        assert "min" in result.index
+        assert "max" in result.index
+        assert result.loc["count", "collection date"] == 10
+
+    def test_describe_by_xml_set_columns(self, metadata_csv, metadata_tsv):
+        md = {
+            "A": read_metadata(metadata_csv, "collection date"),
+            "B": read_metadata(metadata_tsv, "collection date"),
+        }
+        result = describe_collection_dates_by_xml_set(
+            md, "collection date", xml_set_label="xml set")
+        assert isinstance(result, pd.DataFrame)
+        assert list(result.columns) == ["A", "B"]
+        assert result.columns.name == "xml set"
+        assert result.loc["count", "A"] == 10
+        assert result.loc["count", "B"] == 8
+
+
+# ============================================================================
+# Tests: collection date histograms
+# ============================================================================
+
+
+class TestPlotCollectionDateHistogram:
+    """Tests for the collection date histogram plots."""
+
+    def test_histogram_returns_fig_ax(self, metadata_csv):
+        df = read_metadata(metadata_csv, "collection date")
+        fig, ax = plot_collection_date_histogram(df, "collection date", bins=10)
+        assert fig is not None
+        assert ax is not None
+        assert len(ax.patches) > 0
+        assert ax.get_ylabel() == "Number of samples"
+        plt.close("all")
+
+    def test_stacked_histogram_returns_fig_ax(self, metadata_csv, metadata_tsv):
+        md = {
+            "A": read_metadata(metadata_csv, "collection date"),
+            "B": read_metadata(metadata_tsv, "collection date"),
+        }
+        fig, ax = plot_stacked_collection_date_histogram(
+            md, "collection date", xml_set_label="xml set", bins=10)
+        assert fig is not None
+        assert ax is not None
+        assert len(ax.patches) > 0
+        legend = ax.get_legend()
+        assert legend is not None
+        assert legend.get_title().get_text() == "xml set"
         plt.close("all")

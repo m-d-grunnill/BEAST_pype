@@ -10,6 +10,8 @@ metadata_path: example_data/Measles/Netherlands_2024_measles_metadata.csv # Path
 sample_id_field: 'accessionVersion' #    Name of field in metadata_db containing sequence IDs.
 collection_date_field: 'sampleCollectionDate' #Name of field in metadata_db containing collection dates of sequences. Should be formatted YYYY-MM-DD.
 use_initial_tree: True
+clock_filter: 5
+remove_future_tips: null 
 
 # Defining XML Sets (Partitioning Data)
 xml_set_definitions: # The definitions for the xml_sets you wish to use.
@@ -22,11 +24,11 @@ xml_set_definitions: # The definitions for the xml_sets you wish to use.
 rt_partitions: #Instructions for setting rt_change date, going backwards from youngest xml_set in fasta_path until rt_partitions["end"]  is reached.
   # {'unit': 'days, weeks or years', 'every': int/float, 'end': date str YYYY-MM-DD}
   unit: months
-  every: 3
+  every: 4
 sampling_prop_partitions: #Instructions for setting sampling_prop_change date, going backwards from youngest xml_set in fasta_path until sampling_prop_partition_freq["end"]  is reached.
   # {'unit': 'days, weeks or years', 'every': int/float, 'end': date str YYYY-MM-DD}
   unit: months
-  every: 3
+  every: 4
 origin_start_addition: 0.049315068493150684 #    Suggested infection period of pathogen. **Should be in years.** This + initial MLE tree height is used as starting value of origin.
 origin_upper_addition: 5 #    This + initial MLE tree height is used as upper value of origin prior.
 

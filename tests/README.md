@@ -15,6 +15,31 @@ pytest -n NUMBER_OF_CPUS_TO_USE tests/
 ```
 **Note** NUMBER_OF_CPUS_TO_USE can be `logical` to run on all CPUs detected by the OS. BEWARE if working on a High Performance Cluster the detection method when using logical may detect more CPUs than allocated to you.
 
+# Running the tests against a specific Jupyter kernelspec
+
+The workflow tests execute notebooks using a Jupyter kernel. By default they use the
+`beast_pype` kernelspec. If you have installed beast_pype into a differently named
+environment (and registered a kernelspec for it), you can point the tests at that
+kernelspec with the `--kernel-name` option:
+```bash
+pytest -n NUMBER_OF_CPUS_TO_USE tests/ --kernel-name KERNELSPEC_NAME
+```
+For example, to run the tests with 31 CPUs against a development environment whose
+kernelspec is named `dev_beast_pype`:
+```bash
+pytest -n 31 tests/ --kernel-name dev_beast_pype
+```
+**Note** `KERNELSPEC_NAME` must be the name of an installed kernelspec (not the conda
+environment path). You can list the kernelspecs available on your machine with:
+```bash
+jupyter kernelspec list
+```
+If a kernelspec for your environment does not yet exist, you can register one from
+within that environment via:
+```bash
+python -m ipykernel install --user --name KERNELSPEC_NAME --display-name "KERNELSPEC_NAME"
+```
+
 # A note on running these tests with little RAM 
 
 If you do not have much RAM tests may well fail with the error `RuntimeError("Kernel didn't respond in 60 seconds")`. There are 2 solutions to this:

@@ -847,3 +847,184 @@ def plot_comparative_origin_or_tmrca(df_melted, parameter, xml_set_label='xml_se
     plt.setp(ax.get_xticklabels(), ha='right')
     plt.tight_layout()
     return fig
+
+
+def read_metadata(metadata_path, collection_date_field):
+    """Read a metadata CSV/TSV file and parse the collection date field.
+
+    Parameters
+    ----------
+    metadata_path : str
+        Path to the metadata file. Must end with ``.csv`` or ``.tsv``.
+    collection_date_field : str
+        Name of the column containing sample collection dates. This column is
+        parsed to ``datetime`` (unparseable values become ``NaT``).
+
+    Returns
+    -------
+    pandas.DataFrame
+        The metadata with ``collection_date_field`` cast to datetime.
+    """
+    if metadata_path.endswith('.tsv'):
+        sep = '\t'
+    elif metadata_path.endswith('.csv'):
+        sep = ','
+    else:
+        raise ValueError(
+            'Only .csv and .tsv files are supported for metadata. '
+            f'Got: {metadata_path}'
+        )
+    metadata = pd.read_csv(metadata_path, sep=sep)
+    if collection_date_field not in metadata.columns:
+        raise ValueError(
+            f"collection_date_field '{collection_date_field}' not found in "
+            f"{metadata_path}. Available columns: {', '.join(metadata.columns)}"
+        )
+    metadata[collection_date_field] = pd.to_datetime(
+        metadata[collection_date_field], errors='coerce')
+    return metadata
+
+
+def describe_collection_dates(metadata, collection_date_field):
+    """Summarise a collection date column via :meth:`pandas.Series.describe`.
+
+    Parameters
+    ----------
+    metadata : pandas.DataFrame
+        Metadata containing the collection date column (as datetime).
+    collection_date_field : str
+        Name of the collection date column.
+
+    Returns
+    -------
+    pandas.DataFrame
+        A single column DataFrame of descriptive statistics for the collection
+        dates.
+    """
+    dates = pd.to_datetime(metadata[collection_date_field], errors='coerce')
+    description = dates.describe()
+    return description.to_frame(name=collection_date_field)
+
+
+def describe_collection_dates_by_xml_set(metadata_dict,
+                                         collection_date_field,
+                                         xml_set_label='xml_set'):
+    """Summarise collection dates for several xml sets side by side.
+
+    Parameters
+    ----------
+    metadata_dict : dict of {str: pandas.DataFrame}
+        Mapping of xml set name to its metadata DataFrame.
+    collection_date_field : str
+        Name of the collection date column.
+    xml_set_label : str, default 'xml_set'
+        Name to use for the columns index of the returned DataFrame.
+
+    Returns
+    -------
+    pandas.DataFrame
+        Descriptive statistics with one column per xml set.
+    """
+    describes = {}
+    for xml_set, metadata in metadata_dict.items():
+        dates = pd.to_datetime(metadata[collection_date_field], errors='coerce')
+        describes[xml_set] = dates.describe()
+    summary = pd.DataFrame(describes)
+    summary.columns.name = xml_set_label
+    return summary
+
+
+def plot_collection_date_histogram(metadata, collection_date_field, bins=30,
+                                   ax=None, x_tick_freq='automatic'):
+    """Plot a histogram of sample collection dates.
+
+    Parameters
+    ----------
+    metadata : pandas.DataFrame
+        Metadata containing the collection date column (as datetime).
+    collection_date_field : str
+        Name of the collection date column.
+    bins : int, default 30
+        Number of histogram bins.
+    ax : matplotlib.axes.Axes, optional
+        Axes to draw on. If None a new figure and axes are created.
+    x_tick_freq : str, default 'automatic'
+        Suggested x-axis tick frequency. Options are 'automatic', 'yearly',
+        'quarterly', 'monthly', 'half month' or 'weekly'.
+
+    Returns
+    -------
+    tuple of (matplotlib.figure.Figure, matplotlib.axes.Axes)
+    """
+    if ax is None:
+        fig, ax = plt.subplots(1, 1)
+    else:
+        fig = ax.get_figure()
+    dates = pd.to_datetime(metadata[collection_date_field], errors='coerce').dropna()
+    year_decimals = dates.map(date_to_decimal)
+    sns.histplot(x=year_decimals, bins=bins, ax=ax)
+    ax.set_xlabel('Collection date')
+    ax.set_ylabel('Number of samples')
+    if len(year_decimals) > 0:
+        tick_year_decimals, tick_labels = year_decimal_to_date_tick_labels(
+            year_decimals, tick_freq=x_tick_freq)
+        ax.xaxis.set_ticks(tick_year_decimals)
+        ax.set_xticklabels(tick_labels)
+        ax.tick_params(axis='x', labelrotation=45)
+        plt.setp(ax.get_xticklabels(), ha='right')
+    plt.tight_layout()
+    return fig, ax
+
+
+def plot_stacked_collection_date_histogram(metadata_dict, collection_date_field,
+                                           xml_set_label='xml_set', bins=30,
+                                           ax=None, x_tick_freq='automatic'):
+    """Plot a stacked histogram of collection dates for several xml sets.
+
+    Parameters
+    ----------
+    metadata_dict : dict of {str: pandas.DataFrame}
+        Mapping of xml set name to its metadata DataFrame.
+    collection_date_field : str
+        Name of the collection date column.
+    xml_set_label : str, default 'xml_set'
+        Label used for the grouping (legend title).
+    bins : int, default 30
+        Number of histogram bins.
+    ax : matplotlib.axes.Axes, optional
+        Axes to draw on. If None a new figure and axes are created.
+    x_tick_freq : str, default 'automatic'
+        Suggested x-axis tick frequency. Options are 'automatic', 'yearly',
+        'quarterly', 'monthly', 'half month' or 'weekly'.
+
+    Returns
+    -------
+    tuple of (matplotlib.figure.Figure, matplotlib.axes.Axes)
+    """
+    if ax is None:
+        fig, ax = plt.subplots(1, 1)
+    else:
+        fig = ax.get_figure()
+    frames = []
+    for xml_set, metadata in metadata_dict.items():
+        dates = pd.to_datetime(metadata[collection_date_field],
+                               errors='coerce').dropna()
+        entry = pd.DataFrame({
+            'year_decimal': dates.map(date_to_decimal),
+            xml_set_label: xml_set,
+        })
+        frames.append(entry)
+    combined = pd.concat(frames, ignore_index=True)
+    sns.histplot(data=combined, x='year_decimal', hue=xml_set_label,
+                 multiple='stack', bins=bins, ax=ax)
+    ax.set_xlabel('Collection date')
+    ax.set_ylabel('Number of samples')
+    if len(combined) > 0:
+        tick_year_decimals, tick_labels = year_decimal_to_date_tick_labels(
+            combined['year_decimal'], tick_freq=x_tick_freq)
+        ax.xaxis.set_ticks(tick_year_decimals)
+        ax.set_xticklabels(tick_labels)
+        ax.tick_params(axis='x', labelrotation=45)
+        plt.setp(ax.get_xticklabels(), ha='right')
+    plt.tight_layout()
+    return fig, ax

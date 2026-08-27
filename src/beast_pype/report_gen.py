@@ -172,6 +172,134 @@ def gen_summary_tree_notebook(directory_of_merged_trees, output_path, topology, 
     with open(output_path , 'w') as f:
         nbf.write(notebook, f)
 
+def gen_metadata_report(output_report_path,
+                        metadata_paths,
+                        collection_date_field='collection_date',
+                        xml_set_comparisons=False,
+                        xml_set_label='xml set',
+                        kernel_name='beast_pype',
+                        as_version=4):
+    """Generate a notebook report summarising sample metadata.
+
+    Currently this report summarises sample collection date metadata. Further
+    metadata summaries may be added in future.
+
+    For simple workflows (``xml_set_comparisons=False``) the report summarises a
+    single metadata file via :func:`pandas.DataFrame.describe` and a histogram.
+
+    For comparative workflows (``xml_set_comparisons=True``) the report starts
+    with a combined summary and histogram of all sequences, then adds a section
+    comparing each xml set via :func:`pandas.DataFrame.describe` and a stacked
+    histogram.
+
+    Parameters
+    ----------
+    output_report_path : str
+        Path (including filename) where the report notebook will be saved.
+    metadata_paths : str or dict of {str: str}
+        If ``xml_set_comparisons`` is False, a path to a single metadata file
+        (``.csv`` or ``.tsv``). If ``xml_set_comparisons`` is True, a mapping of
+        xml set name to its metadata file path.
+    collection_date_field : str, default 'collection_date'
+        Name of the field in the metadata containing collection dates
+        (formatted YYYY-MM-DD).
+    xml_set_comparisons : bool, default False
+        Whether the report should compare xml sets.
+    xml_set_label : str, default 'xml set'
+        Label used for the xml set grouping variable in comparative reports.
+    kernel_name : str, default 'beast_pype'
+        Name of the Jupyter (python) kernel to use when executing the notebook.
+    as_version : int, default 4
+        Jupyter notebook version.
+
+    Returns
+    -------
+    str
+        Path to the generated notebook.
+    """
+    notebook = nbf.v4.new_notebook()
+    notebook['metadata']['kernelspec'] = make_kernelspec(kernel_name)
+
+    notebook['cells'] = [
+        nbf.v4.new_markdown_cell(
+            "# Sample Collection Date Report\n\n" +
+            "This report summarises the sample collection date metadata used in "
+            "this analysis."
+        ),
+        nbf.v4.new_code_cell(
+            "import warnings\n" +
+            "warnings.filterwarnings('ignore')\n" +
+            "import pandas as pd\n" +
+            "from beast_pype.outputs import (read_metadata, describe_collection_dates,\n" +
+            "    plot_collection_date_histogram)"
+        ),
+    ]
+
+    if xml_set_comparisons:
+        if not isinstance(metadata_paths, dict):
+            raise ValueError(
+                "metadata_paths must be a dict of {xml_set: path} when "
+                "xml_set_comparisons is True.")
+        notebook['cells'].append(
+            nbf.v4.new_code_cell(
+                "from beast_pype.outputs import (\n" +
+                "    describe_collection_dates_by_xml_set,\n" +
+                "    plot_stacked_collection_date_histogram)"
+            ))
+        notebook['cells'].append(
+            nbf.v4.new_code_cell(
+                f"collection_date_field = '{collection_date_field}'\n" +
+                f"xml_set_label = '{xml_set_label}'\n" +
+                f"metadata_paths = {metadata_paths!r}\n" +
+                "metadata_dict = {xml_set: read_metadata(path, collection_date_field)\n" +
+                "    for xml_set, path in metadata_paths.items()}\n" +
+                "combined_metadata = pd.concat(metadata_dict.values(), ignore_index=True)"
+            ))
+        notebook['cells'] += [
+            nbf.v4.new_markdown_cell(
+                "## All Sequences\n\n" +
+                "### Summary statistics of collection dates"),
+            nbf.v4.new_code_cell(
+                "describe_collection_dates(combined_metadata, collection_date_field)"),
+            nbf.v4.new_markdown_cell("### Histogram of collection dates"),
+            nbf.v4.new_code_cell(
+                "fig, ax = plot_collection_date_histogram(combined_metadata, collection_date_field)\n"),
+            nbf.v4.new_markdown_cell(
+                "## Comparison of XML Sets\n\n" +
+                "### Summary statistics of collection dates per xml set"),
+            nbf.v4.new_code_cell(
+                "describe_collection_dates_by_xml_set(metadata_dict, collection_date_field, xml_set_label=xml_set_label)"),
+            nbf.v4.new_markdown_cell("### Stacked histogram of collection dates per xml set"),
+            nbf.v4.new_code_cell(
+                "fig, ax = plot_stacked_collection_date_histogram(metadata_dict, collection_date_field, xml_set_label=xml_set_label)\n"),
+        ]
+    else:
+        if isinstance(metadata_paths, dict):
+            raise ValueError(
+                "metadata_paths must be a single path (str) when "
+                "xml_set_comparisons is False.")
+        notebook['cells'].append(
+            nbf.v4.new_code_cell(
+                f"collection_date_field = '{collection_date_field}'\n" +
+                f"metadata_path = '{metadata_paths}'\n" +
+                "metadata = read_metadata(metadata_path, collection_date_field)"
+            ))
+        notebook['cells'] += [
+            nbf.v4.new_markdown_cell(
+                "## Summary statistics of collection dates"),
+            nbf.v4.new_code_cell(
+                "describe_collection_dates(metadata, collection_date_field)"),
+            nbf.v4.new_markdown_cell("## Histogram of collection dates"),
+            nbf.v4.new_code_cell(
+                "fig, ax = plot_collection_date_histogram(metadata, collection_date_field)\n" +
+                "fig"),
+        ]
+
+    with open(output_report_path, 'w') as f:
+        nbf.write(notebook, f)
+
+    return output_report_path
+
 def gen_tree_report(output_report_path, inputs_directory='outputs_and_reports', topology=None, collection_date_field='collection_date', plot_width=12, plot_height=6, plot_res=120, xml_set_comparisons=False, as_version=4):
     """Generate a notebook report for tree outputs of BEAST_pype.
 

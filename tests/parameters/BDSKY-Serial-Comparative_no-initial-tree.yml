@@ -18,9 +18,11 @@ xml_set_definitions: # The definitions for the xml_sets you wish to use.
 
 # Initial Tree Building & Downsampling
 use_initial_tree: False
+clock_filter: 5
+remove_future_tips: null 
 
 # BDSky Options
-rt_dims: 3 #    Number of Rt dimensions (time periods over which Rt is estimated).
+rt_dims: 1 #    Number of Rt dimensions (time periods over which Rt is estimated).
 zero_sampling_before_first_sample: True # Fix the sampling proportion to 0 for the period before the first xml_set.
 
 

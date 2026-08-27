@@ -129,7 +129,7 @@ initial_tree_type: # str (either 'Distance' or 'Temporal') or None, (default, ca
 #     If True, remove the root after rerooting. This is useful if the root is not a real sample and is only used for rooting purposes.
 # clock_filter_method: # str, default 'local'
 
-# remove_future_tips: # bool, default True
+# remove_future_tips: # float/int or None, default 28
 #     If True, tips that TreeTime places in the future (numdate > youngest
 #     real sample date) are removed at each iteration.
 
