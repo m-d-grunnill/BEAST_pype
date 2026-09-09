@@ -4,7 +4,14 @@ import nbformat
 from nbconvert import HTMLExporter
 from beast_pype.nb_utils import execute_notebook
 from beast_pype.path_utils import path_to_workflows, path_to_report_templates
-from beast_pype.diagnostics import gen_beast_diagnostic_nb, gen_static_diagnostic_nb
+from beast_pype.diagnostics import (
+    gen_beast_diagnostic_nb,
+    gen_mcmc_report_nb,
+    merge_logs_to_csv,
+    subset_and_merge_trees,
+    read_log_files_as_posterior,
+    burn_posterior,
+)
 from beast_pype.report_gen import gen_summary_tree_report, gen_parameters_report, gen_metadata_report
 from datetime import datetime
 from papermill.iorw import read_yaml_file
@@ -121,6 +128,11 @@ def run_workflow(workflow,
               help='Burn-in percentage (0-100) to remove from the start of each chain.\n' +
                    'If not given 10%% is used.'
               )
+@click.option('--front_percentage', '-f', default=100, type=float,
+              help='Percentage (0-100) of the posterior to keep at the front. '
+                   'Must be greater than or equal to burnin.\n' +
+                   'If not given 100%% is used.'
+              )
 @click.option('--output_prefix', '-o', default=None, type=str,
               help='Prefix (including path) for output files.\n' +
                    'If not given, defaults to <beast_outputs>/static_diag_.'
@@ -133,28 +145,95 @@ def run_workflow(workflow,
               help='Name of the Jupyter kernel to use when executing the diagnostic notebook.\n' +
                    'If not given "beast_pype" is used.'
               )
+@click.option('--chain_name', '-c', 'chain_names', multiple=True, type=str,
+              help='Name of an MCMC chain to include. The associated log file is assumed '
+                   'to be <chain_name>.log and the associated trees file <chain_name>.trees, '
+                   'both located in BEAST_OUTPUTS. Can be specified multiple times.\n' +
+                   'If not given, all .log and .trees files in BEAST_OUTPUTS are used.'
+              )
 def static_diagnose_and_merge(beast_outputs,
                               burnin,
+                              front_percentage,
                               output_prefix,
                               parameters_per_section,
-                              kernel_name):
+                              kernel_name,
+                              chain_names):
     """
     BEAST_OUTPUTS: Path to directory containing BEAST 2 outputs to statically diagnose and merge.
     """
-    results = gen_static_diagnostic_nb(
+    chain_names = list(chain_names) if chain_names else None
+
+    if output_prefix is None:
+        output_prefix = os.path.join(beast_outputs, "static_diag_")
+
+    # --- Generate MCMC diagnostic notebook and HTML ---
+    diag_results = gen_mcmc_report_nb(
         directory=beast_outputs,
         burnin=burnin,
+        front_percentage=front_percentage,
         output_prefix=output_prefix,
         parameters_per_section=parameters_per_section,
         kernel_name=kernel_name,
+        chain_names=chain_names,
     )
-    click.echo(f"Notebook: {results['notebook']}")
-    click.echo(f"Notebook HTML: {results['notebook_html']}")
-    click.echo(f"Merged log: {results['merged_log']}")
-    if results['merged_trees']:
-        click.echo(f"Merged trees: {results['merged_trees']}")
+
+    # --- Resolve chains and load posterior for merging ---
+    import glob
+    import re
+    if chain_names is not None:
+        log_paths = {
+            name: os.path.abspath(os.path.join(beast_outputs, f"{name}.log"))
+            for name in chain_names
+        }
     else:
-        click.echo("No .trees files found; merged trees not generated.")
+        log_paths = {
+            re.sub(r'(-BEAST)?\.log$', '', os.path.basename(f)): os.path.abspath(f)
+            for f in sorted(glob.glob(os.path.join(beast_outputs, "*.log")))
+        }
+    posterior = read_log_files_as_posterior(log_paths)
+    burned_posterior = burn_posterior(
+        posterior, in_percentage=burnin, front_percentage=front_percentage
+    )
+
+    # --- Merge logs to CSV ---
+    merged_log_path = f"{output_prefix}merged_logs.csv"
+    merge_logs_to_csv(burned_posterior, output_file=merged_log_path)
+
+    # --- Subset and merge .trees files ---
+    if chain_names is not None:
+        tree_files = [
+            os.path.abspath(os.path.join(beast_outputs, f"{name}.trees"))
+            for name in chain_names
+            if os.path.isfile(os.path.join(beast_outputs, f"{name}.trees"))
+        ]
+    else:
+        tree_files = sorted(
+            os.path.abspath(f)
+            for f in glob.glob(os.path.join(beast_outputs, "*.trees"))
+        )
+
+    merged_trees_path = f"{output_prefix}merged_trees.trees"
+    if tree_files:
+        draws = posterior.posterior["draw"].values
+        n_draws = len(draws)
+        in_idx = round(burnin / 100 * n_draws)
+        front_idx = round(front_percentage / 100 * n_draws) - 1
+        in_state_number = int(draws[min(in_idx, n_draws - 1)])
+        front_state_number = int(draws[min(front_idx, n_draws - 1)])
+        subset_and_merge_trees(
+            file_list=tree_files,
+            in_number=in_state_number,
+            front_number=front_state_number,
+            output_file=merged_trees_path,
+        )
+    else:
+        merged_trees_path = None
+
+    click.echo(f"Notebook: {diag_results['notebook']}")
+    click.echo(f"Notebook HTML: {diag_results['notebook_html']}")
+    click.echo(f"Merged log: {merged_log_path}")
+    if merged_trees_path:
+        click.echo(f"Merged trees: {merged_trees_path}")
 
 
 @beast_pype.command(context_settings=dict(help_option_names=['-h', '--help']))

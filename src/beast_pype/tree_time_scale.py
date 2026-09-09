@@ -315,6 +315,12 @@ def iterative_timescale(ftree, falignment, fdates,
     metadata_path : str
         Path to the final (filtered) metadata file.
     """
+    if isinstance(remove_future_tips, (int, float)) and remove_future_tips < 0:
+        raise ValueError(f"remove_future_tips must be non-negative or None, got {remove_future_tips}")
+    if remove_future_tips is False:
+        remove_future_tips = None
+    if remove_future_tips is True:
+        remove_future_tips = 0
     # Handle None defaults (when passed from workflow notebooks via papermill)
     if max_iterations is None:
         max_iterations = 50

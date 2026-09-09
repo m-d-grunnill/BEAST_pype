@@ -6,7 +6,6 @@ from pathlib import Path
 import re
 from typing import List
 from tqdm.auto import tqdm
-import yaml
 import arviz as az
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -635,48 +634,58 @@ class BEASTDiag:
             chain.value = True
     
     def _merge_selection(self, progress_callback=None, trees_pbar=None):
+        from beast_pype.diagnostics.mcmc_report import gen_mcmc_report_nb
+
         merged_log_path = f'{self.output_prefix}merged_logs.csv'
         merged_trees_path = f'{self.output_prefix}merged_trees.trees'
-        selection_yaml_path = f'{self.output_prefix}merge_selection.yaml'
 
+        # --- 1. Merge selected logs to CSV ---
         if progress_callback is not None:
             progress_callback(0, 3, 'Merging selected log files...')
-        self.merge_logs_to_csv(output_file=merged_log_path, like_logcombiner=True)
-
-        selected_nexus_files = sorted(            
-            os.path.join(self.directory, fname)
-            for fname in os.listdir(self.directory)
-            if fname.endswith(".trees")
-            and any(fname.startswith(chain) for chain in self.selected_chains)
+        merge_logs_to_csv(
+            posterior=self.selected_posterior,
+            output_file=merged_log_path,
         )
+
+        # --- 2. Subset and merge selected .trees files ---
         if progress_callback is not None:
             progress_callback(1, 3, 'Subsetting and merging .trees files...')
 
-        # Convert percentage-based selection to actual STATE numbers
-        draws = self.original_posterior.posterior['draw'].values
-        n_draws = len(draws)
-        in_idx = round(self.burinin_percentage / 100 * n_draws)
-        front_idx = round(self.keep_front_percentage / 100 * n_draws) - 1
-        in_state_number = int(draws[min(in_idx, n_draws - 1)])
-        front_state_number = int(draws[min(front_idx, n_draws - 1)])
+        tree_files = [
+            os.path.join(self.directory, f'{chain}.trees')
+            for chain in self.selected_chains
+            if os.path.isfile(os.path.join(self.directory, f'{chain}.trees'))
+        ]
 
-        subset_and_merge_trees(
-            file_list=selected_nexus_files,
-            in_number=in_state_number,
-            front_number=front_state_number,
-            output_file=merged_trees_path,
-            pbar=trees_pbar
-        )
+        if tree_files:
+            draws = self.original_posterior.posterior['draw'].values
+            n_draws = len(draws)
+            in_idx = round(self.burinin_percentage / 100 * n_draws)
+            front_idx = round(self.keep_front_percentage / 100 * n_draws) - 1
+            in_state_number = int(draws[min(in_idx, n_draws - 1)])
+            front_state_number = int(draws[min(front_idx, n_draws - 1)])
 
-        selection_info = {
-            'selected_chains': self.selected_chains,
-            'burinin_percentage': self.burinin_percentage,
-            'keep_front_percentage': self.keep_front_percentage
-        }
+            subset_and_merge_trees(
+                file_list=tree_files,
+                in_number=in_state_number,
+                front_number=front_state_number,
+                output_file=merged_trees_path,
+                pbar=trees_pbar,
+            )
+        else:
+            merged_trees_path = None
+
+        # --- 3. Generate diagnostic notebook and HTML ---
         if progress_callback is not None:
-            progress_callback(2, 3, 'Writing selection YAML...')
-        with open(selection_yaml_path, 'w', encoding='utf-8') as file:
-            yaml.safe_dump(selection_info, file, sort_keys=False)
+            progress_callback(2, 3, 'Generating MCMC diagnostic notebook...')
+
+        diag_outputs = gen_mcmc_report_nb(
+            directory=self.directory,
+            burnin=self.burinin_percentage,
+            front_percentage=self.keep_front_percentage,
+            output_prefix=self.output_prefix,
+            chain_names=self.selected_chains,
+        )
 
         if progress_callback is not None:
             progress_callback(3, 3, 'Merge complete.')
@@ -684,7 +693,8 @@ class BEASTDiag:
         return {
             'merged_logs': merged_log_path,
             'merged_trees': merged_trees_path,
-            'selection_yaml': selection_yaml_path
+            'notebook': diag_outputs['notebook'],
+            'notebook_html': diag_outputs['notebook_html']
         }
 
 
@@ -807,7 +817,8 @@ class BEASTDiag:
                     "Merge complete.<br>"
                     f"Merged logs can be found at {output_paths['merged_logs']}.<br>"
                     f"Merged trees can be found at {output_paths['merged_trees']}.<br>"
-                    f"Selection info can be found at {output_paths['selection_yaml']}."
+                    f"Diagnostic notebook can be found at {output_paths['notebook']}.<br>"
+                    f"Diagnostic report (HTML) can be found at {output_paths['notebook_html']}."
                     "</span>"
                 )
             except Exception as exc:
