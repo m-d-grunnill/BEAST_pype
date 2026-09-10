@@ -816,6 +816,7 @@ class BDSKYSerialWorkflowParams(SimpleWorkflowParams):
                                                    'rt_dims',
                                                    'sampling_prop_dims',
                                                    'zero_sampling_before_first_sample',
+                                                   'initial_tree_type',
                                                    'origin_start_addition',
                                                    'origin_upper_addition',
                                                    'origin_prior']))

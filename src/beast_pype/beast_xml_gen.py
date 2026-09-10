@@ -98,6 +98,7 @@ def gen_bdsky_serial_xml(template_xml_path,
                          collection_date_field='date',
                          sample_id_field='strain',
                          initial_tree_path=None,
+                         initial_tree_type = 'Temporal',
                          origin_upper_height_addition=None,
                          origin_start_addition=None,
                          origin_prior=None,
@@ -131,6 +132,8 @@ def gen_bdsky_serial_xml(template_xml_path,
         Field to use as sequence collection date.
     initial_tree_path: str, optional
         Path to initial_tree    must be Newick file (nwk).
+    initial_tree_type: str, default 'Temporal'
+        Type of initial tree. Must be one of 'Temporal' or 'Distance'.
     origin_upper_height_addition: int or float, optional
         Value to add to tree height for upper limit of origin prior. Origin prior is
          uniformly distributed.
@@ -187,13 +190,11 @@ def gen_bdsky_serial_xml(template_xml_path,
                                  'initial tree must be provided.')
             tree = ete3.Tree(initial_tree_path, format=1)
             furthest_leaf, tree_height = tree.get_farthest_leaf()
-            youngest_tip = metadata_df.year_decimal.max()
-            oldest_tip = metadata_df.year_decimal.min()
-            tip_distance = youngest_tip - oldest_tip
-            if tip_distance > tree_height:
-                raise ValueError('tree_height must be greater than distance between youngest_tip_date and oldest_tip.')
+            time_span = metadata_df.year_decimal.max() - metadata_df.year_decimal.min()
+            if initial_tree_type == 'Temporal' and time_span > tree_height:
+                raise ValueError(f'If using a temporal tree the tree_height ({tree_height}) must be greater than the time span ({time_span}) in the metadata.')
             origin_prior = {
-                'lower': tip_distance,
+                'lower': time_span,
                 'upper': tree_height + origin_upper_height_addition,
                 'start': tree_height + origin_start_addition}
     else:
