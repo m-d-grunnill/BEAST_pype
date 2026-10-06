@@ -20,6 +20,7 @@ from beast_pype.outputs import (
     plot_box_violin,
     plot_hist_kde,
     plot_origin_or_tmrca,
+    plot_comparative_origin_or_tmrca,
     plot_comparative_box_violin,
     summary_stats_and_plot,
     _gridded_skyline,
@@ -419,6 +420,33 @@ class TestPlotComparativeBoxViolin:
         prior = np.random.randn(100)
         fig = plot_comparative_box_violin(melted_df, "treeHeight", prior_draws=prior)
         assert fig is not None
+        plt.close("all")
+
+
+class TestPlotComparativeOriginOrTmrca:
+    """Tests for comparative origin and TMRCA histograms."""
+
+    def test_dashed_lines_match_hdi_pivot(self):
+        draws = np.concatenate([np.linspace(2020.0, 2020.2, 95), [2024.0] * 5])
+        trace_df = pd.DataFrame({"xml_set": "strain_A", "TMRCA": draws})
+        melted = trace_df.melt(
+            id_vars="xml_set",
+            value_vars="TMRCA",
+            value_name="Estimate",
+        )
+
+        ax = plot_comparative_origin_or_tmrca(
+            melted,
+            "TMRCA",
+            one_figure=True,
+        )
+        expected = hdi_pivot(trace_df, "TMRCA").iloc[0]
+        dashed_lines = [line for line in ax.lines if line.get_linestyle() == "--"]
+        observed_bounds = sorted(line.get_xdata()[0] for line in dashed_lines)
+
+        assert observed_bounds == pytest.approx(
+            sorted([expected["Lower 0.95 HDI"], expected["Upper 0.95 HDI"]])
+        )
         plt.close("all")
 
 
