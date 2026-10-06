@@ -786,7 +786,8 @@ def plot_origin_or_tmrca(trace_df, parameter, x_tick_freq='automatic', hdi_prob=
 
 
 def plot_comparative_origin_or_tmrca(df_melted, parameter, xml_set_label='xml_set',
-                                     x_tick_freq='automatic', one_figure=False, palette=None):
+                                     x_tick_freq='automatic', one_figure=False, palette=None,
+                                     hdi_prob=0.95):
     """Plot histograms of origins for each strain, with kde line.
 
     Parameters
@@ -809,6 +810,9 @@ def plot_comparative_origin_or_tmrca(df_melted, parameter, xml_set_label='xml_se
     palette : list or dict of RGB colors (tuples), default None
         List of colors to use for each strain.
         Or dict of RGB colors to use for each strain.
+    hdi_prob : float, default 0.95
+        Probability mass for the highest density interval indicated by the
+        dashed lines.
 
     Returns
     -------
@@ -826,9 +830,10 @@ def plot_comparative_origin_or_tmrca(df_melted, parameter, xml_set_label='xml_se
             palette = sns.color_palette()
         for colour, xml_set in zip(palette, df[xml_set_label].unique()):
             strain_df = df[df[xml_set_label] == xml_set]
+            lower_hdi, upper_hdi = hdi(strain_df[parameter].to_numpy(), prob=hdi_prob)
             ax.axvline(strain_df[parameter].median(), color=colour)
-            ax.axvline(strain_df[parameter].quantile(0.05), color=colour, ls='--', lw=1)
-            ax.axvline(strain_df[parameter].quantile(0.95), color=colour, ls='--', lw=1)
+            ax.axvline(lower_hdi, color=colour, ls='--', lw=1)
+            ax.axvline(upper_hdi, color=colour, ls='--', lw=1)
         fig = ax
     else:
         fig = sns.FacetGrid(df, row=xml_set_label, hue=xml_set_label, margin_titles=True, aspect=4)
@@ -837,9 +842,10 @@ def plot_comparative_origin_or_tmrca(df_melted, parameter, xml_set_label='xml_se
         fig.add_legend()
         for ax, xml_set in zip(fig.axes.flat, df[xml_set_label].unique()):
             strain_df = df[df[xml_set_label] == xml_set]
+            lower_hdi, upper_hdi = hdi(strain_df[parameter].to_numpy(), prob=hdi_prob)
             ax.axvline(strain_df[parameter].median(), color='k', lw=2)
-            ax.axvline(strain_df[parameter].quantile(0.05), color='k', ls='--', lw=1)
-            ax.axvline(strain_df[parameter].quantile(0.95), color='k', ls='--', lw=1)
+            ax.axvline(lower_hdi, color='k', ls='--', lw=1)
+            ax.axvline(upper_hdi, color='k', ls='--', lw=1)
 
     ax.xaxis.set_ticks(tick_year_decimals)
     ax.set_xticklabels(tick_labels)
