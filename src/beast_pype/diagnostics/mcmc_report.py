@@ -141,6 +141,8 @@ def gen_mcmc_report_nb(
             "import os\n"
             "import re\n"
             "import arviz as az\n"
+            "import plotly.io as pio\n"
+            "pio.renderers.default = 'notebook'\n"
             "from beast_pype.diagnostics.mcmc import (\n"
             "    read_log_files_as_posterior,\n"
             "    burn_posterior,\n"
@@ -170,7 +172,8 @@ def gen_mcmc_report_nb(
 
         nb["cells"].append(
             nbf.v4.new_code_cell(
-                f"fig, axes = plot_traces(burned_posterior, {section_params!r}, labels={list(log_paths.keys())!r})"
+                f"fig = plot_traces(burned_posterior, {section_params!r}, labels={list(log_paths.keys())!r})\n"
+                "fig"
             )
         )
 

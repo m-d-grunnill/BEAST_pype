@@ -432,6 +432,13 @@ def iterative_timescale(ftree, falignment, fdates,
             else:
                 raise
 
+        # When clock filtering is disabled, timescale is meant to run exactly
+        # once and remove no sequences. Stop here before any future-tip
+        # detection or FASTA/metadata filtering.
+        if clock_filter is None:
+            print("Clock filter disabled: ran timescale once, no sequences removed.")
+            break
+
         # Detect tips placed in the future using clock model projection.
         # Uses (dist2root - intercept) / rate to compute projected date,
         # which is more reliable than TreeTime's inferred numdate.

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "beast_pype"
-version = "0.13.2"
+version = "0.14.0"
 dynamic = ["dependencies"]
 authors = [
     {name="Martin Grunnill", email="Martin.Grunnill@phac-aspc.gc.ca"},
@@ -71,6 +71,7 @@ dependencies = [
  # Plotting figures.
     { pip = 'seaborn'},
     { pip = 'matplotlib >= 3.10'},
+    { pip = 'plotly'},
 # MCMC diagnostics_of_selection
     { pip = 'arviz >= 1.2.0'},
     { pip = 'xarray'},

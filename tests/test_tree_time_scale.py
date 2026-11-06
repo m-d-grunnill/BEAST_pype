@@ -397,6 +397,34 @@ class TestIterativeTimescale:
         remaining = [t.name for t in time_tree.tree.get_terminals()]
         assert len(remaining) == len(tip_names)
 
+    def test_no_clock_filter_keeps_all_with_future_tips(self, tmp_path):
+        """With clock_filter=None, no sequences are removed even when a
+        future-dated tip would otherwise be flagged by remove_future_tips."""
+        from beast_pype.tree_time_scale import iterative_timescale
+        # Make one tip dated far in the future so remove_future_tips would
+        # flag it if the disabled-clock-filter short-circuit were absent.
+        tree_path, aln_path, dates_path, tip_names = _make_synthetic_data(
+            tmp_path, n_tips=10, outlier_date=2050.0
+        )
+        original_ids = {rec.id for rec in SeqIO.parse(aln_path, 'fasta')}
+        time_tree, outliers_df, final_fasta, final_meta = iterative_timescale(
+            ftree=tree_path,
+            falignment=aln_path,
+            fdates=dates_path,
+            clock_filter=None,
+            remove_future_tips=0,  # Would flag the 2050 tip if clock filter were active
+            remove_root=False,
+            rng_seed=42,
+        )
+        assert outliers_df.empty
+        # No sequences removed from the FASTA or metadata.
+        final_ids = {rec.id for rec in SeqIO.parse(final_fasta, 'fasta')}
+        assert final_ids == original_ids
+        meta_df = pd.read_csv(final_meta)
+        assert len(meta_df) == len(tip_names)
+        remaining = [t.name for t in time_tree.tree.get_terminals()]
+        assert len(remaining) == len(tip_names)
+
     def test_converges_with_clean_data(self, synthetic_data):
         """Clean data (no outliers) should converge in 1 iteration."""
         from beast_pype.tree_time_scale import iterative_timescale
