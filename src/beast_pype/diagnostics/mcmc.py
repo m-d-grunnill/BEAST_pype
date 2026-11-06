@@ -7,8 +7,11 @@ import re
 from typing import List
 from tqdm.auto import tqdm
 import arviz as az
-import seaborn as sns
-import matplotlib.pyplot as plt
+import numpy as np
+from scipy.stats import gaussian_kde
+import plotly.graph_objects as go
+import plotly.express as px
+from plotly.subplots import make_subplots
 import ipywidgets as widgets
 from IPython.display import display, clear_output
 
@@ -195,8 +198,9 @@ def plot_traces(posterior, parameters, labels=None, legend=True):
     - Left: KDE (kernel density estimate) per chain
     - Right: Trace plot (parameter value vs draw) per chain
 
-    The parameter name appears centred between the two subplots and the legend
-    appears once on the right side of the first row's trace plot.
+    The parameter name appears centred above the two subplots and a single
+    legend (shared across parameters) identifies each chain. Hovering over a
+    chain's line (in either the KDE or trace plot) shows that chain's name.
 
     Parameters
     ----------
@@ -211,7 +215,7 @@ def plot_traces(posterior, parameters, labels=None, legend=True):
 
     Returns
     -------
-    tuple of (matplotlib.figure.Figure, numpy.ndarray of Axes)
+    plotly.graph_objects.Figure
     """
     ds = posterior.posterior.to_dataset()
     n_chains = ds.sizes["chain"]
@@ -220,44 +224,88 @@ def plot_traces(posterior, parameters, labels=None, legend=True):
     if labels is None:
         labels = [f"Chain {i}" for i in range(n_chains)]
 
-    fig, axes = plt.subplots(n_params, 2, figsize=(13, 2 * n_params), squeeze=False)
-    plt.subplots_adjust(hspace=0.4)
+    fig = make_subplots(
+        rows=n_params,
+        cols=2,
+        horizontal_spacing=0.08,
+        vertical_spacing=0.4 / max(n_params, 1),
+    )
 
-    colors = sns.color_palette("husl", n_chains)
+    colors = px.colors.qualitative.Plotly
+    if n_chains > len(colors):
+        colors = (colors * (n_chains // len(colors) + 1))[:n_chains]
 
-    for row, param in enumerate(parameters):
-        ax_kde = axes[row, 0]
-        ax_trace = axes[row, 1]
-
+    for row, param in enumerate(parameters, start=1):
         for chain_idx in range(n_chains):
             values = ds[param].isel(chain=chain_idx).values
             draws = ds["draw"].values if "draw" in ds.coords else range(len(values))
+            color = colors[chain_idx]
+            chain_name = labels[chain_idx]
+            show_legend_entry = legend and row == 1
 
             # KDE plot
-            sns.kdeplot(values, ax=ax_kde, color=colors[chain_idx],
-                        label=labels[chain_idx])
+            kde = gaussian_kde(values)
+            x_grid = np.linspace(values.min(), values.max(), 200)
+            density = kde(x_grid)
+            fig.add_trace(
+                go.Scatter(
+                    x=x_grid,
+                    y=density,
+                    mode="lines",
+                    name=chain_name,
+                    legendgroup=chain_name,
+                    showlegend=show_legend_entry,
+                    line=dict(color=color),
+                    hovertemplate=f"{chain_name}<br>x=%{{x}}<br>density=%{{y}}<extra></extra>",
+                ),
+                row=row,
+                col=1,
+            )
 
             # Trace plot
-            ax_trace.plot(draws, values, color=colors[chain_idx],
-                          alpha=0.7, linewidth=0.5, label=labels[chain_idx])
+            fig.add_trace(
+                go.Scatter(
+                    x=draws,
+                    y=values,
+                    mode="lines",
+                    name=chain_name,
+                    legendgroup=chain_name,
+                    showlegend=False,
+                    opacity=0.7,
+                    line=dict(color=color, width=1),
+                    hovertemplate=f"{chain_name}<br>draw=%{{x}}<br>value=%{{y}}<extra></extra>",
+                ),
+                row=row,
+                col=2,
+            )
 
-        # Parameter name centred between the two subplots
-        ax_kde.set_title(param, x=1.1)
-        ax_kde.set_xlabel("")
-        ax_kde.set_ylabel("")
+    fig.update_layout(
+        height=max(200 * n_params, 200),
+        width=1000,
+        legend_title_text="Chain",
+        margin=dict(t=60, b=40),
+    )
 
-        ax_trace.set_title('')
-        ax_trace.set_xlabel("")
-        ax_trace.set_ylabel("")
-        ax_trace.ticklabel_format(style='sci', axis='x', scilimits=(0, 0))
+    # Parameter name centred between the two subplots of each row.
+    for row, param in enumerate(parameters, start=1):
+        xaxis_left = fig.layout[f"xaxis{2 * row - 1}" if row > 1 else "xaxis"]
+        xaxis_right = fig.layout[f"xaxis{2 * row}"]
+        x_center = (xaxis_left.domain[0] + xaxis_right.domain[1]) / 2
+        yaxis_left = fig.layout[f"yaxis{2 * row - 1}" if row > 1 else "yaxis"]
+        y_top = yaxis_left.domain[1]
+        fig.add_annotation(
+            text=param,
+            x=x_center,
+            y=y_top,
+            xref="paper",
+            yref="paper",
+            xanchor="center",
+            yanchor="bottom",
+            showarrow=False,
+            font=dict(size=14),
+        )
 
-    # Single legend on the right side of the first trace plot
-    if legend:
-        handles, _ = axes[0, 1].get_legend_handles_labels()
-        axes[0, 1].legend(handles, labels, loc="upper left",
-                          bbox_to_anchor=(1, 1), ncol=1)
-
-    return fig, axes
+    return fig
 
 STATE_RE = re.compile(r'^\s*tree\s+STATE_(\d+)\s*=\s*(.*)$', re.IGNORECASE)
 STATE_LABEL_RE = re.compile(r'(\btree\s+)STATE_\d+(\s*=)', re.IGNORECASE)
@@ -598,7 +646,7 @@ class BEASTDiag:
             self.diagnose_selection()
         if len(selected_chains) > 0:
             stats, trace = self._display_diagnosis(parameters)
-            plt.show()
+            trace.show()
             display(stats)
 
 
@@ -618,9 +666,9 @@ class BEASTDiag:
             if parameter not in self.parameters:
                 raise ValueError("Parameter {0} not found in posteriors list of parameters.".format(parameter))
 
-        traces_fig, traces_ax = plot_traces(posterior=self.selected_posterior,
-                                            parameters=parameters,
-                                            labels=self.selected_chains)
+        traces_fig = plot_traces(posterior=self.selected_posterior,
+                                 parameters=parameters,
+                                 labels=self.selected_chains)
         return self.diagnosis_of_selection.loc[parameters], traces_fig
 
     def clear_all_chains(self):
